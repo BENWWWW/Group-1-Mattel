@@ -1,0 +1,301 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #D32F2F;
+  --color-on-surface: #1A1A1A;
+  --color-on-surface-variant: #1A1A1A;
+  --color-outline: #1A1A1A;
+  
+  --radius-default: 20px;
+  --radius-lg: 20px;
+  --radius-xl: 20px;
+
+  --spacing-margin-desktop: 40px;
+  --spacing-sidebar-width: 220px;
+  --spacing-stack-sm: 8px;
+  --spacing-stack-lg: 32px;
+  --spacing-gutter: 24px;
+  --spacing-stack-md: 16px;
+  --spacing-margin-mobile: 16px;
+}
+
+@utility font-headline-xl {
+  font-family: var(--font-plus-jakarta-sans), sans-serif;
+}
+@utility font-label-md {
+  font-family: var(--font-plus-jakarta-sans), sans-serif;
+}
+@utility font-label-sm {
+  font-family: var(--font-plus-jakarta-sans), sans-serif;
+}
+@utility font-body-lg {
+  font-family: var(--font-plus-jakarta-sans), sans-serif;
+}
+@utility font-body-md {
+  font-family: var(--font-plus-jakarta-sans), sans-serif;
+}
+@utility font-headline-md {
+  font-family: var(--font-plus-jakarta-sans), sans-serif;
+}
+@utility font-headline-lg {
+  font-family: var(--font-plus-jakarta-sans), sans-serif;
+}
+
+@utility text-headline-xl {
+  font-size: 48px;
+  line-height: 56px;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+@utility text-label-md {
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+@utility text-label-sm {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+@utility text-body-lg {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 500;
+}
+@utility text-body-md {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+@utility text-headline-md {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+@utility text-headline-lg {
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.01em;
+  font-weight: 800;
+}
+@utility text-headline-lg-mobile {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 800;
+}
+
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.industrial-border {
+  border: 2px solid #1A1A1A;
+}
+
+/* Remove shadows globally for flat aesthetic */
+* {
+  box-shadow: none !important;
+}
+
+/* Transition for Label and Input */
+.content-transition {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.content-transition.switching {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+body {
+  background-color: #FFFFFF;
+}
+
+/* Checklist Template Management Page Styles */
+.industrial-card {
+  background: #ffffff;
+  border: 2px solid #1a1c1c;
+  border-radius: 4px;
+  padding: 24px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.industrial-card.active {
+  border-color: #af101a;
+  box-shadow: 4px 4px 0px #af101a !important; /* Override global box-shadow override */
+}
+.pill-button-sharp {
+  border: 2px solid #1a1c1c;
+  border-radius: 4px;
+  padding: 10px 24px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  transition: all 0.2s;
+}
+.pill-button-sharp:active {
+  transform: translateY(2px);
+}
+.status-badge-sharp {
+  display: inline-block;
+  border: 2px solid #1a1c1c;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.custom-toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+.custom-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #e2e2e2;
+  border: 2px solid #1a1c1c;
+  transition: .3s;
+  border-radius: 24px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #1a1c1c;
+  transition: .3s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #af101a;
+}
+input:checked + .slider:before {
+  transform: translateX(24px);
+  background-color: #FFFFFF;
+}
+
+.slider-urgent {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #e2e2e2;
+  border: 2px solid #1a1c1c;
+  transition: .3s;
+  border-radius: 24px;
+}
+.slider-urgent:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #1a1c1c;
+  transition: .3s;
+  border-radius: 50%;
+}
+input:checked + .slider-urgent {
+  background-color: #D32F2F;
+}
+input:checked + .slider-urgent:before {
+  transform: translateX(24px);
+  background-color: #FFFFFF;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-down {
+  animation: slideDown 0.3s ease-out forwards;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); height: 0; margin-bottom: 0; }
+  to { opacity: 1; transform: translateY(0); height: auto; margin-bottom: 12px; }
+}
+
+.scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-container::-webkit-scrollbar-track {
+  background: #f9f9f9;
+}
+.scroll-container::-webkit-scrollbar-thumb {
+  background: #1a1c1c;
+  border-radius: 10px;
+}
+
+.task-row.dragging {
+  opacity: 0.5;
+  background: #fcebeb;
+  border-style: dashed;
+}
+
+.heritage-card {
+  border: 2px solid #1A1A1A;
+  border-radius: 20px;
+  padding: 32px;
+  transition: transform 0.1s ease-in-out;
+  box-shadow: none !important;
+}
+
+.heritage-pill {
+  border: 2px solid #1A1A1A;
+  border-radius: 20px;
+  padding: 8px 24px;
+  transition: all 0.1s ease-in-out;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.heritage-badge {
+  display: inline-block;
+  border: 2px solid #1A1A1A;
+  border-radius: 20px;
+  padding: 4px 16px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.fab-button {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 64px;
+  height: 64px;
+  background-color: #D32F2F;
+  color: #FFFFFF;
+  border: 2px solid #1A1A1A;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+  z-index: 100;
+}
+
+.fab-button:active {
+  transform: scale(0.95);
+}
+
+
