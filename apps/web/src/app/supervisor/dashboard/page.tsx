@@ -95,6 +95,7 @@ interface Vendor {
   email: string;
   phone: string;
   status: "Active" | "On Hold";
+  password?: string;
   upcomingTasks: { id: string; title: string; asset: string; date: string }[];
   completedTasks: { id: string; title: string; asset: string; date: string; status: "Approved" | "Rejected" }[];
 }
@@ -109,6 +110,7 @@ const VENDOR_DATABASE: Vendor[] = [
     email: "j.shock@apexelectrics.com",
     phone: "+1 (555) 019-2834",
     status: "Active",
+    password: "Apex@7721#Secure",
     upcomingTasks: [
       { id: "TK-7250", title: "Generator Load Testing", asset: "Backup Gen-Set 02", date: "2026-06-30" }
     ],
@@ -125,6 +127,7 @@ const VENDOR_DATABASE: Vendor[] = [
     email: "s.airs@hvacpro.com",
     phone: "+1 (555) 021-9876",
     status: "Active",
+    password: "HVACPro@2026#Sec",
     upcomingTasks: [
       { id: "TK-8021", title: "HVAC Filter Maintenance", asset: "Carrier WeatherMaker 50TC", date: "2026-07-01" }
     ],
@@ -141,6 +144,7 @@ const VENDOR_DATABASE: Vendor[] = [
     email: "m.weld@steelworks.com",
     phone: "+1 (555) 032-4455",
     status: "Active",
+    password: "SteelWork@3244#",
     upcomingTasks: [
       { id: "PM-8829-X", title: "Hydraulic Press A12 Review", asset: "Hydraulic Press A12", date: "2026-07-01" }
     ],
@@ -157,6 +161,7 @@ const VENDOR_DATABASE: Vendor[] = [
     email: "r.safe@safeguard.com",
     phone: "+1 (555) 045-8899",
     status: "On Hold",
+    password: "SafeGuard@Compliance#",
     upcomingTasks: [
       { id: "TK-7945", title: "Emergency Exit Inspection", asset: "Main Exit Gate Alpha", date: "2026-07-01" }
     ],
@@ -194,6 +199,7 @@ export default function ReviewQueuePage() {
 
   // Selected Vendor State
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
+  const [showVendorPassword, setShowVendorPassword] = useState(false);
 
   // Modal State for Review Detail
   const [reviewTarget, setReviewTarget] = useState<QueueItem | typeof urgentItem | null>(null);
@@ -610,7 +616,10 @@ export default function ReviewQueuePage() {
               {VENDOR_DATABASE.map((vendor) => (
                 <div
                   key={vendor.id}
-                  onClick={() => setSelectedVendorId(vendor.id)}
+                  onClick={() => {
+                    setSelectedVendorId(vendor.id);
+                    setShowVendorPassword(false);
+                  }}
                   className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 hover:border-[#D32F2F] transition-all duration-200 cursor-pointer flex flex-col justify-between h-48 relative group"
                 >
                   <div>
@@ -771,6 +780,28 @@ export default function ReviewQueuePage() {
                 <div>
                   <p className="text-gray-400 font-bold uppercase text-[9px]">Phone</p>
                   <p className="font-bold text-[#1A1A1A]">{vendor.phone}</p>
+                </div>
+
+                {/* Vendor Password (Read Only) */}
+                <div className="md:col-span-2 pt-3 border-t border-gray-200 mt-1">
+                  <p className="text-gray-400 font-bold uppercase text-[9px] mb-1">Vendor Account Password</p>
+                  <div className="relative flex items-center">
+                    <input
+                      type={showVendorPassword ? "text" : "password"}
+                      value={vendor.password || ""}
+                      readOnly
+                      className="w-full bg-white border border-[#1A1A1A] rounded-lg p-2.5 pr-10 text-xs font-semibold text-gray-700 cursor-default select-all outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowVendorPassword(!showVendorPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#D32F2F] bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        {showVendorPassword ? "visibility_off" : "visibility"}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
