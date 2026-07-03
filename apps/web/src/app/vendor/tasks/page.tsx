@@ -215,20 +215,7 @@ interface Toast {
 export default function PMChecklistPage() {
   const router = useRouter();
 
-  // Full state variables for standard supervisor tasks queue logic
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("vendor_tasks");
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-    return INITIAL_TASKS;
-  });
+  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   // Search & Filter state variables
@@ -283,6 +270,18 @@ export default function PMChecklistPage() {
       router.push("/");
     }, 1200);
   };
+
+  // Load persisted tasks from localStorage after client mount (avoids SSR hydration mismatch)
+  useEffect(() => {
+    const saved = localStorage.getItem("vendor_tasks");
+    if (saved) {
+      try {
+        setTasks(JSON.parse(saved));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Tick current time
