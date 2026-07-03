@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 interface FlaggedItem {
@@ -97,6 +97,71 @@ export default function AIVerificationScorePage() {
   // Notification Toasts
   const [toasts, setToasts] = useState<ToastType[]>([]);
 
+  // Signature States
+  const sigCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [signed, setSigned] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
+
+  // Initialize Canvas Drawing context
+  const startDrawing = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+    canvas: HTMLCanvasElement | null,
+    setIsDrawing: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.strokeStyle = "#1A1A1A";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.beginPath();
+    const rect = canvas.getBoundingClientRect();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    ctx.moveTo(clientX - rect.left, clientY - rect.top);
+    setIsDrawing(true);
+  };
+
+  const draw = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+    canvas: HTMLCanvasElement | null,
+    isDrawing: boolean,
+    setSigned: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    if (!isDrawing || !canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    if ("touches" in e) {
+      e.preventDefault();
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    ctx.lineTo(clientX - rect.left, clientY - rect.top);
+    ctx.stroke();
+    setSigned(true);
+  };
+
+  const stopDrawing = (setIsDrawing: React.Dispatch<React.SetStateAction<boolean>>) => {
+    setIsDrawing(false);
+  };
+
+  const clearSignature = (
+    canvas: HTMLCanvasElement | null,
+    setSigned: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setSigned(false);
+  };
+
   // Open review drawer helper
   const handleOpenReview = (item: FlaggedItem) => {
     setSelectedItem(item);
@@ -144,6 +209,10 @@ export default function AIVerificationScorePage() {
 
   // Handle final Submit report
   const handleSubmitReport = () => {
+    if (!signed) {
+      triggerToast("Digital signature is required before submitting.", "error");
+      return;
+    }
     setIsSubmitting(true);
     setSubmitText("Submitting PM Report...");
 
@@ -418,6 +487,53 @@ export default function AIVerificationScorePage() {
                       All audit conflicts verified and resolved.
                     </p>
                   </div>
+                )}
+              </div>
+
+              {/* Vendor Signature Box */}
+              <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col gap-4 mt-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-sm text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+                      Vendor Digital Signature
+                    </h4>
+                    <p className="text-[10px] text-[#1A1A1A]/70 font-bold mt-0.5">
+                      Sign before submitting the final PM report
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => clearSignature(sigCanvasRef.current, setSigned)}
+                    className="text-[10px] font-black uppercase text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent"
+                  >
+                    Clear Signature
+                  </button>
+                </div>
+
+                <div className="w-full h-32 bg-black/5 border-2 border-[#1A1A1A] rounded-[20px] flex items-center justify-center relative overflow-hidden">
+                  {!signed && (
+                    <span className="absolute text-gray-400 text-[10px] font-bold uppercase tracking-widest pointer-events-none">
+                      Draw signature here
+                    </span>
+                  )}
+                  <canvas
+                    ref={sigCanvasRef}
+                    width={500}
+                    height={128}
+                    onMouseDown={(e) => startDrawing(e, sigCanvasRef.current, setIsDrawing)}
+                    onMouseMove={(e) => draw(e, sigCanvasRef.current, isDrawing, setSigned)}
+                    onMouseUp={() => stopDrawing(setIsDrawing)}
+                    onMouseLeave={() => stopDrawing(setIsDrawing)}
+                    onTouchStart={(e) => startDrawing(e, sigCanvasRef.current, setIsDrawing)}
+                    onTouchMove={(e) => draw(e, sigCanvasRef.current, isDrawing, setSigned)}
+                    onTouchEnd={() => stopDrawing(setIsDrawing)}
+                    className="w-full h-full cursor-crosshair relative z-10"
+                  />
+                </div>
+                {!signed && (
+                  <p className="text-[9px] text-[#D32F2F] font-bold uppercase">
+                    Digital signature is required before submitting.
+                  </p>
                 )}
               </div>
             </div>
