@@ -72,7 +72,10 @@ export default function AdminLayout({
             <span>Logout</span>
           </button>
 
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/admin/profile")}
+            className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
+          >
             <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
               <img
                 className="w-full h-full object-cover"
@@ -86,7 +89,7 @@ export default function AdminLayout({
               </p>
               <p className="text-[10px] uppercase font-bold text-white/40">Admin Access</p>
             </div>
-          </div>
+          </button>
         </div>
       </aside>
       {children}

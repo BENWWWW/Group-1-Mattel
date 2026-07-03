@@ -220,7 +220,10 @@ export default function AIVerificationScorePage() {
             <span>Logout</span>
           </button>
 
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/vendor/profile")}
+            className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
+          >
             <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
               <img
                 alt="Vendor Headshot"
@@ -232,7 +235,7 @@ export default function AIVerificationScorePage() {
               <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">Apex Services</p>
               <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #7721</p>
             </div>
-          </div>
+          </button>
         </div>
       </aside>
 

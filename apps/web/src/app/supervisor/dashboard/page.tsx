@@ -332,7 +332,10 @@ export default function ReviewQueuePage() {
             <span>Logout</span>
           </button>
 
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/supervisor/profile")}
+            className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
+          >
             <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
               <img
                 className="w-full h-full object-cover"
@@ -344,7 +347,7 @@ export default function ReviewQueuePage() {
               <p className="text-xs font-bold truncate text-white uppercase">E. Schmidt</p>
               <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Lead Auditor</p>
             </div>
-          </div>
+          </button>
         </div>
       </aside>
 
