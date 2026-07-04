@@ -2,6 +2,7 @@
 
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminLayout({
   children,
@@ -10,10 +11,13 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const supabase = createClient();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     if (typeof window !== "undefined") {
       localStorage.removeItem("userRole");
+      localStorage.removeItem("userName");
     }
     router.push("/");
   };

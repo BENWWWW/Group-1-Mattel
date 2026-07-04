@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 interface ToastType {
   id: string;
@@ -9,10 +10,17 @@ interface ToastType {
   type: "success" | "error" | "info";
 }
 
-export default function SubmissionConfirmationPage() {
+function ConfirmationContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlTaskId = searchParams.get("taskId");
+  const supabase = createClient();
+
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [taskData, setTaskData] = useState<any>(null);
+  const [reportData, setReportData] = useState<any>(null);
   const [toasts, setToasts] = useState<ToastType[]>([]);
-  const [timestamp, setTimestamp] = useState("Oct 24, 2023 | 14:32:01");
+  const [timestamp, setTimestamp] = useState("Oct 24, 2026 | 14:32:01");
 
   // Trigger Toast helper
   const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
@@ -23,19 +31,62 @@ export default function SubmissionConfirmationPage() {
     }, 3500);
   };
 
+  const loadUserProfileAndData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        
+        setCurrentUser(profile);
+      }
+
+      if (urlTaskId) {
+        // Fetch task details
+        const { data: tData } = await supabase
+          .from("pm_tasks")
+          .select(`
+            task_code,
+            assets (name)
+          `)
+          .eq("id", urlTaskId)
+          .single();
+        setTaskData(tData);
+
+        // Fetch latest submitted report details
+        const { data: rData } = await supabase
+          .from("pm_reports")
+          .select("ai_confidence_score, submitted_at")
+          .eq("task_id", urlTaskId)
+          .eq("status", "submitted")
+          .order("submitted_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        setReportData(rData);
+
+        if (rData?.submitted_at) {
+          const auditDate = new Date(rData.submitted_at);
+          const options: Intl.DateTimeFormatOptions = {
+            year: "numeric",
+            month: "short",
+            day: "2-digit",
+          };
+          const dateStr = auditDate.toLocaleDateString("en-US", options);
+          const timeStr = auditDate.toLocaleTimeString("en-US", { hour12: false });
+          setTimestamp(`${dateStr} | ${timeStr}`);
+        }
+      }
+    } catch (e) {
+      console.error("Gagal memuat profile user: ", e);
+    }
+  };
+
   // Generate dynamic date/time on load
   useEffect(() => {
-    const now = new Date();
-    const options: Intl.DateTimeFormatOptions = {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-    };
-    const dateStr = now.toLocaleDateString("en-US", options);
-    const timeStr = now.toLocaleTimeString("en-US", { hour12: false });
-    setTimeout(() => {
-      setTimestamp(`${dateStr} | ${timeStr}`);
-    }, 0);
+    loadUserProfileAndData();
 
     // Trigger Confetti Effect (Red / Black / White particles)
     const createParticle = () => {
@@ -92,7 +143,11 @@ export default function SubmissionConfirmationPage() {
     for (let i = 0; i < 60; i++) {
       setTimeout(createParticle, i * 12);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const avatarSrc = currentUser?.avatar_url ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || "V")}&background=D32F2F&color=fff&size=200`;
 
   return (
     <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md select-none relative overflow-hidden">
@@ -160,8 +215,9 @@ export default function SubmissionConfirmationPage() {
         {/* Profile Info Widget */}
         <div className="px-4 mt-auto border-t border-white/20 pt-4 pb-2">
           <button
-            onClick={() => {
+            onClick={async () => {
               triggerToast("CLOSING VENDOR TERMINAL...", "info");
+              await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
             className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-xs cursor-pointer border-none mb-4"
@@ -178,12 +234,12 @@ export default function SubmissionConfirmationPage() {
               <img
                 alt="Vendor Headshot"
                 className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkcXzppBB6fuF01AvoMkYO_AOqmpkcq3D2Vlss7eZ_ZAD8O3zoshCALMS0lGvJ0suvCu7yCme9VBwgGW0_5gWcKdEhZpezn9UL5gM3Q6sFoD1w1AtYSkaBEsK9LvfsRGytarIgnQDyvH4RSrhJ4Uk8QzCn2YYVKs1xbRHYlntioLqTlBA03RqqQrOvg3RDTFG_jhPxbfLxjGwtWXlawO997mjbvuWuGMta8W2b_9-wqNJlv8AsFrQwXO_F27qzdnPfDeWPGD1IuyKP"
+                src={avatarSrc}
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">Apex Services</p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #7721</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Apex Services"}</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
         </div>
@@ -196,7 +252,6 @@ export default function SubmissionConfirmationPage() {
             Task Completion
           </h2>
         </div>
-
       </header>
 
       {/* Main Content Area */}
@@ -208,95 +263,105 @@ export default function SubmissionConfirmationPage() {
             {/* Animated Success Icon Container */}
             <div className="mb-8 relative">
               <div id="success-icon" className="w-32 h-32 rounded-full bg-primary flex items-center justify-center text-white">
-                  <span className="material-symbols-outlined text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    check_circle
+                <span className="material-symbols-outlined text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  check_circle
+                </span>
+              </div>
+              {/* Decorative Orbit (Flat Industrial) */}
+              <div className="absolute inset-0 -m-4 border-2 border-[#1A1A1A] rounded-full orbit-spin-class">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rounded-full"></div>
+              </div>
+            </div>
+
+            <h1 className="text-3xl text-[#1A1A1A] mb-2 uppercase font-extrabold tracking-tight">
+              PM Report Submitted!
+            </h1>
+            <p className="text-sm font-medium text-[#1A1A1A]/80 max-w-lg mb-10 leading-relaxed">
+              Your preventive maintenance assessment for the regional industrial cluster has been successfully processed by the AI Core.
+            </p>
+
+            {/* Submission Summary Card */}
+            <div className="w-full bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 mb-10 text-left grid grid-cols-2 gap-y-6 gap-x-8">
+              <div className="col-span-2 pb-4 border-b-2 border-[#1A1A1A] flex justify-between items-center">
+                <span className="text-xs uppercase tracking-wider text-[#1A1A1A] font-bold">
+                  System Analysis
+                </span>
+                <div className="flex items-center gap-2 px-3 py-1 bg-white border-2 border-[#1A1A1A] rounded-full">
+                  <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#1A1A1A]">
+                    Status Verified
                   </span>
                 </div>
-                {/* Decorative Orbit (Flat Industrial) */}
-                <div className="absolute inset-0 -m-4 border-2 border-[#1A1A1A] rounded-full orbit-spin-class">
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rounded-full"></div>
-                </div>
               </div>
-
-              <h1 className="text-3xl text-[#1A1A1A] mb-2 uppercase font-extrabold tracking-tight">
-                PM Report Submitted!
-              </h1>
-              <p className="text-sm font-medium text-[#1A1A1A]/80 max-w-lg mb-10 leading-relaxed">
-                Your preventive maintenance assessment for the regional industrial cluster has been successfully processed by the AI Core.
-              </p>
-
-              {/* Submission Summary Card */}
-              <div className="w-full bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 mb-10 text-left grid grid-cols-2 gap-y-6 gap-x-8">
-                <div className="col-span-2 pb-4 border-b-2 border-[#1A1A1A] flex justify-between items-center">
-                  <span className="text-xs uppercase tracking-wider text-[#1A1A1A] font-bold">
-                    System Analysis
-                  </span>
-                  <div className="flex items-center gap-2 px-3 py-1 bg-white border-2 border-[#1A1A1A] rounded-full">
-                    <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#1A1A1A]">
-                      Status Verified
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
-                    AI Precision Score
-                  </p>
-                  <p className="text-2xl font-extrabold text-primary">98/100</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
-                    Asset Reference
-                  </p>
-                  <p className="text-sm font-bold text-[#1A1A1A]">HVAC Unit 4B</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
-                    Process ID
-                  </p>
-                  <p className="text-sm font-bold text-[#1A1A1A]">#PM-99204-X</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
-                    Timestamp
-                  </p>
-                  <p className="text-sm font-bold text-[#1A1A1A]">{timestamp}</p>
-                </div>
+              <div>
+                <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
+                  AI Precision Score
+                </p>
+                <p className="text-2xl font-extrabold text-primary">
+                  {reportData?.ai_confidence_score !== undefined ? `${reportData.ai_confidence_score}/100` : "98/100"}
+                </p>
               </div>
-
-              {/* Action Cluster */}
-              <div className="flex flex-col sm:flex-row gap-4 w-full">
-                <button
-                  onClick={() => {
-                    triggerToast("Detailed telemetry log generated.", "info");
-                  }}
-                  className="flex-1 bg-primary text-white border-2 border-[#1A1A1A] rounded-full px-8 py-4 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer"
-                >
-                  View Detailed Report
-                </button>
-                <button
-                  onClick={() => router.push("/vendor")}
-                  className="flex-1 bg-white text-[#1A1A1A] border-2 border-[#1A1A1A] rounded-full px-8 py-4 font-bold text-xs uppercase tracking-wider hover:bg-gray-50 transition-all active:scale-[0.98] cursor-pointer"
-                >
-                  Back to Dashboard
-                </button>
+              <div>
+                <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
+                  Asset Reference
+                </p>
+                <p className="text-sm font-bold text-[#1A1A1A]">
+                  {taskData?.assets?.name || "HVAC Unit 4B"}
+                </p>
               </div>
+              <div>
+                <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
+                  Process ID
+                </p>
+                <p className="text-sm font-bold text-[#1A1A1A]">
+                  {taskData?.task_code || "N/A"}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
+                  Timestamp
+                </p>
+                <p className="text-sm font-bold text-[#1A1A1A]">{timestamp}</p>
+              </div>
+            </div>
 
-              {/* Verification Metadata */}
-              <div className="mt-8 pt-8 border-t-2 border-[#1A1A1A] w-full flex justify-center items-center gap-8 opacity-70">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">shield_with_heart</span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest">ISO 9001 Certified</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">lock</span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest font-bold">
-                    End-to-End Encrypted
-                  </span>
-                </div>
+            {/* Action Cluster */}
+            <div className="flex flex-col sm:flex-row gap-4 w-full">
+              <button
+                onClick={() => {
+                  if (urlTaskId) {
+                    window.open(`/supervisor/tasks/report-preview?taskId=${urlTaskId}`, "_blank");
+                  } else {
+                    triggerToast("No task ID found for detailed report.", "error");
+                  }
+                }}
+                className="flex-1 bg-primary text-white border-2 border-[#1A1A1A] rounded-full px-8 py-4 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                View Detailed Report
+              </button>
+              <button
+                onClick={() => router.push("/vendor")}
+                className="flex-1 bg-white text-[#1A1A1A] border-2 border-[#1A1A1A] rounded-full px-8 py-4 font-bold text-xs uppercase tracking-wider hover:bg-gray-50 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+
+            {/* Verification Metadata */}
+            <div className="mt-8 pt-8 border-t-2 border-[#1A1A1A] w-full flex justify-center items-center gap-8 opacity-70">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">shield_with_heart</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest">ISO 9001 Certified</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">lock</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest">
+                  End-to-End Encrypted
+                </span>
               </div>
             </div>
           </div>
+        </div>
       </main>
 
       {/* Success Toast notifications */}
@@ -320,5 +385,17 @@ export default function SubmissionConfirmationPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function SubmissionConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen w-full items-center justify-center bg-white">
+        <span className="material-symbols-outlined animate-spin text-4xl text-[#D32F2F]">sync</span>
+      </div>
+    }>
+      <ConfirmationContent />
+    </Suspense>
   );
 }

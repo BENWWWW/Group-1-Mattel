@@ -1,29 +1,88 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
-interface ReportData {
-  status: "Approved" | "Rejected" | "Pending";
-  supervisor: string;
-  notes: string;
-  techNotes: string;
-  date: string;
-  hash: string;
+interface ChecklistItem {
+  item_id: string;
+  label: string;
+  checked: boolean;
+  notes?: string;
+  image?: string | null;
+  status?: string;
+  type?: "optional" | "required" | "urgent";
+  requireImage?: boolean;
 }
 
-export default function ReportPreviewPage() {
+interface ReportInfo {
+  status: "approved" | "rejected" | "submitted" | "pending";
+  supervisorName: string;
+  supervisorNotes: string;
+  techNotes: string;
+  adminNotes: string;
+  date: string;
+  hash: string;
+  taskCode: string;
+  taskTitle: string;
+  assetName: string;
+  assetCode: string;
+  location: string;
+  category: string;
+  techName: string;
+  aiConfidence: number;
+  checklist: ChecklistItem[];
+  vendorSignature: string;
+  supervisorSignature: string;
+}
+
+function ReportPreviewContent() {
   const router = useRouter();
-  const [reportInfo, setReportInfo] = useState<ReportData>({
-    status: "Approved",
-    supervisor: "Karl Heinz-Berger",
-    notes: "",
-    techNotes: "",
+  const searchParams = useSearchParams();
+  const taskId = searchParams.get("taskId");
+  const reportId = searchParams.get("reportId");
+
+  const supabase = createClient();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [reportInfo, setReportInfo] = useState<ReportInfo>({
+    status: "approved",
+    supervisorName: "Karl Heinz-Berger",
+    supervisorNotes: "Inspection approved under standard regulations.",
+    techNotes: "All systems calibrated successfully.",
+    adminNotes: "",
     date: "25 OCT 2023",
     hash: "SHA-256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    taskCode: "TASK-2023-AI",
+    taskTitle: "Turbine Alignment & Pressure Calibration",
+    assetName: "Turbine Assembly Gen-IV (T-800)",
+    assetCode: "T-800",
+    location: "Sector 7G - Power Plant",
+    category: "Mechanical",
+    techName: "Marcus Vance",
+    aiConfidence: 98,
+    checklist: [
+      { item_id: "1", label: "Hydraulic Pressure Calibration", checked: true, notes: "Optimal operating range maintained." },
+      { item_id: "2", label: "Lubrication Viscosity Test", checked: true, notes: "Sample clean, no metallic debris found." },
+      { item_id: "3", label: "Emergency Cut-off Verification", checked: true, notes: "Response time < 0.5s. All clear." }
+    ],
+    vendorSignature: "",
+    supervisorSignature: ""
   });
+
   const [toasts, setToasts] = useState<{ id: string; message: string; type: string }[]>([]);
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+
+  // Override body overflow so this dedicated PDF preview page can scroll
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "auto";
+    document.documentElement.style.overflow = "auto";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, []);
 
   // Trigger Toast Notification
   const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
@@ -34,38 +93,170 @@ export default function ReportPreviewPage() {
     }, 3000);
   };
 
-  // Pull signed/rejection state if stored from previous screen interaction
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedStatus = localStorage.getItem("lastReviewStatus");
-      const savedNotes = localStorage.getItem("lastReviewNotes") || "";
-      const savedSupervisor = localStorage.getItem("lastReviewSupervisor") || "Karl Heinz-Berger";
-      const savedTechNotes = localStorage.getItem("lastReviewTechNotes") || "";
-      
-      if (savedStatus) {
-        // Generate dynamic hash simulation
-        const randomHash = "SHA-256: " + Array.from({ length: 64 }, () => 
-          Math.floor(Math.random() * 16).toString(16)
-        ).join("");
+    const fetchReportDetails = async () => {
+      try {
+        setLoading(true);
+        // Get user session
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+          setCurrentUser(profile);
+        }
 
-        const today = new Date();
-        const formattedDate = today.toLocaleDateString("en-US", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric"
-        }).toUpperCase();
+        let targetTaskId = taskId;
+        let reportData: any = null;
 
-        setReportInfo({
-          status: savedStatus as "Approved" | "Rejected" | "Pending",
-          supervisor: savedSupervisor,
-          notes: savedNotes,
-          techNotes: savedTechNotes,
-          date: formattedDate,
-          hash: randomHash,
-        });
+        if (reportId) {
+          // Fetch report first
+          const { data: rData, error: rError } = await supabase
+            .from("pm_reports")
+            .select("*")
+            .eq("id", reportId)
+            .single();
+
+          if (rError) throw rError;
+          reportData = rData;
+          targetTaskId = rData.task_id;
+        }
+
+        if (targetTaskId) {
+          // Fetch task details
+          const { data: taskData, error: taskError } = await supabase
+            .from("pm_tasks")
+            .select(`
+              *,
+              assets (*),
+              vendor:profiles!assigned_vendor_id (*),
+              supervisor:profiles!assigned_supervisor_id (*)
+            `)
+            .eq("id", targetTaskId)
+            .single();
+
+          if (taskError) throw taskError;
+
+          if (!reportData) {
+            // Try fetching report if we only had taskId (get the latest report)
+            const { data: rData } = await supabase
+              .from("pm_reports")
+              .select("*")
+              .eq("task_id", targetTaskId)
+              .order("submitted_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            reportData = rData;
+          }
+
+          // Parse checklist results
+          let checklistItems: ChecklistItem[] = [];
+          let vendorSig = "";
+          let vendorName = taskData.vendor?.full_name || "Vendor Partner";
+          let superSig = "";
+          let superName = taskData.supervisor?.full_name || "Lead Auditor";
+
+          if (reportData && reportData.checklist_results) {
+            const cr = reportData.checklist_results;
+            if (Array.isArray(cr)) {
+              checklistItems = cr.map((c: any) => ({
+                item_id: c.item_id || c.id || "",
+                label: c.label || c.title || c.text || c.task || "Checklist Task",
+                checked: c.checked !== undefined ? c.checked : (c.status === "Pass"),
+                notes: c.notes || "",
+                image: c.image || null,
+                status: c.status || (c.checked ? "Pass" : "Awaiting"),
+                type: c.type || "optional",
+                requireImage: c.requireImage !== undefined ? c.requireImage : false
+              }));
+              vendorSig = reportData.vendor_signature || reportData.vendorSignature || "";
+              superSig = reportData.supervisor_signature || reportData.supervisorSignature || "";
+            } else {
+              const results = cr.items || [];
+              checklistItems = results.map((c: any) => ({
+                item_id: c.item_id || c.id || "",
+                label: c.label || c.title || c.text || c.task || "Checklist Task",
+                checked: c.checked !== undefined ? c.checked : (c.status === "Pass"),
+                notes: c.notes || "",
+                image: c.image || null,
+                status: c.status || (c.checked ? "Pass" : "Awaiting"),
+                type: c.type || "optional",
+                requireImage: c.requireImage !== undefined ? c.requireImage : false
+              }));
+              vendorSig = cr.vendorSignature || cr.vendor_signature || reportData.vendor_signature || reportData.vendorSignature || "";
+              vendorName = cr.vendorName || cr.vendor_name || vendorName;
+              superSig = cr.supervisorSignature || cr.supervisor_signature || reportData.supervisor_signature || reportData.supervisorSignature || "";
+              superName = cr.supervisorName || cr.supervisor_name || superName;
+            }
+          } else if (Array.isArray(taskData.checklist)) {
+            checklistItems = taskData.checklist.map((c: any) => ({
+              item_id: c.id || "",
+              label: c.label || c.title || c.text || c.task || "Checklist Task",
+              checked: c.status === "Pass" || c.checked === true,
+              notes: c.notes || "",
+              image: c.image || null,
+              status: c.status || (c.checked ? "Pass" : "Awaiting"),
+              type: c.type || "optional",
+              requireImage: c.requireImage !== undefined ? c.requireImage : false
+            }));
+          }
+
+          // Format Date
+          const auditDate = reportData?.reviewed_at 
+            ? new Date(reportData.reviewed_at) 
+            : reportData?.submitted_at 
+              ? new Date(reportData.submitted_at) 
+              : new Date();
+
+          const formattedDate = auditDate.toLocaleDateString("en-US", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+          }).toUpperCase();
+
+          // Generate dynamic deterministic hash based on report/task ID
+          const hashSeed = reportData?.id || taskData.id;
+          const reportHash = "SHA-256: " + Array.from({ length: 64 }, (_, i) => 
+            ((hashSeed.charCodeAt(i % hashSeed.length) * (i + 1)) % 16).toString(16)
+          ).join("");
+
+          setReportInfo({
+            status: (reportData?.status || taskData.status || "pending") as any,
+            supervisorName: superName,
+            supervisorNotes: reportData?.review_notes || "No notes filed by reviewer.",
+            techNotes: reportData?.findings || taskData.description || "Resolved anomalies. Precision score nominal.",
+            adminNotes: taskData.notes || "",
+            date: formattedDate,
+            hash: reportHash,
+            taskCode: taskData.task_code,
+            taskTitle: taskData.title,
+            assetName: taskData.assets?.name || "Equipment Asset",
+            assetCode: taskData.assets?.asset_code || "N/A",
+            location: taskData.assets?.location || "N/A",
+            category: taskData.assets?.category || "Industrial",
+            techName: vendorName,
+            aiConfidence: reportData?.ai_confidence_score || 95,
+            checklist: checklistItems,
+            vendorSignature: vendorSig,
+            supervisorSignature: superSig
+          });
+        }
+      } catch (err: any) {
+        console.error("Error loading report PDF details:", err);
+        triggerToast("Gagal memuat data PDF: " + err.message, "error");
+      } finally {
+        setLoading(false);
       }
+    };
+
+    if (taskId || reportId) {
+      fetchReportDetails();
+    } else {
+      setLoading(false);
     }
-  }, []);
+  }, [taskId, reportId]);
 
   const handlePrint = () => {
     if (typeof window !== "undefined") {
@@ -73,14 +264,31 @@ export default function ReportPreviewPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-white text-[#1A1A1A] font-bold uppercase tracking-widest gap-3">
+        <span className="w-5 h-5 rounded-full border-4 border-t-transparent border-[#D32F2F] animate-spin inline-block"></span>
+        Memuat Dokumen Laporan...
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md select-none relative overflow-hidden">
+    <div className="min-h-screen w-full bg-slate-50 text-[#1A1A1A] font-body-md flex flex-col items-center">
       <style jsx global>{`
+        /* Ensure the page can scroll naturally */
+        html, body {
+          height: auto !important;
+          min-height: 100% !important;
+          overflow-x: hidden !important;
+          overflow-y: auto !important;
+        }
+
         ::-webkit-scrollbar {
           width: 8px;
         }
         ::-webkit-scrollbar-track {
-          background: #FFFFFF;
+          background: #f1f1f1;
         }
         ::-webkit-scrollbar-thumb {
           background: #1A1A1A;
@@ -98,12 +306,10 @@ export default function ReportPreviewPage() {
           .print-only { 
             display: block !important; 
           }
-          .sidebar-nav { 
-            display: none !important; 
-          }
           .content-area-main { 
-            margin-left: 0 !important; 
+            margin: 0 !important; 
             width: 100% !important; 
+            max-width: 100% !important;
             padding: 0 !important; 
             height: auto !important;
             overflow: visible !important;
@@ -112,89 +318,46 @@ export default function ReportPreviewPage() {
             border: 2px solid #1A1A1A !important; 
             box-shadow: none !important;
             margin: 0 auto !important;
+            border-radius: 0 !important;
           }
-          body {
+          html, body {
             background-color: white !important;
             color: black !important;
+            height: auto !important;
+            overflow: visible !important;
           }
         }
       `}</style>
 
-      {/* Side Navigation Bar */}
-      <aside className="no-print sidebar-nav fixed h-screen left-0 top-0 w-[220px] border-r-2 border-[#1A1A1A] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white">
-        <div className="px-6 mb-10">
-          <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
-            Industrial Precision
-          </p>
+      {/* Dynamic Action Bar (no-print) */}
+      <header className="no-print sticky top-0 left-0 right-0 w-full bg-[#1A1A1A] text-white py-4 px-8 flex justify-between items-center z-50 shadow-md">
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-[#D32F2F] text-2xl font-bold">picture_as_pdf</span>
+          <div className="text-left">
+            <h1 className="font-headline-md text-sm font-extrabold tracking-widest leading-none">MAINTAIN.AI</h1>
+            <p className="text-[9px] opacity-60 uppercase font-black tracking-wider mt-1">PM REPORT TELEMETRY VERIFICATION</p>
+          </div>
         </div>
-        <nav className="flex-1 space-y-2 px-2">
+        <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push("/supervisor/dashboard")}
-            className="w-full px-4 py-3 flex items-center gap-4 text-white/70 hover:bg-white/10 text-left font-label-md text-sm uppercase tracking-wider rounded-lg transition-colors cursor-pointer border-none bg-transparent"
+            onClick={handlePrint}
+            className="bg-[#D32F2F] text-white hover:bg-[#b71c1c] transition-colors font-bold px-5 py-2 border-2 border-black rounded-lg text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer"
           >
-            <span className="material-symbols-outlined">dashboard</span>
-            <span>Dashboard</span>
+            <span className="material-symbols-outlined text-sm">print</span>
+            Cetak / Simpan PDF
           </button>
-
           <button
-            onClick={() => router.push("/supervisor/tasks")}
-            className="bg-[#D32F2F] text-white w-full px-4 py-3 flex items-center gap-4 text-left font-label-md text-sm uppercase tracking-wider rounded-lg transition-colors cursor-pointer border-none"
+            onClick={() => window.close()}
+            className="bg-white/10 hover:bg-white/20 transition-colors text-white font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wider flex items-center gap-1 cursor-pointer border border-white/20"
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-              assignment
-            </span>
-            <span>Tasks</span>
-          </button>
-
-          <button
-            onClick={() => router.push("/supervisor/reports")}
-            className="w-full px-4 py-3 flex items-center gap-4 text-white/70 hover:bg-white/10 text-left font-label-md text-sm uppercase tracking-wider rounded-lg transition-colors cursor-pointer border-none bg-transparent"
-          >
-            <span className="material-symbols-outlined">analytics</span>
-            <span>Reports</span>
-          </button>
-        </nav>
-        {/* User Profile Widget */}
-        <div className="px-4 mt-auto border-t border-white/10 pt-4 pb-2">
-          <button
-            onClick={() => {
-              triggerToast("CLOSING SUPERVISOR SESSION...", "info");
-              if (typeof window !== "undefined") {
-                localStorage.removeItem("userRole");
-                localStorage.removeItem("lastReviewStatus");
-                localStorage.removeItem("lastReviewNotes");
-                localStorage.removeItem("lastReviewSupervisor");
-              }
-              setTimeout(() => router.push("/"), 1000);
-            }}
-            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-xs cursor-pointer border-none mb-4"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span>Logout</span>
-          </button>
-
-          <button
-            onClick={() => router.push("/supervisor/profile")}
-            className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
-          >
-            <div className="w-10 h-10 border-2 border-[#D32F2F] rounded-full overflow-hidden shrink-0">
-              <img
-                className="w-full h-full object-cover"
-                alt="A professional headshot of E. Schmidt."
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGr1GabPuRddQJ5DDQodY0mm-FpKyAbdxG-40JLrOgFIVBSFGynpIMBLwDZl3ySnWeIMNrOrjiXIbIFGz1xdBjkdSM6TJTzOnweEAerX2BuY5Gnc6S9r3E2opIoMcrvKjmgqz7_ZLen6z0ZE1ISc2pPHvuhNXbQdU6YU6UMVFrBmJ07-KuIkgdRCGnD_yjTNxuBwkEPqcILVegDcQXrdgo0akHbD4ZgQEP9zZZY9UXUwsoBkz5TKicnENq_E-K90u1320ZOULkSmaY"
-              />
-            </div>
-            <div className="overflow-hidden">
-              <p className="font-bold text-xs truncate text-white uppercase">E. Schmidt</p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Lead Auditor</p>
-            </div>
+            <span className="material-symbols-outlined text-sm">close</span>
+            Tutup Halaman
           </button>
         </div>
-      </aside>
+      </header>
 
       {/* Main Content Area */}
-      <main className="content-area-main pt-24 pb-12 ml-[220px] px-10 flex flex-col items-center h-screen overflow-y-auto bg-white scroll-container w-[calc(100%-220px)]">
+      <main className="content-area-main w-full max-w-[850px] px-4 md:px-0 py-8 flex flex-col items-center relative">
         
         {/* The PDF Page Simulation Card */}
         <div className="paper-card bg-white border-2 border-[#1A1A1A] max-w-[850px] w-full min-h-[1100px] relative overflow-hidden flex flex-col mb-10 rounded-xl shadow-none shrink-0">
@@ -206,7 +369,7 @@ export default function ReportPreviewPage() {
             </span>
             <div className="text-right">
               <p className="text-[10px] font-label-sm opacity-90 uppercase font-bold tracking-wider">Report Document</p>
-              <p className="font-headline-md text-lg font-bold tracking-tighter">REPORT ID: AI-294-XJ</p>
+              <p className="font-headline-md text-lg font-bold tracking-tighter">REPORT ID: {reportInfo.taskCode}</p>
             </div>
           </div>
 
@@ -220,20 +383,24 @@ export default function ReportPreviewPage() {
               </h3>
               <div className="grid grid-cols-2 gap-y-6 gap-x-12">
                 <div className="border-l-4 border-[#D32F2F] pl-4">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Asset Name / ID</p>
-                  <p className="text-base font-bold text-[#1A1A1A] uppercase">Turbine Assembly Gen-IV (T-800)</p>
+                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Asset Name & Code</p>
+                  <p className="text-base font-bold text-[#1A1A1A] uppercase">
+                    {reportInfo.assetName} ({reportInfo.assetCode})
+                  </p>
                 </div>
                 <div className="border-l-4 border-[#D32F2F] pl-4">
                   <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Lead Technician</p>
-                  <p className="text-base font-bold text-[#1A1A1A] uppercase">Marcus Vance (ID: 8829)</p>
+                  <p className="text-base font-bold text-[#1A1A1A] uppercase">{reportInfo.techName}</p>
                 </div>
                 <div className="border-l-4 border-[#D32F2F] pl-4">
                   <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Date of Inspection</p>
-                  <p className="text-base font-bold text-[#1A1A1A] uppercase">October 24, 2023</p>
+                  <p className="text-base font-bold text-[#1A1A1A] uppercase">{reportInfo.date}</p>
                 </div>
                 <div className="border-l-4 border-[#D32F2F] pl-4">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Maintenance Duration</p>
-                  <p className="text-base font-bold text-[#1A1A1A] uppercase">04h 22m 15s</p>
+                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Asset Location & Category</p>
+                  <p className="text-base font-bold text-[#1A1A1A] uppercase">
+                    {reportInfo.location} • {reportInfo.category}
+                  </p>
                 </div>
               </div>
             </section>
@@ -245,7 +412,7 @@ export default function ReportPreviewPage() {
                   <span className="material-symbols-outlined text-base">edit_note</span>
                   General Technician Notes
                 </h3>
-                <div className="border-2 border-[#1A1A1A] rounded-xl p-4 bg-gray-50 text-xs italic font-medium text-gray-700">
+                <div className="border-2 border-[#1A1A1A] rounded-xl p-4 bg-gray-50 text-xs italic font-medium text-gray-700 whitespace-pre-wrap">
                   "{reportInfo.techNotes}"
                 </div>
               </section>
@@ -261,39 +428,69 @@ export default function ReportPreviewPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-[#1A1A1A] text-white">
-                      <th className="px-4 py-3 font-label-md text-xs font-extrabold uppercase border-r border-white/20">Requirement</th>
+                      <th className="px-4 py-3 font-label-md text-xs font-extrabold uppercase border-r border-white/20">Requirement & Evidence</th>
                       <th className="px-4 py-3 font-label-md text-xs font-extrabold uppercase w-32 text-center border-r border-white/20">Status</th>
                       <th className="px-4 py-3 font-label-md text-xs font-extrabold uppercase">Field Notes</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#1A1A1A] text-xs font-bold uppercase">
-                    <tr className="hover:bg-black/5 transition-colors">
-                      <td className="px-4 py-4 border-r border-[#1A1A1A]">Hydraulic Pressure Calibration</td>
-                      <td className="px-4 py-4 text-center border-r border-[#1A1A1A]">
-                        <span className="inline-flex items-center gap-1 bg-[#D32F2F] text-white px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border-2 border-black">
-                          <span className="material-symbols-outlined text-[10px]" style={{ fontWeight: 900 }}>check_circle</span> PASS
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-xs opacity-70 italic font-medium">Optimal operating range maintained.</td>
-                    </tr>
-                    <tr className="hover:bg-black/5 transition-colors">
-                      <td className="px-4 py-4 border-r border-[#1A1A1A]">Lubrication Viscosity Test</td>
-                      <td className="px-4 py-4 text-center border-r border-[#1A1A1A]">
-                        <span className="inline-flex items-center gap-1 bg-[#D32F2F] text-white px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border-2 border-black">
-                          <span className="material-symbols-outlined text-[10px]" style={{ fontWeight: 900 }}>check_circle</span> PASS
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-xs opacity-70 italic font-medium">Sample clean, no metallic debris found.</td>
-                    </tr>
-                    <tr className="hover:bg-black/5 transition-colors">
-                      <td className="px-4 py-4 border-r border-[#1A1A1A]">Emergency Cut-off Verification</td>
-                      <td className="px-4 py-4 text-center border-r border-[#1A1A1A]">
-                        <span className="inline-flex items-center gap-1 bg-[#D32F2F] text-white px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border-2 border-black">
-                          <span className="material-symbols-outlined text-[10px]" style={{ fontWeight: 900 }}>check_circle</span> PASS
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-xs opacity-70 italic font-medium">Response time &lt; 0.5s. All clear.</td>
-                    </tr>
+                    {reportInfo.checklist.map((item, idx) => (
+                      <tr key={item.item_id || idx} className="hover:bg-black/5 transition-colors">
+                        <td className="px-4 py-4 border-r border-[#1A1A1A] max-w-[280px]">
+                          <p>{item.label}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-1.5 normal-case font-bold">
+                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${
+                              item.type === "urgent" 
+                                ? "bg-red-50 text-red-700 border-red-200" 
+                                : item.type === "required" 
+                                  ? "bg-black text-white border-black" 
+                                  : "bg-gray-100 text-gray-500 border-gray-200"
+                            }`}>
+                              {item.type || "optional"}
+                            </span>
+                            <span className="text-[8px] font-black rounded uppercase tracking-wider bg-gray-50 text-gray-400 border border-gray-200 px-2 py-0.5">
+                              {item.requireImage ? "Photo Req." : "No Photo"}
+                            </span>
+                          </div>
+                          {item.image && (
+                            <div className="mt-3 w-32 h-20 border border-gray-300 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                              <img src={item.image} alt={item.label} className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-center border-r border-[#1A1A1A]">
+                          {(() => {
+                            const status = item.status || (item.checked ? "Pass" : "Awaiting");
+                            let bgColor = "bg-gray-500";
+                            let icon = "hourglass_empty";
+                            if (status === "Pass") {
+                              bgColor = "bg-green-600";
+                              icon = "check_circle";
+                            } else if (status === "AI Processing") {
+                              bgColor = "bg-amber-500";
+                              icon = "psychology";
+                            } else if (status === "Error") {
+                              bgColor = "bg-[#D32F2F]";
+                              icon = "error";
+                            } else if (status === "Awaiting") {
+                              bgColor = "bg-gray-500";
+                              icon = "hourglass_empty";
+                            }
+                            return (
+                              <span className={`inline-flex items-center gap-1 text-white px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border-2 border-black ${bgColor}`}>
+                                <span className="material-symbols-outlined text-[10px]" style={{ fontWeight: 900 }}>
+                                  {icon}
+                                </span>
+                                {status}
+                              </span>
+                            );
+                          })()}
+                        </td>
+                        <td className="px-4 py-4 text-xs opacity-70 italic font-medium leading-relaxed max-w-[200px] break-words">
+                          {item.notes || "-"}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -317,13 +514,13 @@ export default function ReportPreviewPage() {
                         r="58"
                         stroke="#D32F2F"
                         strokeDasharray="364.4"
-                        strokeDashoffset="36.4"
+                        strokeDashoffset={364.4 - (364.4 * reportInfo.aiConfidence) / 100}
                         strokeWidth="12"
                         strokeLinecap="round"
                       ></circle>
                     </svg>
                     <div className="absolute flex flex-col items-center">
-                      <span className="text-3xl font-extrabold text-[#1A1A1A]">90%</span>
+                      <span className="text-3xl font-extrabold text-[#1A1A1A]">{reportInfo.aiConfidence}%</span>
                       <span className="text-[9px] font-black uppercase text-[#1A1A1A] tracking-wider">SCORE</span>
                     </div>
                   </div>
@@ -359,32 +556,26 @@ export default function ReportPreviewPage() {
             </section>
 
             {/* Approval / Rejection Section */}
-            <section className="relative pt-8 pb-12 border-t-2 border-[#1A1A1A] flex justify-between items-end">
+            <section className="relative pt-8 pb-12 border-t-2 border-[#1A1A1A] flex flex-col gap-8">
               
               {/* Approved/Rejected Stamp Watermark */}
               <div
                 className={`absolute right-20 top-2 p-4 text-center border-8 select-none tracking-widest font-black uppercase rounded-lg ${
-                  reportInfo.status === "Rejected"
+                  reportInfo.status === "rejected"
                     ? "border-red-600 text-red-600 rotate-[15deg] opacity-15"
                     : "border-green-600 text-green-600 -rotate-[15deg] opacity-15"
                 }`}
                 style={{ fontSize: "3.5rem" }}
               >
-                {reportInfo.status === "Rejected" ? "REJECTED" : "APPROVED"}
+                {reportInfo.status === "rejected" ? "REJECTED" : "APPROVED"}
               </div>
 
               <div className="space-y-6">
-                <div className="flex flex-col">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Supervisor Name</p>
-                  <p className="text-base font-extrabold border-b-2 border-[#1A1A1A] w-64 mt-2 py-1 uppercase">
-                    {reportInfo.supervisor}
-                  </p>
-                </div>
-                {reportInfo.notes && (
-                  <div className="flex flex-col max-w-sm">
-                    <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Supervisor Notes</p>
+                {reportInfo.supervisorNotes && (
+                  <div className="flex flex-col max-w-2xl">
+                    <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Supervisor Review Notes</p>
                     <p className="text-xs italic bg-black/5 p-3 rounded-lg border border-black mt-2 font-medium">
-                      "{reportInfo.notes}"
+                      "{reportInfo.supervisorNotes}"
                     </p>
                   </div>
                 )}
@@ -396,19 +587,54 @@ export default function ReportPreviewPage() {
                 </div>
               </div>
 
-              <div className="text-right">
-                <div className="flex flex-col items-end">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Final Review Date</p>
-                  <p className="text-base font-black mt-2 uppercase">{reportInfo.date}</p>
+              {/* Dynamic Double Signatures Section */}
+              <div className="grid grid-cols-2 gap-12 mt-6">
+                {/* Vendor Signature */}
+                <div className="flex flex-col items-center text-center p-4 border-2 border-dashed border-[#1A1A1A]/20 rounded-xl bg-gray-50/50">
+                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold mb-4">Vendor Signature</p>
+                  <div className="h-20 flex items-center justify-center mb-2">
+                    {reportInfo.vendorSignature?.startsWith("data:image") ? (
+                      <img 
+                        src={reportInfo.vendorSignature} 
+                        alt="Vendor Signature" 
+                        className="max-h-16 max-w-[180px] object-contain" 
+                      />
+                    ) : reportInfo.vendorSignature ? (
+                      <span className="font-serif italic text-lg text-[#1D4ED8] tracking-widest border-b-2 border-double border-[#1D4ED8] px-4 py-1">
+                        {reportInfo.vendorSignature.replace("digital:", "")}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono opacity-40 uppercase">No signature capture</span>
+                    )}
+                  </div>
+                  <p className="text-xs font-black uppercase text-[#1A1A1A] border-t border-[#1A1A1A] pt-1 w-48">
+                    {reportInfo.techName}
+                  </p>
+                  <p className="text-[9px] font-bold text-gray-400 uppercase mt-0.5">Authorized Operator</p>
                 </div>
-                <div
-                  className={`mt-4 inline-block transform -rotate-12 border-4 px-6 py-2 rounded-xl font-black text-xl uppercase tracking-tighter ${
-                    reportInfo.status === "Rejected"
-                      ? "border-black text-black bg-black/5"
-                      : "border-[#D32F2F] text-[#D32F2F]"
-                  }`}
-                >
-                  {reportInfo.status === "Rejected" ? "REJECTED" : "APPROVED"}
+
+                {/* Supervisor Signature */}
+                <div className="flex flex-col items-center text-center p-4 border-2 border-dashed border-[#1A1A1A]/20 rounded-xl bg-gray-50/50">
+                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold mb-4">Supervisor Signature</p>
+                  <div className="h-20 flex items-center justify-center mb-2">
+                    {reportInfo.supervisorSignature?.startsWith("data:image") ? (
+                      <img 
+                        src={reportInfo.supervisorSignature} 
+                        alt="Supervisor Signature" 
+                        className="max-h-16 max-w-[180px] object-contain" 
+                      />
+                    ) : reportInfo.supervisorSignature ? (
+                      <span className="font-serif italic text-lg text-[#1D4ED8] tracking-widest border-b-2 border-double border-[#1D4ED8] px-4 py-1">
+                        {reportInfo.supervisorSignature.replace("digital:", "")}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono opacity-40 uppercase">No signature capture</span>
+                    )}
+                  </div>
+                  <p className="text-xs font-black uppercase text-[#1A1A1A] border-t border-[#1A1A1A] pt-1 w-48">
+                    {reportInfo.supervisorName}
+                  </p>
+                  <p className="text-[9px] font-bold text-gray-400 uppercase mt-0.5">Lead Auditor / Inspector</p>
                 </div>
               </div>
             </section>
@@ -457,5 +683,18 @@ export default function ReportPreviewPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function ReportPreviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center bg-white text-[#1A1A1A] font-bold uppercase tracking-widest gap-3">
+        <span className="w-5 h-5 rounded-full border-4 border-t-transparent border-[#D32F2F] animate-spin inline-block"></span>
+        Memuat Sistem Cetak Laporan...
+      </div>
+    }>
+      <ReportPreviewContent />
+    </Suspense>
   );
 }

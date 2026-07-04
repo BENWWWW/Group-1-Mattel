@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 interface ToastType {
   id: string;
@@ -11,24 +12,23 @@ interface ToastType {
 
 export default function VendorProfilePage() {
   const router = useRouter();
+  const supabase = createClient();
+
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Toast Notifications State
   const [toasts, setToasts] = useState<ToastType[]>([]);
 
   // Form Fields State
-  const [fullName, setFullName] = useState("Jonathan Shock");
-  const [department, setDepartment] = useState("Electrical & HVAC Operations");
-  const [company, setCompany] = useState("Apex Services Ltd.");
-  const [facility, setFacility] = useState("Factory Complex - All Wings");
-  const [email, setEmail] = useState("j.shock@apex-ops.com");
-  const [phone, setPhone] = useState("+1 (555) 019-2834");
-  const [profilePhoto, setProfilePhoto] = useState(
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBkcXzppBB6fuF01AvoMkYO_AOqmpkcq3D2Vlss7eZ_ZAD8O3zoshCALMS0lGvJ0suvCu7yCme9VBwgGW0_5gWcKdEhZpezn9UL5gM3Q6sFoD1w1AtYSkaBEsK9LvfsRGytarIgnQDyvH4RSrhJ4Uk8QzCn2YYVKs1xbRHYlntioLqTlBA03RqqQrOvg3RDTFG_jhPxbfLxjGwtWXlawO997mjbvuWuGMta8W2b_9-wqNJlv8AsFrQwXO_F27qzdnPfDeWPGD1IuyKP"
-  );
-
-  // Account password (read-only, view-only toggle)
-  const [showAccountPassword, setShowAccountPassword] = useState(false);
-  const ACCOUNT_PASSWORD = "Apex@7721#Secure";
+  const [fullName, setFullName] = useState("");
+  const [department, setDepartment] = useState("");
+  const [company, setCompany] = useState("");
+  const [facility, setFacility] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,14 +41,79 @@ export default function VendorProfilePage() {
     }, 3500);
   };
 
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/");
+        return;
+      }
+
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+
+      setCurrentUser(profile);
+      setFullName(profile.full_name || "");
+      setDepartment(profile.department || "Electrical & HVAC Operations");
+      setCompany(profile.company || "Apex Services Ltd.");
+      setFacility(profile.facility || "Factory Complex - All Wings");
+      setEmail(user.email || "");
+      setPhone(profile.phone || "");
+      setProfilePhoto(profile.avatar_url || "");
+
+    } catch (e: any) {
+      console.error(e);
+      triggerToast("Gagal memuat profil: " + e.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Save General Info Handler
-  const handleSaveGeneralInfo = (e: React.FormEvent) => {
+  const handleSaveGeneralInfo = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !email.trim()) {
-      triggerToast("Full Name and Email are required fields.", "error");
+    if (!fullName.trim()) {
+      triggerToast("Nama Lengkap wajib diisi.", "error");
       return;
     }
-    triggerToast("Vendor Profile Details updated successfully.", "success");
+
+    try {
+      setSaving(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName,
+          department,
+          company,
+          facility,
+          phone,
+          avatar_url: profilePhoto
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+      triggerToast("Profil berhasil diperbarui.", "success");
+      loadProfile();
+    } catch (e: any) {
+      console.error(e);
+      triggerToast("Gagal memperbarui profil: " + e.message, "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Profile Photo Change Helper
@@ -56,28 +121,65 @@ export default function VendorProfilePage() {
     fileInputRef.current?.click();
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePhoto(reader.result as string);
-        triggerToast("Profile picture uploaded successfully.", "success");
-      };
-      reader.readAsDataURL(file);
+      try {
+        triggerToast("Mengunggah foto...", "info");
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${user.id}-${Math.random()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(filePath, file, { cacheControl: "3600", upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+        // Update database right away
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ avatar_url: publicUrl })
+          .eq("id", user.id);
+
+        if (updateError) throw updateError;
+
+        setProfilePhoto(publicUrl);
+        triggerToast("Foto profil berhasil diunggah.", "success");
+        loadProfile();
+      } catch (e: any) {
+        console.error(e);
+        triggerToast("Gagal mengunggah foto: " + e.message, "error");
+      }
     }
   };
 
   // Run Logout simulation
-  const handleLogout = () => {
+  const handleLogout = async () => {
     triggerToast("CLOSING VENDOR TERMINAL...", "info");
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("userRole");
-    }
+    await supabase.auth.signOut();
     setTimeout(() => {
       router.push("/");
     }, 1200);
   };
+
+  const avatarSrc = profilePhoto ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || "V")}&background=D32F2F&color=fff&size=200`;
+
+  if (loading && !currentUser) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat Profil...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md overflow-hidden relative">
@@ -161,12 +263,12 @@ export default function VendorProfilePage() {
               <img
                 alt="Vendor Headshot"
                 className="w-full h-full object-cover"
-                src={profilePhoto}
+                src={avatarSrc}
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">Apex Services</p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #7721</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{fullName || "Apex Services"}</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
         </div>
@@ -195,7 +297,7 @@ export default function VendorProfilePage() {
           <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
             <div className="relative group cursor-pointer" onClick={handlePhotoClick}>
               <div className="w-32 h-32 rounded-full border-4 border-[#D32F2F] overflow-hidden shrink-0 bg-gray-100">
-                <img src={profilePhoto} alt={fullName} className="w-full h-full object-cover" />
+                <img src={avatarSrc} alt={fullName} className="w-full h-full object-cover" />
               </div>
               <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <span className="material-symbols-outlined text-2xl">photo_camera</span>
@@ -213,14 +315,14 @@ export default function VendorProfilePage() {
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                 <h3 className="font-headline-lg text-2xl font-extrabold text-black uppercase">{fullName}</h3>
                 <span className="bg-[#D32F2F] text-white px-3 py-1 rounded-full text-[9px] font-extrabold tracking-widest uppercase">
-                  Vendor Lead
+                  Vendor Partner
                 </span>
               </div>
               <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">
-                Department: {department} | Employee ID: VND-7721-V
+                Department: {department} | Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}
               </p>
               <p className="text-xs text-gray-400 font-medium">
-                Username: <span className="font-bold text-gray-600">apex_vendor_lead</span>
+                Username: <span className="font-bold text-gray-600">{currentUser?.username || "N/A"}</span>
               </p>
               <button
                 onClick={handlePhotoClick}
@@ -294,13 +396,13 @@ export default function VendorProfilePage() {
 
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
-                    Email Address
+                    Email Address (Read Only)
                   </label>
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white border border-[#1A1A1A] rounded-lg p-2.5 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"
+                    disabled
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs font-semibold text-gray-400 cursor-not-allowed"
                   />
                 </div>
 
@@ -319,11 +421,11 @@ export default function VendorProfilePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">
-                      Employee ID (Read Only)
+                      Role (Read Only)
                     </label>
                     <input
                       type="text"
-                      value="VND-7721-V"
+                      value={currentUser?.role || "vendor"}
                       disabled
                       className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs font-semibold text-gray-400 cursor-not-allowed"
                     />
@@ -334,43 +436,19 @@ export default function VendorProfilePage() {
                     </label>
                     <input
                       type="text"
-                      value="apex_vendor_lead"
+                      value={currentUser?.username || "N/A"}
                       disabled
                       className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs font-semibold text-gray-400 cursor-not-allowed"
                     />
                   </div>
                 </div>
 
-                {/* Account Password (View Only) */}
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
-                    Account Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showAccountPassword ? "text" : "password"}
-                      value={ACCOUNT_PASSWORD}
-                      readOnly
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 pr-10 text-xs font-semibold text-gray-600 cursor-default select-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowAccountPassword(!showAccountPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#D32F2F] bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        {showAccountPassword ? "visibility_off" : "visibility"}
-                      </span>
-                    </button>
-                  </div>
-                  <p className="text-[9px] text-gray-400 font-semibold mt-1">Click the eye icon to reveal your account password.</p>
-                </div>
-
                 <button
                   type="submit"
-                  className="w-full bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full py-3 font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors cursor-pointer mt-4"
+                  disabled={saving}
+                  className="w-full bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full py-3 font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors cursor-pointer mt-4 active:scale-95 disabled:opacity-50"
                 >
-                  Save General Info
+                  {saving ? "Menyimpan..." : "Save General Info"}
                 </button>
               </form>
             </section>

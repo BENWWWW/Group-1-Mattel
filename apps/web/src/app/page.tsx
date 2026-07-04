@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 type RoleType = "Admin" | "Vendor" | "Supervisor";
 
@@ -13,18 +14,16 @@ type ToastType = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const supabase = createClient();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Page fade-in
   const [pageOpacity, setPageOpacity] = useState(0);
 
   // Form states
-  const [role, setRole] = useState<RoleType>("Supervisor");
-  const [displayedRole, setDisplayedRole] = useState<RoleType>("Supervisor");
-  const [isSwitching, setIsSwitching] = useState(false);
-
   const [idValue, setIdValue] = useState("");
   const [idError, setIdError] = useState("");
-  const [passwordValue, setPasswordValue] = useState("••••••••••••");
+  const [passwordValue, setPasswordValue] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -33,7 +32,6 @@ export default function LoginPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Modal form states
-  const [modalRole, setModalRole] = useState<RoleType>("Supervisor");
   const [modalId, setModalId] = useState("");
   const [modalIdError, setModalIdError] = useState("");
   const [modalEmail, setModalEmail] = useState("");
@@ -41,7 +39,6 @@ export default function LoginPage() {
   const [modalPhone, setModalPhone] = useState("");
 
   // Inline Forgot form states
-  const [inlineRole, setInlineRole] = useState<RoleType>("Supervisor");
   const [inlineId, setInlineId] = useState("");
   const [inlineIdError, setInlineIdError] = useState("");
   const [inlineEmail, setInlineEmail] = useState("");
@@ -55,16 +52,6 @@ export default function LoginPage() {
     setPageOpacity(1);
   }, []);
 
-  // Handle role transition animation
-  useEffect(() => {
-    setIsSwitching(true);
-    const timer = setTimeout(() => {
-      setDisplayedRole(role);
-      setIsSwitching(false);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [role]);
-
   // Toast helper
   const triggerToast = (message: string, type: "success" | "error" | "info" = "info") => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -74,23 +61,8 @@ export default function LoginPage() {
     }, 4000);
   };
 
-  // Get label and placeholder based on current displayed role
-  const getRoleFields = (currentRole: RoleType) => {
-    switch (currentRole) {
-      case "Admin":
-        return { label: "Admin ID", placeholder: "ADM-001-Z" };
-      case "Vendor":
-        return { label: "Vendor ID", placeholder: "VND-772-K" };
-      case "Supervisor":
-      default:
-        return { label: "Supervisor ID", placeholder: "ENT-992-X" };
-    }
-  };
-
-  const fields = getRoleFields(displayedRole);
-
-  // Handle Login Submit
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  // Handle Login Submit — connected to Supabase Auth
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let valid = true;
 
@@ -113,24 +85,63 @@ export default function LoginPage() {
       return;
     }
 
-
-    // Success simulation
+    setIsLoading(true);
     triggerToast("INITIALIZING SECURE SESSION...", "info");
-    setTimeout(() => {
-      triggerToast(`WELCOME BACK, ${role === "Vendor" ? "APEX SERVICES" : role.toUpperCase()}! SESSION ACTIVE.`, "success");
-      if (typeof window !== "undefined") {
-        localStorage.setItem("userRole", role);
+
+    try {
+      // 1. Look up the profile by employee_id to find role and registered email
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("email, full_name, role")
+        .eq("employee_id", idValue.trim())
+        .eq("is_active", true)
+        .single();
+
+      if (profileError || !profileData) {
+        triggerToast("ID NOT FOUND OR ACCOUNT DEACTIVATED.", "error");
+        setIdError("Invalid Employee ID.");
+        setIsLoading(false);
+        return;
       }
+
+      // 2. Sign in with resolved email + password
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: profileData.email,
+        password: passwordValue,
+      });
+
+      if (authError || !authData.user) {
+        triggerToast("AUTHENTICATION FAILED. CHECK YOUR PASSWORD.", "error");
+        setPasswordError("Incorrect password.");
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Store role in localStorage for client-side nav guards
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userRole", profileData.role);
+        localStorage.setItem("userName", profileData.full_name);
+      }
+
+      triggerToast(`WELCOME BACK, ${profileData.full_name.toUpperCase()}! SESSION ACTIVE.`, "success");
+
+      // 4. Role-based redirect
       setTimeout(() => {
-        if (role === "Vendor") {
+        if (profileData.role === "vendor") {
           router.push("/vendor");
-        } else if (role === "Supervisor") {
+        } else if (profileData.role === "supervisor") {
           router.push("/supervisor/dashboard");
         } else {
           router.push("/admin/dashboard");
         }
       }, 1000);
-    }, 1200);
+
+    } catch (err) {
+      console.error("Login error:", err);
+      triggerToast("SYSTEM ERROR. PLEASE TRY AGAIN.", "error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -224,45 +235,18 @@ export default function LoginPage() {
                   </p>
                 </header>
 
-                <form className="space-y-stack-md" onSubmit={handleLoginSubmit}>
-                  {/* Role Dropdown */}
-                  <div className="relative">
-                    <label className="block font-label-md text-label-md text-on-surface mb-2 uppercase">
-                      Role Identification
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value as RoleType)}
-                        className="w-full bg-white industrial-border rounded-[20px] py-4 px-6 appearance-none font-body-md focus:ring-0 focus:outline-none cursor-pointer text-on-surface pr-10"
-                      >
-                        <option value="Admin">Admin</option>
-                        <option value="Vendor">Vendor</option>
-                        <option value="Supervisor">Supervisor</option>
-                      </select>
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface flex items-center">
-                        <span className="material-symbols-outlined">arrow_drop_down</span>
-                      </div>
-                    </div>
-                  </div>
-
+                 <form className="space-y-stack-md" onSubmit={handleLoginSubmit}>
                   {/* ID Field */}
                   <div>
-                    <label
-                      className={`block font-label-md text-label-md text-on-surface mb-2 uppercase content-transition ${
-                        isSwitching ? "switching" : ""
-                      }`}
-                    >
-                      {fields.label}
+                    <label className="block font-label-md text-label-md text-on-surface mb-2 uppercase">
+                      Employee ID
                     </label>
                     <input
                       type="text"
                       value={idValue}
                       onChange={(e) => setIdValue(e.target.value)}
-                      placeholder={fields.placeholder}
-                      className={`w-full bg-white industrial-border rounded-[20px] py-4 px-6 font-body-md focus:ring-0 focus:outline-none placeholder:text-on-surface placeholder:opacity-30 text-on-surface content-transition ${
-                        isSwitching ? "switching" : ""
-                      } ${idError ? "border-primary" : ""}`}
+                      placeholder="e.g. ADM-001-Z, VND-772-K, ENT-992-X"
+                      className={`w-full bg-white industrial-border rounded-[20px] py-4 px-6 font-body-md focus:ring-0 focus:outline-none placeholder:text-on-surface placeholder:opacity-30 text-on-surface ${idError ? "border-primary" : ""}`}
                     />
                     {idError && <p className="text-primary text-xs mt-1 font-label-sm">{idError}</p>}
                   </div>
@@ -300,10 +284,20 @@ export default function LoginPage() {
                   <div className="pt-4">
                     <button
                       type="submit"
-                      className="w-full bg-primary text-white py-5 rounded-[20px] font-headline-md text-headline-md flex items-center justify-center gap-stack-sm hover:brightness-110 transition-all active:scale-[0.98] industrial-border border-primary cursor-pointer"
+                      disabled={isLoading}
+                      className="w-full bg-primary text-white py-5 rounded-[20px] font-headline-md text-headline-md flex items-center justify-center gap-stack-sm hover:brightness-110 transition-all active:scale-[0.98] industrial-border border-primary cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      INITIALIZE SESSION
-                      <span className="material-symbols-outlined">arrow_forward</span>
+                      {isLoading ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                          AUTHENTICATING...
+                        </>
+                      ) : (
+                        <>
+                          INITIALIZE SESSION
+                          <span className="material-symbols-outlined">arrow_forward</span>
+                        </>
+                      )}
                     </button>
                   </div>
 
@@ -324,33 +318,13 @@ export default function LoginPage() {
                 <form className="space-y-stack-md" onSubmit={(e) => { e.preventDefault(); handleInlineSubmit(); }}>
                   <div>
                     <label className="block font-label-md text-label-md text-on-surface mb-2 uppercase">
-                      Role Identification
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={inlineRole}
-                        onChange={(e) => setInlineRole(e.target.value as RoleType)}
-                        className="w-full bg-white industrial-border rounded-[20px] py-4 px-6 appearance-none font-body-md focus:ring-0 focus:outline-none cursor-pointer text-on-surface pr-10"
-                      >
-                        <option value="Admin">Admin</option>
-                        <option value="Vendor">Vendor</option>
-                        <option value="Supervisor">Supervisor</option>
-                      </select>
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface flex items-center">
-                        <span className="material-symbols-outlined">arrow_drop_down</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-label-md text-label-md text-on-surface mb-2 uppercase">
                       Employee / Vendor ID
                     </label>
                     <input
                       type="text"
                       value={inlineId}
                       onChange={(e) => setInlineId(e.target.value)}
-                      placeholder={getRoleFields(inlineRole).placeholder}
+                      placeholder="e.g. ADM-001-Z, VND-772-K, ENT-992-X"
                       className={`w-full bg-white industrial-border rounded-[20px] py-4 px-6 font-body-md focus:ring-0 focus:outline-none placeholder:text-on-surface placeholder:opacity-30 text-on-surface ${
                         inlineIdError ? "border-primary" : ""
                       }`}

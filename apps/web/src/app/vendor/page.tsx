@@ -2,10 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 // Define Task interface matching the industrial requirements
 interface Task {
   id: string;
+  dbId?: string;
+  dbStatus?: string;
   title: string;
   priority: "High" | "Normal";
   status: "Active" | "Pending" | "Completed";
@@ -18,74 +21,6 @@ interface Task {
   icon: string;
 }
 
-const INITIAL_TASKS: Task[] = [
-  {
-    id: "TK-8021",
-    title: "HVAC Filter Maintenance",
-    priority: "High",
-    status: "Active",
-    location: "Main Terminal - Sector G4",
-    due: "Oct 24, 2026 (14:00)",
-    category: "HVAC",
-    confidence: "HIGH CONFIDENCE",
-    techs: ["JD", "AK"],
-    time: "1 hour ago",
-    icon: "air",
-  },
-  {
-    id: "TK-7945",
-    title: "Emergency Exit Light Testing",
-    priority: "Normal",
-    status: "Pending",
-    location: "All Exit Points - Floor 1-3",
-    due: "Oct 26, 2026 (09:00)",
-    category: "Safety",
-    confidence: "HIGH CONFIDENCE",
-    techs: ["JD", "MC"],
-    time: "2 hours ago",
-    icon: "exit_to_app",
-  },
-  {
-    id: "TK-7832",
-    title: "Conveyor Belt Lubrication",
-    priority: "High",
-    status: "Active",
-    location: "Mechanical Room B - Sublevel 1",
-    due: "Oct 24, 2026 (16:30)",
-    category: "Mechanical",
-    confidence: "HIGH CONFIDENCE",
-    techs: ["JD", "RC"],
-    time: "3 hours ago",
-    icon: "oil_barrel",
-  },
-  {
-    id: "TK-7611",
-    title: "Main Breaker Thermal Scan",
-    priority: "Normal",
-    status: "Completed",
-    location: "Substation B - Assembly Area 2",
-    due: "Oct 23, 2026 (11:00)",
-    category: "Electrical",
-    confidence: "LOW CONFIDENCE",
-    techs: ["DM"],
-    time: "Completed yesterday",
-    icon: "bolt",
-  },
-  {
-    id: "TK-7422",
-    title: "Fire Damper Inspection",
-    priority: "Normal",
-    status: "Completed",
-    location: "Sector 7G - Administrative Block",
-    due: "Oct 22, 2026 (15:00)",
-    category: "Safety",
-    confidence: "HIGH CONFIDENCE",
-    techs: ["JW"],
-    time: "Completed 2 days ago",
-    icon: "fire_extinguisher",
-  },
-];
-
 interface Toast {
   id: string;
   message: string;
@@ -94,9 +29,20 @@ interface Toast {
 
 export default function VendorDashboardPage() {
   const router = useRouter();
+  const supabase = createClient();
 
-  // Tasks state
-  const [tasks] = useState<Task[]>(INITIAL_TASKS);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Statistics state
+  const [stats, setStats] = useState({
+    activeCount: 0,
+    pendingCount: 0,
+    completedCount: 0,
+    awaitingStartCount: 0,
+    complianceScore: "100%"
+  });
 
   // Notifications Toast state
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -110,21 +56,148 @@ export default function VendorDashboardPage() {
     }, 4000);
   };
 
-  // Run Logout simulation
-  const handleLogout = () => {
-    triggerToast("CLOSING VENDOR TERMINAL...", "info");
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("userRole");
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/");
+        return;
+      }
+
+      // Fetch Profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      
+      setCurrentUser(profile);
+
+      // Fetch Tasks assigned to this Vendor
+      const { data: tasksData, error } = await supabase
+        .from("pm_tasks")
+        .select(`
+          id,
+          task_code,
+          priority,
+          status,
+          due_date,
+          created_at,
+          assets (
+            name,
+            category,
+            location
+          ),
+          pm_reports (
+            ai_confidence_score
+          )
+        `)
+        .eq("assigned_vendor_id", user.id);
+
+      if (error) throw error;
+
+      // Transform data
+      const list: Task[] = (tasksData || []).map((t: any) => {
+        const reportsList = t.pm_reports;
+        const firstReport = Array.isArray(reportsList) && reportsList.length > 0 ? reportsList[0] : null;
+        const score = firstReport?.ai_confidence_score || 90;
+        let confStr: "HIGH CONFIDENCE" | "MEDIUM CONFIDENCE" | "LOW CONFIDENCE" = "HIGH CONFIDENCE";
+        if (score < 50) confStr = "LOW CONFIDENCE";
+        else if (score < 80) confStr = "MEDIUM CONFIDENCE";
+
+        let statusStr: "Active" | "Pending" | "Completed" = "Active";
+        if (t.status === "pending" || t.status === "submitted") {
+          statusStr = "Pending";
+        } else if (t.status === "approved" || t.status === "completed") {
+          statusStr = "Completed";
+        } else if (t.status === "in_progress" || t.status === "rejected") {
+          statusStr = "Active";
+        }
+
+        const categoryMapped = t.assets?.category || "Mechanical";
+
+        return {
+          id: t.task_code || `TK-${t.id.substring(0, 4).toUpperCase()}`,
+          dbId: t.id,
+          dbStatus: t.status,
+          title: t.assets?.name || "PM Maintenance",
+          priority: t.priority === "high" ? "High" : "Normal",
+          status: statusStr,
+          location: t.assets?.location || "Main Plant",
+          due: t.due_date ? new Date(t.due_date).toLocaleDateString() : "No Due Date",
+          category: categoryMapped,
+          confidence: confStr,
+          techs: [profile?.full_name || "Vendor Tech"],
+          time: new Date(t.created_at).toLocaleDateString(),
+          icon: categoryMapped === "Electrical" ? "bolt" : categoryMapped === "HVAC" ? "air" : "settings"
+        };
+      });
+
+      setTasks(list);
+
+      // Calculate stats
+      const active = (tasksData || []).filter((t: any) => t.status === "in_progress" || t.status === "rejected").length;
+      const pendingReview = (tasksData || []).filter((t: any) => t.status === "submitted").length;
+      const completed = (tasksData || []).filter((t: any) => t.status === "approved" || t.status === "completed").length;
+      const awaitingStart = (tasksData || []).filter((t: any) => t.status === "pending").length;
+
+      // Calculate average compliance score based on reports ai_confidence_score
+      const scoredReports = (tasksData || []).filter((t: any) => {
+        const rep = Array.isArray(t.pm_reports) && t.pm_reports.length > 0 ? t.pm_reports[0] : null;
+        return rep && rep.ai_confidence_score !== undefined;
+      });
+      const avgCompliance = scoredReports.length > 0
+        ? Math.round(scoredReports.reduce((acc: number, curr: any) => {
+            const rep = curr.pm_reports[0];
+            return acc + (rep.ai_confidence_score || 0);
+          }, 0) / scoredReports.length)
+        : 100;
+
+      setStats({
+        activeCount: active,
+        pendingCount: pendingReview,
+        completedCount: completed,
+        awaitingStartCount: awaitingStart,
+        complianceScore: `${avgCompliance}%`
+      });
+
+    } catch (e: any) {
+      console.error(e);
+      triggerToast("Failed to load dashboard data: " + e.message, "error");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLogout = async () => {
+    triggerToast("CLOSING VENDOR TERMINAL...", "info");
+    await supabase.auth.signOut();
     setTimeout(() => {
       router.push("/");
     }, 1200);
   };
 
-  // Calculate dynamic stats
-  const activeCount = tasks.filter((t) => t.status === "Active").length;
-  const pendingCount = tasks.filter((t) => t.status === "Pending").length;
-  const completedCount = tasks.filter((t) => t.status === "Completed").length;
+  const awaitingStartTasks = tasks.filter(t => t.dbStatus === "pending");
+
+  const avatarSrc = currentUser?.avatar_url || 
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || "Apex Services")}&background=D32F2F&color=fff&size=200`;
+
+  if (loading && tasks.length === 0) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -210,12 +283,12 @@ export default function VendorDashboardPage() {
               <img
                 alt="Vendor Headshot"
                 className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkcXzppBB6fuF01AvoMkYO_AOqmpkcq3D2Vlss7eZ_ZAD8O3zoshCALMS0lGvJ0suvCu7yCme9VBwgGW0_5gWcKdEhZpezn9UL5gM3Q6sFoD1w1AtYSkaBEsK9LvfsRGytarIgnQDyvH4RSrhJ4Uk8QzCn2YYVKs1xbRHYlntioLqTlBA03RqqQrOvg3RDTFG_jhPxbfLxjGwtWXlawO997mjbvuWuGMta8W2b_9-wqNJlv8AsFrQwXO_F27qzdnPfDeWPGD1IuyKP"
+                src={avatarSrc}
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">Apex Services</p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #7721</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Apex Services"}</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
         </div>
@@ -243,7 +316,7 @@ export default function VendorDashboardPage() {
           <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
             <img
               className="w-full h-full object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkcXzppBB6fuF01AvoMkYO_AOqmpkcq3D2Vlss7eZ_ZAD8O3zoshCALMS0lGvJ0suvCu7yCme9VBwgGW0_5gWcKdEhZpezn9UL5gM3Q6sFoD1w1AtYSkaBEsK9LvfsRGytarIgnQDyvH4RSrhJ4Uk8QzCn2YYVKs1xbRHYlntioLqTlBA03RqqQrOvg3RDTFG_jhPxbfLxjGwtWXlawO997mjbvuWuGMta8W2b_9-wqNJlv8AsFrQwXO_F27qzdnPfDeWPGD1IuyKP"
+              src={avatarSrc}
               alt="User Profile"
             />
           </div>
@@ -257,10 +330,10 @@ export default function VendorDashboardPage() {
           {/* Stats Overview Grid (Adapted from Admin Dashboard style) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: "Active Tasks", value: activeCount, icon: "assignment", delta: "Assigned to your shift" },
-              { label: "Pending Review", value: pendingCount, icon: "schedule", delta: "Awaiting supervisor signoff" },
-              { label: "Completed Tasks", value: completedCount, icon: "check_circle", delta: "Archived this week" },
-              { label: "Compliance Score", value: "98%", icon: "verified", delta: "Nominal rating grade A" },
+              { label: "Active Tasks", value: stats.activeCount, icon: "assignment", delta: `${stats.awaitingStartCount} awaiting start` },
+              { label: "Pending Review", value: stats.pendingCount, icon: "schedule", delta: "Awaiting supervisor signoff" },
+              { label: "Completed Tasks", value: stats.completedCount, icon: "check_circle", delta: "Archived this week" },
+              { label: "Compliance Score", value: stats.complianceScore, icon: "verified", delta: "Nominal rating grade A" },
             ].map((stat) => (
               <div key={stat.label} className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 flex flex-col justify-between">
                 <div className="flex justify-between items-start">
@@ -273,6 +346,77 @@ export default function VendorDashboardPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Awaiting Start Tasks Panel */}
+          <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-extrabold uppercase tracking-tight text-[#1A1A1A]">
+                  Awaiting Start ({awaitingStartTasks.length})
+                </h3>
+                <p className="text-xs text-gray-500 uppercase font-bold tracking-wide mt-0.5">
+                  Tasks assigned to you that have not been started yet
+                </p>
+              </div>
+              <span className="material-symbols-outlined text-gray-400">pending_actions</span>
+            </div>
+
+            {awaitingStartTasks.length === 0 ? (
+              <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-[16px] text-gray-400 font-bold uppercase tracking-wider text-xs">
+                <span className="material-symbols-outlined text-4xl block mb-2 opacity-30 text-[#D32F2F]">check_circle</span>
+                All tasks have been started or completed.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {awaitingStartTasks.map((task) => (
+                  <div key={task.dbId} className="border-2 border-[#1A1A1A] hover:border-[#D32F2F] rounded-[16px] p-5 flex flex-col justify-between transition-all group bg-gray-50/50">
+                    <div className="flex justify-between items-start gap-2 mb-4">
+                      <div>
+                        <span className="inline-block text-[9px] font-black uppercase px-2 py-0.5 bg-[#1A1A1A] text-white rounded border border-black mb-2 tracking-wide">
+                          {task.id}
+                        </span>
+                        <h4 className="font-extrabold text-base uppercase tracking-tight text-[#1A1A1A]">
+                          {task.title}
+                        </h4>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-500 font-bold">
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">category</span>
+                            {task.category}
+                          </span>
+                          <span className="text-gray-300">•</span>
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">location_on</span>
+                            {task.location}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {task.priority === "High" && (
+                        <span className="text-[9px] font-extrabold uppercase px-2.5 py-0.5 bg-[#D32F2F] text-white rounded-[12px] border-none animate-pulse">
+                          HIGH PRIORITY
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-200 mt-auto">
+                      <div className="text-left">
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Due Date</p>
+                        <p className="text-xs font-black text-[#1a1a1a]">{task.due}</p>
+                      </div>
+
+                      <button
+                        onClick={() => router.push(`/vendor/tasks?taskId=${task.dbId}`)}
+                        className="bg-[#D32F2F] hover:bg-[#1A1A1A] text-white transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-[10px] uppercase tracking-wider cursor-pointer border-none"
+                      >
+                        <span>Start Work</span>
+                        <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Quick Access Panel (Adapted from Admin Dashboard style) */}

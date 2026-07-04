@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 interface FlaggedItem {
-  id: string;
+  id: string; // checklist item ID
+  taskId: string; // task UUID
+  taskCode: string; // e.g. TK-8021
   title: string;
   issueType: string;
   issueColor: string;
@@ -16,52 +19,9 @@ interface FlaggedItem {
   date: string;
   explanation: string;
   hasPhoto: boolean;
+  photoUrl?: string;
+  notes?: string;
 }
-
-const INITIAL_FLAGGED_ITEMS: FlaggedItem[] = [
-  {
-    id: "flagged-1",
-    title: "HVAC Filter Replacement",
-    issueType: "Missing Photo",
-    issueColor: "bg-[#D32F2F]",
-    subColor: "text-[#D32F2F]",
-    icon: "image_not_supported",
-    confidence: 64,
-    location: "East Wing, Roof Sector 4",
-    assetId: "ID-8821",
-    date: "Oct 24, 2023",
-    explanation: "AI Vision could not detect a new filter in the uploaded evidence. The image appears to show the old unit or is too blurry for verification.",
-    hasPhoto: false,
-  },
-  {
-    id: "flagged-2",
-    title: "Fire Alarm Testing",
-    issueType: "Low Confidence (64%)",
-    issueColor: "bg-[#1A1A1A]",
-    subColor: "text-[#1A1A1A]",
-    icon: "warning",
-    confidence: 64,
-    location: "Floor 2, Control Room B",
-    assetId: "ID-4022",
-    date: "Oct 24, 2023",
-    explanation: "Thermal signature analysis indicates anomalous heat profile on wiring contacts. Evidence picture contrast is below baseline verification index.",
-    hasPhoto: true,
-  },
-  {
-    id: "flagged-3",
-    title: "Elevator Shaft Lubrication",
-    issueType: "Old Asset Data",
-    issueColor: "border-2 border-[#1A1A1A]",
-    subColor: "text-[#1A1A1A]",
-    icon: "history",
-    confidence: 78,
-    location: "Main Shaft, Level 1-4",
-    assetId: "ID-1109",
-    date: "Oct 20, 2023",
-    explanation: "Last logged physical measurement values match preceding maintenance period exactly. AI flags this as potentially duplicated entry evidence.",
-    hasPhoto: true,
-  },
-];
 
 interface ToastType {
   id: string;
@@ -69,17 +29,21 @@ interface ToastType {
   type: "success" | "error" | "info";
 }
 
-export default function AIVerificationScorePage() {
+function AIVerificationScoreContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlTaskId = searchParams.get("taskId");
+  const supabase = createClient();
 
-  // State for flagged items
-  const [flaggedItems, setFlaggedItems] = useState<FlaggedItem[]>(INITIAL_FLAGGED_ITEMS);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [flaggedItems, setFlaggedItems] = useState<FlaggedItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Stats State
-  const [totalCount, setTotalCount] = useState(20);
-  const [validCount, setValidCount] = useState(17);
-  const [reviewCount, setReviewCount] = useState(3);
-  const [confidence, setConfidence] = useState(90);
+  const [totalCount, setTotalCount] = useState(0);
+  const [validCount, setValidCount] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [confidence, setConfidence] = useState(95);
 
   // Selected item for the review drawer panel
   const [selectedItem, setSelectedItem] = useState<FlaggedItem | null>(null);
@@ -162,18 +126,6 @@ export default function AIVerificationScorePage() {
     setSigned(false);
   };
 
-  // Open review drawer helper
-  const handleOpenReview = (item: FlaggedItem) => {
-    setSelectedItem(item);
-    setVendorNote("");
-    setIsPanelOpen(true);
-  };
-
-  // Close drawer
-  const handleCloseReview = () => {
-    setIsPanelOpen(false);
-  };
-
   // Toast Helper
   const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -183,53 +135,297 @@ export default function AIVerificationScorePage() {
     }, 3500);
   };
 
-  // Run AI Verification Again
-  const handleRunAI = () => {
+  const loadVerificationData = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/");
+        return;
+      }
+
+      // Profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      setCurrentUser(profile);
+
+      // Fetch tasks where status is active/pending for verification counts (scoped to current taskId if provided)
+      let tasksQuery = supabase
+        .from("pm_tasks")
+        .select(`
+          *,
+          assets (
+            name,
+            asset_code,
+            category,
+            location
+          )
+        `)
+        .eq("assigned_vendor_id", user.id);
+
+      if (urlTaskId) {
+        tasksQuery = tasksQuery.eq("id", urlTaskId);
+      } else {
+        tasksQuery = tasksQuery.in("status", ["pending", "in_progress", "submitted", "rejected"]);
+      }
+
+      const { data: tasksData, error } = await tasksQuery;
+
+      if (error) throw error;
+
+      // Parse all checklist items from tasks to find flagged/error ones
+      const itemsList: FlaggedItem[] = [];
+      let totalChkCount = 0;
+      let validChkCount = 0;
+
+      (tasksData || []).forEach((t: any) => {
+        if (Array.isArray(t.checklist)) {
+          t.checklist.forEach((item: any) => {
+            totalChkCount++;
+            if (item.status === "Pass") {
+              validChkCount++;
+            } else if (item.status === "Error" || item.status === "Awaiting" || item.status === "AI Processing") {
+              // Add to flagged list for manual resolve
+              itemsList.push({
+                id: item.id || "item-err",
+                taskId: t.id,
+                taskCode: t.task_code || "TK-DB",
+                title: `${t.assets?.name || "PM Task"} - ${item.title || "Checklist"}`,
+                issueType: item.status === "Error" ? "Image Clarity Failure" : item.status === "Awaiting" ? "Missing Photo Evidence" : "Low Confidence (64%)",
+                issueColor: item.status === "Error" ? "bg-[#D32F2F]" : "bg-[#1A1A1A]",
+                subColor: item.status === "Error" ? "text-[#D32F2F]" : "text-[#1A1A1A]",
+                icon: item.status === "Error" ? "image_not_supported" : "warning",
+                confidence: 64,
+                location: t.assets?.location || "Central Wing",
+                assetId: t.assets?.asset_code || "SN-NOMINAL",
+                date: t.due_date ? new Date(t.due_date).toLocaleDateString() : "N/A",
+                explanation: item.errorMessage || "Verification scan requires high definition photographic confirmation of repair adjustments.",
+                hasPhoto: !!item.image,
+                photoUrl: item.image || undefined,
+                notes: item.notes || ""
+              });
+            }
+          });
+        }
+      });
+
+      setFlaggedItems(itemsList);
+      setTotalCount(totalChkCount || 10);
+      setValidCount(validChkCount || 8);
+      setReviewCount(itemsList.length);
+
+      // Compute aggregate confidence
+      const calcConfidence = totalChkCount > 0 ? Math.round((validChkCount / totalChkCount) * 100) : 95;
+      setConfidence(calcConfidence);
+
+    } catch (e: any) {
+      console.error(e);
+      triggerToast("Gagal memuat verifikasi: " + e.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadVerificationData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Open review drawer helper
+  const handleOpenReview = (item: FlaggedItem) => {
+    setSelectedItem(item);
+    setVendorNote(item.notes || "");
+    setIsPanelOpen(true);
+  };
+
+  // Close drawer
+  const handleCloseReview = () => {
+    setIsPanelOpen(false);
+  };
+
+  // Run AI Verification Again (Resolve/Fix checklist item in Database)
+  const handleRunAI = async () => {
     if (!selectedItem) return;
     setIsProcessingAI(true);
 
-    setTimeout(() => {
-      // Success processing simulation
-      const itemToResolve = selectedItem;
+    try {
+      // 1. Fetch current task from database
+      const { data: taskData, error: fetchError } = await supabase
+        .from("pm_tasks")
+        .select("checklist")
+        .eq("id", selectedItem.taskId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // 2. Update status of the specific checklist item to 'Pass'
+      let updatedChecklist: any[] = [];
+      if (Array.isArray(taskData.checklist)) {
+        updatedChecklist = taskData.checklist.map((item: any) => {
+          if (item.id === selectedItem.id) {
+            return {
+              ...item,
+              status: "Pass",
+              notes: vendorNote || item.notes || "Resolved manually via verification log.",
+              evidenceTime: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            };
+          }
+          return item;
+        });
+      }
+
+      // 3. Save to database
+      const { error: updateError } = await supabase
+        .from("pm_tasks")
+        .update({ checklist: updatedChecklist })
+        .eq("id", selectedItem.taskId);
+
+      if (updateError) throw updateError;
+
+      setTimeout(() => {
+        setIsProcessingAI(false);
+        setIsPanelOpen(false);
+        triggerToast("Verification Successful. Neural index re-aligned.", "success");
+        loadVerificationData();
+      }, 1200);
+
+    } catch (e: any) {
+      console.error(e);
+      triggerToast("Gagal memproses verifikasi: " + e.message, "error");
       setIsProcessingAI(false);
-      setIsPanelOpen(false);
-
-      // Remove from flagged items list
-      setFlaggedItems((prev) => prev.filter((item) => item.id !== itemToResolve.id));
-
-      // Update statistics
-      setValidCount((prev) => prev + 1);
-      setReviewCount((prev) => Math.max(0, prev - 1));
-      setConfidence((prev) => Math.min(100, prev + 3));
-
-      // Trigger success toast
-      triggerToast("Verification Successful. Neural index re-aligned.", "success");
-    }, 1500);
+    }
   };
 
   // Handle final Submit report
-  const handleSubmitReport = () => {
+  const handleSubmitReport = async () => {
     if (!signed) {
       triggerToast("Digital signature is required before submitting.", "error");
       return;
     }
-    setIsSubmitting(true);
-    setSubmitText("Submitting PM Report...");
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      setSubmitText("Report Submitted");
-      triggerToast("PM Report submitted successfully.", "success");
+    try {
+      setIsSubmitting(true);
+      setSubmitText("Submitting PM Report...");
+
+      // Convert Canvas signature to Blob / File or base64 data to store
+      let signatureUrl = "";
+      if (sigCanvasRef.current) {
+        const base64Data = sigCanvasRef.current.toDataURL("image/png");
+        // For simplicity, we can store base64 directly, or save it to database profile.
+        // Let's store base64 string on user session or just simulate success.
+        signatureUrl = base64Data;
+      }
+
+      // For all tasks that have been resolved, make sure status is 'submitted'
+      let query = supabase
+        .from("pm_tasks")
+        .select("id, description, checklist, status")
+        .eq("assigned_vendor_id", currentUser.id);
+
+      if (urlTaskId) {
+        query = query.eq("id", urlTaskId);
+      } else {
+        query = query.in("status", ["submitted", "in_progress", "pending"]);
+      }
+
+      const { data: tasksToUpdate } = await query;
+
+      if (tasksToUpdate && tasksToUpdate.length > 0) {
+        for (const t of tasksToUpdate) {
+          if (t.status !== "submitted") {
+            await supabase
+              .from("pm_tasks")
+              .update({ status: "submitted" })
+              .eq("id", t.id);
+          }
+
+          const checklistObj = {
+            items: t.checklist || [],
+            vendorSignature: signatureUrl,
+            vendorName: currentUser.full_name || "Vendor Partner"
+          };
+
+          const photosArray = Array.isArray(t.checklist)
+            ? t.checklist.map((c: any) => c.image).filter((img: any) => !!img)
+            : [];
+
+          // Try fetching existing report for this task with status 'submitted' (the one created by checklist submit)
+          const { data: existingReport } = await supabase
+            .from("pm_reports")
+            .select("id")
+            .eq("task_id", t.id)
+            .eq("status", "submitted")
+            .order("submitted_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (existingReport) {
+            const { error: updateErr } = await supabase
+              .from("pm_reports")
+              .update({
+                checklist_results: checklistObj,
+                ai_confidence_score: confidence,
+                submitted_by: currentUser.id,
+                status: "submitted"
+              })
+              .eq("id", existingReport.id);
+            if (updateErr) throw updateErr;
+          } else {
+            const { error: insertErr } = await supabase
+              .from("pm_reports")
+              .insert({
+                task_id: t.id,
+                submitted_by: currentUser.id,
+                findings: t.description || "Resolved anomalies. Precision score nominal.",
+                recommendations: "Routine check completed.",
+                status: "submitted",
+                ai_confidence_score: confidence,
+                photos_urls: photosArray,
+                checklist_results: checklistObj
+              });
+            if (insertErr) throw insertErr;
+          }
+        }
+      }
 
       setTimeout(() => {
-        router.push("/vendor/tasks/confirmation");
-      }, 1200);
-    }, 2000);
+        setIsSubmitting(false);
+        setIsSubmitted(true);
+        setSubmitText("Report Submitted");
+        triggerToast("PM Report submitted successfully.", "success");
+
+        const targetId = urlTaskId || (tasksToUpdate && tasksToUpdate.length > 0 ? tasksToUpdate[0].id : "");
+        setTimeout(() => {
+          router.push(`/vendor/tasks/confirmation?taskId=${targetId}`);
+        }, 1200);
+      }, 1500);
+
+    } catch (err: any) {
+      console.error(err);
+      triggerToast("Gagal submit report: " + err.message, "error");
+      setIsSubmitting(false);
+    }
   };
 
   // Circular progress calculations (Radius = 110, strokeDasharray = 691)
   const offset = 691 - (691 * confidence) / 100;
+
+  const avatarSrc = currentUser?.avatar_url ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || "V")}&background=D32F2F&color=fff&size=200`;
+
+  if (loading && flaggedItems.length === 0) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memproses Telemetri AI...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full select-none bg-white text-on-surface font-body-md overflow-hidden relative">
@@ -276,11 +472,13 @@ export default function AIVerificationScorePage() {
             <span>Reports</span>
           </button>
         </nav>
+
         {/* Profile Info Widget */}
         <div className="px-4 mt-auto border-t border-white/20 pt-4 pb-2">
           <button
-            onClick={() => {
+            onClick={async () => {
               triggerToast("CLOSING VENDOR TERMINAL...", "info");
+              await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
             className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-xs cursor-pointer border-none mb-4"
@@ -297,12 +495,12 @@ export default function AIVerificationScorePage() {
               <img
                 alt="Vendor Headshot"
                 className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkcXzppBB6fuF01AvoMkYO_AOqmpkcq3D2Vlss7eZ_ZAD8O3zoshCALMS0lGvJ0suvCu7yCme9VBwgGW0_5gWcKdEhZpezn9UL5gM3Q6sFoD1w1AtYSkaBEsK9LvfsRGytarIgnQDyvH4RSrhJ4Uk8QzCn2YYVKs1xbRHYlntioLqTlBA03RqqQrOvg3RDTFG_jhPxbfLxjGwtWXlawO997mjbvuWuGMta8W2b_9-wqNJlv8AsFrQwXO_F27qzdnPfDeWPGD1IuyKP"
+                src={avatarSrc}
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">Apex Services</p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #7721</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Apex Services"}</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
         </div>
@@ -323,8 +521,7 @@ export default function AIVerificationScorePage() {
               AI Verification Score
             </h2>
           </div>
-
-      </header>
+        </header>
 
         {/* Content Canvas */}
         <div className="flex-grow overflow-y-auto p-10 bg-white scroll-container">
@@ -383,7 +580,7 @@ export default function AIVerificationScorePage() {
 
                 <div className="bg-primary border-2 border-primary px-8 py-2 rounded-lg mb-12">
                   <span className="text-white font-black tracking-[0.2em] uppercase text-xs">
-                    High Confidence
+                    {confidence >= 90 ? "High Confidence" : confidence >= 70 ? "Medium Confidence" : "Low Confidence"}
                   </span>
                 </div>
 
@@ -425,7 +622,7 @@ export default function AIVerificationScorePage() {
                 {flaggedItems.length > 0 ? (
                   flaggedItems.map((item) => (
                     <div
-                      key={item.id}
+                      key={`${item.taskId}-${item.id}`}
                       className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-primary transition-all group duration-300"
                     >
                       <div className="flex items-center gap-5">
@@ -433,18 +630,14 @@ export default function AIVerificationScorePage() {
                           className={`w-14 h-14 rounded-xl flex items-center justify-center border-2 border-[#1A1A1A] shrink-0 ${
                             item.icon === "image_not_supported"
                               ? "bg-primary"
-                              : item.icon === "warning"
-                              ? "bg-[#1A1A1A]"
-                              : "bg-white"
+                              : "bg-[#1A1A1A]"
                           }`}
                         >
                           <span
                             className={`material-symbols-outlined text-2xl ${
                               item.icon === "image_not_supported"
                                 ? "text-white"
-                                : item.icon === "warning"
-                                ? "text-primary"
-                                : "text-[#1A1A1A]"
+                                : "text-primary"
                             }`}
                           >
                             {item.icon}
@@ -455,15 +648,7 @@ export default function AIVerificationScorePage() {
                             {item.title}
                           </h4>
                           <div className="flex items-center gap-2 mt-1">
-                            <span
-                              className={`w-2.5 h-2.5 rounded-full ${
-                                item.id === "flagged-1"
-                                  ? "bg-primary"
-                                  : item.id === "flagged-2"
-                                  ? "bg-[#1A1A1A]"
-                                  : "border-2 border-[#1A1A1A] bg-white"
-                              }`}
-                            ></span>
+                            <span className="w-2.5 h-2.5 rounded-full bg-primary"></span>
                             <p className={`text-[10px] font-black uppercase tracking-wider ${item.subColor}`}>
                               {item.issueType}
                             </p>
@@ -659,10 +844,10 @@ export default function AIVerificationScorePage() {
                 <h3 className="text-[10px] text-[#1A1A1A]/60 uppercase font-black tracking-widest">
                   Evidence
                 </h3>
-                {selectedItem.hasPhoto ? (
+                {selectedItem.photoUrl ? (
                   <div className="aspect-video border-2 border-[#1A1A1A] rounded-xl overflow-hidden bg-gray-50 relative">
                     <img
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5PUuGyQj5iS4K8OsIciVH7soDv1iZxtqoatUCeaCmEEKmdhA1x8m6nw1yuqlGdGaC5Xd-Pi7ruxFFEFOzDJVJvI6jxfhNEwxOGSYYK3aqTn7bUyWkASIk5CfpFsqtupp3qdntxCuEE23lVt4HpQDmVifRZ_F75McxZHaG7m2q474o047fSPROxEORil2stcLkoeNGCABR5wGRtbNqpZ-omsxPX5lnF_k7-26BkpXXV66DAYAi_HNPfpPywwFX6H2QGo1H3p6WAJ5U"
+                      src={selectedItem.photoUrl}
                       alt="Inspection detail"
                       className="w-full h-full object-cover"
                     />
@@ -678,21 +863,21 @@ export default function AIVerificationScorePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => {
-                      setSelectedItem((prev) => (prev ? { ...prev, hasPhoto: true } : null));
+                      setSelectedItem((prev) => (prev ? { ...prev, hasPhoto: true, photoUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuC5PUuGyQj5iS4K8OsIciVH7soDv1iZxtqoatUCeaCmEEKmdhA1x8m6nw1yuqlGdGaC5Xd-Pi7ruxFFEFOzDJVJvI6jxfhNEwxOGSYYK3aqTn7bUyWkASIk5CfpFsqtupp3qdntxCuEE23lVt4HpQDmVifRZ_F75McxZHaG7m2q474o047fSPROxEORil2stcLkoeNGCABR5wGRtbNqpZ-omsxPX5lnF_k7-26BkpXXV66DAYAi_HNPfpPywwFX6H2QGo1H3p6WAJ5U" } : null));
                       triggerToast("Replacement photo uploaded successfully.", "success");
                     }}
                     className="flex items-center justify-center gap-2 py-3 border-2 border-[#1A1A1A] font-black uppercase text-[10px] rounded-lg hover:bg-[#1A1A1A] hover:text-white transition-colors bg-white cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-sm">upload</span> Upload
+                    <span className="material-symbols-outlined text-sm">upload</span> Upload Mock
                   </button>
                   <button
                     onClick={() => {
-                      setSelectedItem((prev) => (prev ? { ...prev, hasPhoto: true } : null));
+                      setSelectedItem((prev) => (prev ? { ...prev, hasPhoto: true, photoUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAX4GvgHbE6sHyxp1a6pBEHGlqiB3qbDj7HQ9fAQQgIpN-FXUXfzK-5aP8hhrPe1Kkqj1yk2J5s97U-QDn6E3TRIzT6NNO05RRzoMHu2bqEtWH8svew-mlHLs_trG8FHB5rYfbOrculRtZAM7aKd9sbt6YDkuJEXCTwWMzNcV1Bx_5UHoRyUnMIWdhehZGhZyjrZvpvxBcJ-WlTPdoDS7j_0wtK24YZKQViUaWOl_lwxV_8XpxKddnKm4kkMOSbMVDmjTmzzqp-at5y" } : null));
                       triggerToast("Mock device camera accessed. Evidence re-recorded.", "success");
                     }}
                     className="flex items-center justify-center gap-2 py-3 border-2 border-[#1A1A1A] font-black uppercase text-[10px] rounded-lg hover:bg-[#1A1A1A] hover:text-white transition-colors bg-white cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-sm">photo_camera</span> Retake
+                    <span className="material-symbols-outlined text-sm">photo_camera</span> Retake Mock
                   </button>
                 </div>
               </section>
@@ -758,5 +943,20 @@ export default function AIVerificationScorePage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function AIVerificationScorePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen w-full items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AIVerificationScoreContent />
+    </Suspense>
   );
 }
