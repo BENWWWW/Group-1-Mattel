@@ -69,7 +69,7 @@ export default function VendorProfilePage() {
 
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal memuat profil: " + e.message, "error");
+      triggerToast("Failed to load profile: " + e.message, "error");
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ export default function VendorProfilePage() {
   const handleSaveGeneralInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim()) {
-      triggerToast("Nama Lengkap wajib diisi.", "error");
+      triggerToast("Full name is required.", "error");
       return;
     }
 
@@ -120,11 +120,15 @@ export default function VendorProfilePage() {
       }
 
       if (error) throw error;
-      triggerToast("Profil berhasil diperbarui.", "success");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userName", fullName);
+        window.dispatchEvent(new Event("profileUpdated"));
+      }
+      triggerToast("Profile updated successfully.", "success");
       loadProfile();
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal memperbarui profil: " + e.message, "error");
+      triggerToast("Failed to update profile: " + e.message, "error");
     } finally {
       setSaving(false);
     }
@@ -139,7 +143,7 @@ export default function VendorProfilePage() {
     const file = e.target.files?.[0];
     if (file) {
       try {
-        triggerToast("Mengunggah foto...", "info");
+        triggerToast("Uploading photo...", "info");
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
@@ -163,11 +167,15 @@ export default function VendorProfilePage() {
         if (updateError) throw updateError;
 
         setProfilePhoto(publicUrl);
-        triggerToast("Foto profil berhasil diunggah.", "success");
+        if (typeof window !== "undefined") {
+          localStorage.setItem("userAvatar", publicUrl);
+          window.dispatchEvent(new Event("profileUpdated"));
+        }
+        triggerToast("Profile picture uploaded successfully.", "success");
         loadProfile();
       } catch (e: any) {
         console.error(e);
-        triggerToast("Gagal mengunggah foto: " + e.message, "error");
+        triggerToast("Failed to upload photo: " + e.message, "error");
       }
     }
   };
@@ -189,7 +197,7 @@ export default function VendorProfilePage() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat Profil...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Profile...</p>
         </div>
       </div>
     );
@@ -462,7 +470,7 @@ export default function VendorProfilePage() {
                   disabled={saving}
                   className="w-full bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full py-3 font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors cursor-pointer mt-4 active:scale-95 disabled:opacity-50"
                 >
-                  {saving ? "Menyimpan..." : "Save General Info"}
+                  {saving ? "Saving..." : "Save General Info"}
                 </button>
               </form>
             </section>

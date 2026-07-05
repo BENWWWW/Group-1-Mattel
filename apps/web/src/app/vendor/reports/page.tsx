@@ -145,7 +145,7 @@ export default function VendorReportsPage() {
 
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal memuat laporan: " + e.message, "error");
+      triggerToast("Failed to load reports: " + e.message, "error");
     } finally {
       setLoading(false);
     }
@@ -210,10 +210,10 @@ export default function VendorReportsPage() {
 
   const handlePlayAudio = () => {
     setIsPlaying(true);
-    triggerToast("Memutar audio summary log...", "info");
+    triggerToast("Playing audio summary log...", "info");
     setTimeout(() => {
       setIsPlaying(false);
-      triggerToast("Audio playback selesai.", "success");
+      triggerToast("Audio playback finished.", "success");
     }, 4000);
   };
 
@@ -223,7 +223,7 @@ export default function VendorReportsPage() {
     } else if (selectedReport?.taskId) {
       window.open(`/supervisor/tasks/report-preview?taskId=${selectedReport.taskId}`, "_blank");
     } else {
-      triggerToast("Laporan tidak valid.", "error");
+      triggerToast("Invalid report.", "error");
     }
   };
 
@@ -235,7 +235,7 @@ export default function VendorReportsPage() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat Laporan...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Reports...</p>
         </div>
       </div>
     );

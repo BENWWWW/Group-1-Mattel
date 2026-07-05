@@ -245,7 +245,7 @@ function ReportPreviewContent() {
         }
       } catch (err: any) {
         console.error("Error loading report PDF details:", err);
-        triggerToast("Gagal memuat data PDF: " + err.message, "error");
+        triggerToast("Failed to load PDF data: " + err.message, "error");
       } finally {
         setLoading(false);
       }
@@ -268,7 +268,7 @@ function ReportPreviewContent() {
     return (
       <div className="flex h-screen items-center justify-center bg-white text-[#1A1A1A] font-bold uppercase tracking-widest gap-3">
         <span className="w-5 h-5 rounded-full border-4 border-t-transparent border-[#D32F2F] animate-spin inline-block"></span>
-        Memuat Dokumen Laporan...
+        Loading Report Document...
       </div>
     );
   }
@@ -344,14 +344,14 @@ function ReportPreviewContent() {
             className="bg-[#D32F2F] text-white hover:bg-[#b71c1c] transition-colors font-bold px-5 py-2 border-2 border-black rounded-lg text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">print</span>
-            Cetak / Simpan PDF
+            Print / Save PDF
           </button>
           <button
             onClick={() => window.close()}
             className="bg-white/10 hover:bg-white/20 transition-colors text-white font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wider flex items-center gap-1 cursor-pointer border border-white/20"
           >
             <span className="material-symbols-outlined text-sm">close</span>
-            Tutup Halaman
+            Close Page
           </button>
         </div>
       </header>
@@ -558,16 +558,22 @@ function ReportPreviewContent() {
             {/* Approval / Rejection Section */}
             <section className="relative pt-8 pb-12 border-t-2 border-[#1A1A1A] flex flex-col gap-8">
               
-              {/* Approved/Rejected Stamp Watermark */}
+              {/* Approved/Rejected/Pending Stamp Watermark */}
               <div
                 className={`absolute right-20 top-2 p-4 text-center border-8 select-none tracking-widest font-black uppercase rounded-lg ${
                   reportInfo.status === "rejected"
                     ? "border-red-600 text-red-600 rotate-[15deg] opacity-15"
-                    : "border-green-600 text-green-600 -rotate-[15deg] opacity-15"
+                    : reportInfo.status === "approved"
+                      ? "border-green-600 text-green-600 -rotate-[15deg] opacity-15"
+                      : "border-amber-500 text-amber-500 rotate-[5deg] opacity-15"
                 }`}
                 style={{ fontSize: "3.5rem" }}
               >
-                {reportInfo.status === "rejected" ? "REJECTED" : "APPROVED"}
+                {reportInfo.status === "rejected" 
+                  ? "REJECTED" 
+                  : reportInfo.status === "approved" 
+                    ? "APPROVED" 
+                    : "PENDING"}
               </div>
 
               <div className="space-y-6">
@@ -691,7 +697,7 @@ export default function ReportPreviewPage() {
     <Suspense fallback={
       <div className="flex h-screen items-center justify-center bg-white text-[#1A1A1A] font-bold uppercase tracking-widest gap-3">
         <span className="w-5 h-5 rounded-full border-4 border-t-transparent border-[#D32F2F] animate-spin inline-block"></span>
-        Memuat Sistem Cetak Laporan...
+        Loading Report Print System...
       </div>
     }>
       <ReportPreviewContent />

@@ -104,8 +104,8 @@ export default function LoginPage() {
       }
 
       if (!profileData.is_active) {
-        triggerToast("AKUN DINONAKTIFKAN. SILAKAN HUBUNGI ADMIN SEGERA.", "error");
-        setIdError("Akun dinonaktifkan. Hubungi admin segera.");
+        triggerToast("ACCOUNT DISABLED. PLEASE CONTACT ADMIN IMMEDIATELY.", "error");
+        setIdError("Account disabled. Contact admin immediately.");
         setIsLoading(false);
         return;
       }
@@ -400,17 +400,7 @@ export default function LoginPage() {
       </section>
 
       {/* Right Section: Branding & Identity (Black Panel) */}
-      <section className="hidden lg:flex flex-1 bg-[#1A1A1A] relative flex-col justify-center items-center text-white my-margin-desktop mr-margin-desktop p-margin-desktop rounded-[20px] overflow-hidden">
-        {/* Atmospheric Grid Overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.1]"
-          style={{
-            backgroundImage:
-              "linear-gradient(#D32F2F 1px, transparent 1px), linear-gradient(90deg, #D32F2F 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        ></div>
-
+      <section className="hidden lg:flex flex-1 bg-black relative flex-col justify-center items-center text-white my-margin-desktop mr-margin-desktop p-margin-desktop rounded-[20px] overflow-hidden">
         <div className="z-10 text-center space-y-stack-md max-w-2xl">
           <div className="mb-12">
             <div className="mb-6 flex justify-center">
@@ -437,17 +427,6 @@ export default function LoginPage() {
               Stability Index: <span className="text-primary font-bold">99.98%</span>
             </p>
           </div>
-        </div>
-
-        {/* Background Decorative Image */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none grayscale invert overflow-hidden rounded-[20px]">
-          <div
-            className="w-full h-full bg-no-repeat bg-right-bottom bg-contain"
-            style={{
-              backgroundImage:
-                "url('https://lh3.googleusercontent.com/aida-public/AB6AXuA89c2ev_gXhdP0IVVnljR9jFNRNwrlCA9eXC4pWYrArwFjSHiAagrAbWOzi6AV1PSmlpGq32AYtP71BZuE-RMMfXGn4KQfvLidilUTvo0dudYn9IFW8DF6-PaTrrw6TKJeiAwuD9lfkQVdWz_OLPOESW5fvGAZ5V84azBCJG2WkF2Smeedi8CCLFLlTr68EyVxrlrXUdMM4VQ41azVgODBZUVf1BnlluUNrFEFdW9chn3pz0yblJOBDVtMO8Uo5UtSlnUrqZgXA_b2')",
-            }}
-          ></div>
         </div>
 
         <div className="absolute top-10 right-10 flex gap-4">

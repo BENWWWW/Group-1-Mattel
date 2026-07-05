@@ -174,6 +174,15 @@ export default function VendorDashboardPage() {
 
   useEffect(() => {
     loadDashboardData();
+
+    const handleProfileUpdate = () => {
+      loadDashboardData();
+    };
+
+    window.addEventListener("profileUpdated", handleProfileUpdate);
+    return () => {
+      window.removeEventListener("profileUpdated", handleProfileUpdate);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -195,7 +204,7 @@ export default function VendorDashboardPage() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat Dashboard...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Dashboard...</p>
         </div>
       </div>
     );

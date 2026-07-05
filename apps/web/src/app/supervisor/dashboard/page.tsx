@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
@@ -55,6 +55,7 @@ export default function ReviewQueuePage() {
   const [vendors, setVendors] = useState<VendorCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedVendorDetail, setSelectedVendorDetail] = useState<VendorCard | null>(null);
 
   // Stats
   const [stats, setStats] = useState({
@@ -79,109 +80,129 @@ export default function ReviewQueuePage() {
     return `${Math.floor(hrs / 24)}d ago`;
   };
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-
-      // Get logged in user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/"); return; }
-
-      // Get supervisor profile
+  const loadProfileOnly = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
-
-      if (profileData) setCurrentUser(profileData);
-
-      // Get tasks assigned to this supervisor
-      const { data: tasks, error: taskErr } = await supabase
-        .from("pm_tasks")
-        .select(`
-          id,
-          task_code,
-          notes,
-          status,
-          priority,
-          due_date,
-          created_at,
-          assigned_vendor_id,
-          assets (name, location),
-          vendor:profiles!pm_tasks_assigned_vendor_id_fkey (id, full_name)
-        `)
-        .eq("assigned_supervisor_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (taskErr) {
-        triggerToast("Gagal memuat tasks: " + taskErr.message, "error");
-      } else if (tasks) {
-        const mapped: QueueItem[] = tasks.map((t: any) => ({
-          id: t.id,
-          task_code: t.task_code,
-          title: t.assets?.name || "Unnamed Task",
-          tech: t.vendor?.full_name || "Unassigned",
-          location: t.assets?.location || "—",
-          time: timeAgo(t.created_at),
-          status: t.status,
-          priority: t.priority,
-          due_date: t.due_date,
-        }));
-        setQueue(mapped);
-
-        // Compute stats
-        const pending = tasks.filter((t: any) => t.status === "submitted" || t.status === "pending" || t.status === "in_progress").length;
-        const approved = tasks.filter((t: any) => t.status === "approved").length;
-        const rejected = tasks.filter((t: any) => t.status === "rejected").length;
-        setStats({ pending, approved, rejected, total: tasks.length });
-
-        // Build vendor list from unique vendors in tasks
-        const vendorMap = new Map<string, VendorCard>();
-        for (const t of tasks as any[]) {
-          if (t.vendor && !vendorMap.has(t.vendor.id)) {
-            vendorMap.set(t.vendor.id, {
-              id: t.vendor.id,
-              full_name: t.vendor.full_name,
-              email: "",
-              phone: null,
-              department: null,
-              employee_id: "",
-              is_active: true,
-              taskCount: 0,
-            });
-          }
-          if (t.vendor) {
-            const v = vendorMap.get(t.vendor.id)!;
-            v.taskCount += 1;
-          }
+      if (profileData) {
+        setCurrentUser(profileData);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("userName", profileData.full_name || "");
+          if (profileData.avatar_url) localStorage.setItem("userAvatar", profileData.avatar_url);
         }
+      }
+    }
+  }, [supabase]);
 
-        // Enrich vendor info
-        if (vendorMap.size > 0) {
-          const vendorIds = Array.from(vendorMap.keys());
-          const { data: vendorProfiles } = await supabase
-            .from("profiles")
-            .select("id, full_name, email, phone, department, employee_id, is_active")
-            .in("id", vendorIds);
-          if (vendorProfiles) {
-            for (const vp of vendorProfiles) {
-              if (vendorMap.has(vp.id)) {
-                const existing = vendorMap.get(vp.id)!;
-                vendorMap.set(vp.id, { ...existing, ...vp });
-              }
+  const fetchTasksAndVendors = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Get tasks assigned to this supervisor
+    const { data: tasks, error: taskErr } = await supabase
+      .from("pm_tasks")
+      .select(`
+        id,
+        task_code,
+        notes,
+        status,
+        priority,
+        due_date,
+        created_at,
+        assigned_vendor_id,
+        assets (name, location),
+        vendor:profiles!pm_tasks_assigned_vendor_id_fkey (id, full_name)
+      `)
+      .eq("assigned_supervisor_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (taskErr) {
+      triggerToast("Failed to load tasks: " + taskErr.message, "error");
+    } else if (tasks) {
+      const mapped: QueueItem[] = tasks.map((t: any) => ({
+        id: t.id,
+        task_code: t.task_code,
+        title: t.assets?.name || "Unnamed Task",
+        tech: t.vendor?.full_name || "Unassigned",
+        location: t.assets?.location || "—",
+        time: timeAgo(t.created_at),
+        status: t.status,
+        priority: t.priority,
+        due_date: t.due_date,
+      }));
+      setQueue(mapped);
+
+      // Compute stats
+      const pending = tasks.filter((t: any) => t.status === "submitted" || t.status === "pending" || t.status === "in_progress").length;
+      const approved = tasks.filter((t: any) => t.status === "approved").length;
+      const rejected = tasks.filter((t: any) => t.status === "rejected").length;
+      setStats({ pending, approved, rejected, total: tasks.length });
+
+      // Build vendor list from unique vendors in tasks
+      const vendorMap = new Map<string, VendorCard>();
+      for (const t of tasks as any[]) {
+        if (t.vendor && !vendorMap.has(t.vendor.id)) {
+          vendorMap.set(t.vendor.id, {
+            id: t.vendor.id,
+            full_name: t.vendor.full_name,
+            email: "",
+            phone: null,
+            department: null,
+            employee_id: "",
+            is_active: true,
+            taskCount: 0,
+          });
+        }
+        if (t.vendor) {
+          const v = vendorMap.get(t.vendor.id)!;
+          v.taskCount += 1;
+        }
+      }
+
+      // Enrich vendor info
+      if (vendorMap.size > 0) {
+        const vendorIds = Array.from(vendorMap.keys());
+        const { data: vendorProfiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, email, phone, department, employee_id, is_active")
+          .in("id", vendorIds);
+        if (vendorProfiles) {
+          for (const vp of vendorProfiles) {
+            if (vendorMap.has(vp.id)) {
+              const existing = vendorMap.get(vp.id)!;
+              vendorMap.set(vp.id, { ...existing, ...vp });
             }
           }
         }
-        setVendors(Array.from(vendorMap.values()));
       }
+      setVendors(Array.from(vendorMap.values()));
+    }
+  }, [supabase]);
 
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      await loadProfileOnly();
+      await fetchTasksAndVendors();
       setLoading(false);
     };
 
     load();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadProfileOnly, fetchTasksAndVendors]);
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      loadProfileOnly();
+    };
+    window.addEventListener("profileUpdated", handleProfileUpdate);
+    return () => {
+      window.removeEventListener("profileUpdated", handleProfileUpdate);
+    };
+  }, [loadProfileOnly]);
 
   const filteredQueue = queue.filter((item) => {
     const q = searchQuery.toLowerCase();
@@ -213,7 +234,7 @@ export default function ReviewQueuePage() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat Dashboard...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Dashboard...</p>
         </div>
       </div>
     );
@@ -229,7 +250,7 @@ export default function ReviewQueuePage() {
         </div>
         <nav className="flex-1 space-y-2 px-2">
           <button
-            onClick={() => triggerToast("Dashboard dimuat ulang.", "info")}
+            onClick={() => triggerToast("Dashboard reloaded.", "info")}
             className="bg-[#D32F2F] text-white w-full px-4 py-3 flex items-center gap-4 text-left font-label-md text-sm uppercase tracking-wider rounded-lg transition-colors cursor-pointer border-none"
           >
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
@@ -254,7 +275,7 @@ export default function ReviewQueuePage() {
         <div className="px-4 mt-auto border-t border-white/10 pt-4 pb-2">
           <button
             onClick={async () => {
-              triggerToast("MENUTUP SESI SUPERVISOR...", "info");
+              triggerToast("CLOSING SUPERVISOR SESSION...", "info");
               await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
@@ -282,7 +303,7 @@ export default function ReviewQueuePage() {
       <header className="fixed top-0 right-0 w-[calc(100%-220px)] bg-white border-b-2 border-[#1A1A1A] h-20 px-10 flex justify-between items-center z-40">
         <div>
           <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Review Queue</h2>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Kelola & setujui laporan maintenance</p>
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Manage & approve maintenance reports</p>
         </div>
         <div className="flex-1 max-w-md mx-8 relative">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
@@ -325,9 +346,9 @@ export default function ReviewQueuePage() {
           {urgentItems.length > 0 && (
             <section className="space-y-6">
               <div className="flex items-center gap-4">
-                <h3 className="font-headline-lg text-lg font-extrabold text-[#1A1A1A] uppercase tracking-wide">Prioritas Tinggi</h3>
+                <h3 className="font-headline-lg text-lg font-extrabold text-[#1A1A1A] uppercase tracking-wide">High Priority</h3>
                 <span className="bg-[#D32F2F] text-white px-3 py-0.5 rounded-full font-bold text-[10px] border-2 border-[#1A1A1A] uppercase tracking-wider">
-                  {urgentItems.length} Item
+                  {urgentItems.length} Items
                 </span>
               </div>
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -362,7 +383,7 @@ export default function ReviewQueuePage() {
           <section className="space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="font-headline-lg text-lg font-extrabold text-[#1A1A1A] uppercase tracking-wide">
-                Antrian Aktif
+                Active Queue
                 {submittedItems.length > 0 && (
                   <span className="ml-3 bg-[#D32F2F] text-white px-2 py-0.5 rounded-full text-[10px] font-bold">{submittedItems.length}</span>
                 )}
@@ -371,7 +392,7 @@ export default function ReviewQueuePage() {
                 onClick={() => router.push("/supervisor/tasks")}
                 className="text-[#D32F2F] font-bold hover:underline flex items-center gap-1 uppercase text-xs tracking-wider border-none bg-transparent cursor-pointer"
               >
-                Lihat Semua
+                View All
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </button>
             </div>
@@ -380,7 +401,7 @@ export default function ReviewQueuePage() {
               <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-[20px]">
                 <span className="material-symbols-outlined text-4xl text-gray-300">inbox</span>
                 <p className="text-xs font-bold uppercase text-gray-400 tracking-wider mt-2">
-                  Tidak ada tugas aktif atau belum selesai
+                  No active or incomplete tasks
                 </p>
               </div>
             ) : (
@@ -418,20 +439,21 @@ export default function ReviewQueuePage() {
           {/* Vendors Under Responsibility */}
           <section className="space-y-6 pt-6 border-t border-gray-100">
             <div>
-              <h3 className="font-headline-lg text-lg font-extrabold text-[#1A1A1A] uppercase tracking-wide">Vendor di Bawah Tanggung Jawab</h3>
-              <p className="text-xs text-gray-500 font-medium">Vendor yang memiliki task aktif dengan supervisor ini.</p>
+              <h3 className="font-headline-lg text-lg font-extrabold text-[#1A1A1A] uppercase tracking-wide">Vendors Under Responsibility</h3>
+              <p className="text-xs text-gray-500 font-medium">Vendors that have active tasks with this supervisor.</p>
             </div>
 
             {vendors.length === 0 ? (
               <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-[20px]">
                 <span className="material-symbols-outlined text-4xl text-gray-300">groups</span>
-                <p className="text-xs font-bold uppercase text-gray-400 tracking-wider mt-2">Belum ada vendor terhubung</p>
+                <p className="text-xs font-bold uppercase text-gray-400 tracking-wider mt-2">No vendors connected yet</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 {vendors.map((vendor) => (
                   <div
                     key={vendor.id}
+                    onClick={() => setSelectedVendorDetail(vendor)}
                     className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 hover:border-[#D32F2F] transition-all duration-200 cursor-pointer flex flex-col justify-between h-44 relative group"
                   >
                     <div>
@@ -456,6 +478,90 @@ export default function ReviewQueuePage() {
           </section>
         </div>
       </main>
+
+      {/* Vendor Detail Modal Popup */}
+      {selectedVendorDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            onClick={() => setSelectedVendorDetail(null)}
+          ></div>
+          <div className="relative bg-white border-4 border-[#1A1A1A] p-8 rounded-[24px] max-w-sm w-full z-10 flex flex-col gap-6 text-left shadow-[8px_8px_0px_0px_rgba(0,0,0,0.15)] animate-in zoom-in-95 duration-200">
+            <header className="flex justify-between items-center pb-4 border-b-2 border-[#1A1A1A]">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#D32F2F] text-2xl">badge</span>
+                <h3 className="font-headline-md text-base uppercase font-black tracking-tight">Vendor Profile</h3>
+              </div>
+              <button 
+                onClick={() => setSelectedVendorDetail(null)} 
+                className="w-8 h-8 flex items-center justify-center border-2 border-[#1A1A1A] rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer bg-white"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </header>
+
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full border-2 border-[#1A1A1A] bg-[#D32F2F]/5 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[#D32F2F] text-3xl">engineering</span>
+              </div>
+              <div className="overflow-hidden">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border border-[#1A1A1A] uppercase ${selectedVendorDetail.is_active ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                    {selectedVendorDetail.is_active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                <h4 className="font-headline-lg text-lg font-black leading-tight text-[#1A1A1A] uppercase truncate">
+                  {selectedVendorDetail.full_name}
+                </h4>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 border-2 border-[#1A1A1A] rounded-xl">
+                <div>
+                  <p className="text-[9px] uppercase font-bold text-gray-400">Vendor ID</p>
+                  <p className="font-extrabold text-xs text-[#1A1A1A]">#{selectedVendorDetail.employee_id || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase font-bold text-gray-400">Department</p>
+                  <p className="font-extrabold text-xs text-[#1A1A1A]">{selectedVendorDetail.department || "General Maintenance"}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-[9px] uppercase font-bold text-gray-400">Email Address</p>
+                  <p className="font-extrabold text-xs text-[#1A1A1A] break-all">{selectedVendorDetail.email || "—"}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-[9px] uppercase font-bold text-gray-400">Phone Contact</p>
+                  <p className="font-extrabold text-xs text-[#1A1A1A]">{selectedVendorDetail.phone || "No phone registered"}</p>
+                </div>
+              </div>
+
+              <div className="bg-[#1A1A1A] text-white p-4 rounded-xl border-2 border-[#1A1A1A] flex justify-between items-center">
+                <div>
+                  <p className="text-[9px] uppercase font-bold text-white/50">Current Workload</p>
+                  <p className="font-black text-sm uppercase tracking-tight text-white">Active Assignments</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-black text-[#D32F2F] bg-white border border-[#1A1A1A] px-3 py-1 rounded-lg">
+                    {selectedVendorDetail.taskCount}
+                  </span>
+                  <span className="text-white/60 font-bold text-[10px] uppercase">Tasks</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setSelectedVendorDetail(null);
+                router.push("/supervisor/tasks");
+              }}
+              className="w-full py-3.5 bg-[#D32F2F] text-white font-black text-xs uppercase tracking-widest rounded-lg border-2 border-[#1A1A1A] hover:bg-[#1A1A1A] transition-all cursor-pointer text-center"
+            >
+              View Associated Tasks
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Toast */}
       <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 pointer-events-none">

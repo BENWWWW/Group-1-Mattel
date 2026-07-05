@@ -1,14 +1,14 @@
 // ============================================================
-// signatures.ts — Helper functions untuk Digital Signatures
-// Vendor & Supervisor bisa simpan tanda tangan digital mereka,
-// lalu insert otomatis ke laporan/dokumen tanpa tanda tangan manual.
+// signatures.ts — Helper functions for Digital Signatures
+// Vendors & Supervisors can store their digital signatures,
+// then automatically insert them into reports/documents.
 // ============================================================
 
 import { createClient } from '@/lib/supabase/client'
 import type { Signature } from '@/lib/types/database'
 
 // ============================================================
-// GET: Ambil semua signature milik user yang sedang login
+// GET: Retrieve all signatures belonging to the logged-in user
 // ============================================================
 export async function getMySignatures(): Promise<Signature[]> {
   const supabase = createClient()
@@ -18,12 +18,12 @@ export async function getMySignatures(): Promise<Signature[]> {
     .order('is_default', { ascending: false })
     .order('created_at', { ascending: false })
 
-  if (error) throw new Error(`Gagal mengambil signatures: ${error.message}`)
+  if (error) throw new Error(`Failed to retrieve signatures: ${error.message}`)
   return data ?? []
 }
 
 // ============================================================
-// GET: Ambil signature default milik user yang sedang login
+// GET: Retrieve default signature of the logged-in user
 // ============================================================
 export async function getDefaultSignature(): Promise<Signature | null> {
   const supabase = createClient()
@@ -33,13 +33,13 @@ export async function getDefaultSignature(): Promise<Signature | null> {
     .eq('is_default', true)
     .maybeSingle()
 
-  if (error) throw new Error(`Gagal mengambil default signature: ${error.message}`)
+  if (error) throw new Error(`Failed to retrieve default signature: ${error.message}`)
   return data
 }
 
 // ============================================================
-// GET: Ambil signature default milik user tertentu (by user_id)
-// Dipakai supervisor untuk lihat tanda tangan vendor, atau sebaliknya
+// GET: Retrieve default signature of a specific user (by user_id)
+// Used by supervisors to view vendor signature, or vice versa
 // ============================================================
 export async function getSignatureByUserId(userId: string): Promise<Signature | null> {
   const supabase = createClient()
@@ -50,13 +50,13 @@ export async function getSignatureByUserId(userId: string): Promise<Signature | 
     .eq('is_default', true)
     .maybeSingle()
 
-  if (error) throw new Error(`Gagal mengambil signature user: ${error.message}`)
+  if (error) throw new Error(`Failed to retrieve user signature: ${error.message}`)
   return data
 }
 
 // ============================================================
-// POST: Simpan signature baru
-// signatureData: base64 data URL dari HTML canvas (e.g. canvas.toDataURL('image/png'))
+// POST: Save new signature
+// signatureData: base64 data URL from HTML canvas (e.g. canvas.toDataURL('image/png'))
 // ============================================================
 export async function saveSignature(params: {
   label?: string
@@ -66,7 +66,7 @@ export async function saveSignature(params: {
   const supabase = createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('User tidak terautentikasi')
+  if (!user) throw new Error('User is not authenticated')
 
   const { data, error } = await supabase
     .from('signatures')
@@ -79,13 +79,13 @@ export async function saveSignature(params: {
     .select()
     .single()
 
-  if (error) throw new Error(`Gagal menyimpan signature: ${error.message}`)
+  if (error) throw new Error(`Failed to save signature: ${error.message}`)
   return data
 }
 
 // ============================================================
-// PATCH: Set signature tertentu sebagai default
-// Trigger DB otomatis akan unset signature lain yang is_default = true
+// PATCH: Set specific signature as default
+// Database trigger will automatically unset other signatures where is_default = true
 // ============================================================
 export async function setDefaultSignature(signatureId: string): Promise<void> {
   const supabase = createClient()
@@ -94,11 +94,11 @@ export async function setDefaultSignature(signatureId: string): Promise<void> {
     .update({ is_default: true })
     .eq('id', signatureId)
 
-  if (error) throw new Error(`Gagal set default signature: ${error.message}`)
+  if (error) throw new Error(`Failed to set default signature: ${error.message}`)
 }
 
 // ============================================================
-// PATCH: Update label atau data signature
+// PATCH: Update label or signature data
 // ============================================================
 export async function updateSignature(
   signatureId: string,
@@ -117,12 +117,12 @@ export async function updateSignature(
     .select()
     .single()
 
-  if (error) throw new Error(`Gagal mengupdate signature: ${error.message}`)
+  if (error) throw new Error(`Failed to update signature: ${error.message}`)
   return data
 }
 
 // ============================================================
-// DELETE: Hapus signature tertentu
+// DELETE: Delete specific signature
 // ============================================================
 export async function deleteSignature(signatureId: string): Promise<void> {
   const supabase = createClient()
@@ -131,11 +131,11 @@ export async function deleteSignature(signatureId: string): Promise<void> {
     .delete()
     .eq('id', signatureId)
 
-  if (error) throw new Error(`Gagal menghapus signature: ${error.message}`)
+  if (error) throw new Error(`Failed to delete signature: ${error.message}`)
 }
 
 // ============================================================
-// UTIL: Konversi base64 data URL → Blob (untuk upload ke storage jika diperlukan)
+// UTIL: Convert base64 data URL → Blob (for upload to storage if needed)
 // ============================================================
 export function dataURLtoBlob(dataURL: string): Blob {
   const [header, base64] = dataURL.split(',')

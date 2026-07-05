@@ -164,7 +164,7 @@ export default function ReportsPage() {
 
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal memuat log laporan: " + e.message, "error");
+      triggerToast("Failed to load report logs: " + e.message, "error");
     } finally {
       setLoading(false);
     }
@@ -220,7 +220,7 @@ export default function ReportsPage() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat Laporan...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Reports...</p>
         </div>
       </div>
     );
@@ -332,46 +332,46 @@ export default function ReportsPage() {
             <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col justify-between">
               <div className="flex justify-between items-start">
                 <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Suku Kelulusan Audit
+                  Audit Passing Rate
                 </span>
                 <span className="material-symbols-outlined text-green-600">done_all</span>
               </div>
               <div className="mt-4">
                 <p className="font-headline-xl text-4xl font-extrabold text-green-600 tracking-tighter">{stats.completionRate}</p>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Total: {stats.totalAudits} Laporan</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Total: {stats.totalAudits} Reports</p>
               </div>
             </div>
 
             <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col justify-between">
               <div className="flex justify-between items-start">
                 <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Total Disetujui
+                  Total Approved
                 </span>
                 <span className="material-symbols-outlined text-green-600">check_circle</span>
               </div>
               <div className="mt-4">
                 <p className="font-headline-xl text-4xl font-extrabold text-black tracking-tighter">{stats.approvedCount}</p>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Laporan disetujui</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Approved reports</p>
               </div>
             </div>
 
             <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col justify-between">
               <div className="flex justify-between items-start">
                 <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Frekuensi Penolakan
+                  Rejection Frequency
                 </span>
                 <span className="material-symbols-outlined text-[#D32F2F]">error_outline</span>
               </div>
               <div className="mt-4">
                 <p className="font-headline-xl text-4xl font-extrabold text-[#D32F2F] tracking-tighter">{stats.rejectionRate}</p>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Laporan ditolak</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Rejected reports</p>
               </div>
             </div>
 
             <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col justify-between border-l-8 border-l-[#D32F2F]">
               <div className="flex justify-between items-start">
                 <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Kepatuhan Sistem
+                  System Compliance
                 </span>
                 <span className="material-symbols-outlined text-[#D32F2F]">verified_user</span>
               </div>
@@ -388,8 +388,8 @@ export default function ReportsPage() {
             {/* Category Breakdown Progress */}
             <div className="lg:col-span-1 bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 space-y-6">
               <div>
-                <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Kategori Distribusi</h3>
-                <p className="text-xs text-gray-500 font-medium">Distribusi audit berdasarkan kategori mesin</p>
+                <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Distribution Category</h3>
+                <p className="text-xs text-gray-500 font-medium">Audit distribution based on machine category</p>
               </div>
               
               <div className="space-y-4">
@@ -453,34 +453,34 @@ export default function ReportsPage() {
             {/* Auditor Quality Insights */}
             <div className="lg:col-span-2 bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 space-y-6 flex flex-col justify-between">
               <div>
-                <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Analisis Kualitas Laporan</h3>
-                <p className="text-xs text-gray-500 font-medium">Analisis sistem pada performa audit maintenance</p>
+                <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Report Quality Analysis</h3>
+                <p className="text-xs text-gray-500 font-medium">System analysis on maintenance audit performance</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-gray-50 rounded-xl border border-dashed border-[#1A1A1A]/20">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
-                    <h4 className="font-bold text-xs uppercase text-gray-700">Akurasi Validasi Vendor</h4>
+                    <h4 className="font-bold text-xs uppercase text-gray-700">Vendor Validation Accuracy</h4>
                   </div>
                   <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                    Sinkronisasi berkas digital dengan data log lapangan berjalan dengan lancar 100% tanpa adanya data korup.
+                    Digital file synchronization with field log data runs smoothly 100% without corrupt data.
                   </p>
                 </div>
 
                 <div className="p-4 bg-gray-50 rounded-xl border border-dashed border-[#1A1A1A]/20">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="material-symbols-outlined text-[#D32F2F] text-sm">trending_up</span>
-                    <h4 className="font-bold text-xs uppercase text-gray-700">Efisiensi Audit Ledger</h4>
+                    <h4 className="font-bold text-xs uppercase text-gray-700">Audit Ledger Efficiency</h4>
                   </div>
                   <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                    Sistem otomatisasi visual mendeteksi kepatuhan alur kerja secara optimal pada setiap item penugasan.
+                    Visual automation system optimally detects workflow compliance on each assignment item.
                   </p>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs">
-                <span className="font-bold text-gray-500 uppercase">Sinkronisasi Database</span>
+                <span className="font-bold text-gray-500 uppercase">Database Sync</span>
                 <span className="font-black text-green-600 uppercase flex items-center gap-1 font-bold">
                   <span className="w-2 h-2 rounded-full bg-green-600 inline-block animate-pulse"></span>
                   Active & Synced
@@ -493,15 +493,15 @@ export default function ReportsPage() {
           <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 space-y-6">
             <div className="flex flex-wrap justify-between items-center gap-4">
               <div>
-                <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Ledger Histori Audit</h3>
-                <p className="text-xs text-gray-500 font-medium">Log riwayat seluruh laporan yang sudah disetujui / ditolak</p>
+                <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Audit History Ledger</h3>
+                <p className="text-xs text-gray-500 font-medium">History log of all approved / rejected reports</p>
               </div>
               
               <div className="flex gap-4 items-center">
                 {/* Search */}
                 <input
                   type="text"
-                  placeholder="Cari Laporan..."
+                  placeholder="Search Reports..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold outline-none focus:border-[#D32F2F] bg-white text-[#1A1A1A]"
@@ -513,7 +513,7 @@ export default function ReportsPage() {
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold bg-white text-[#1A1A1A] cursor-pointer outline-none font-bold"
                 >
-                  <option value="All">Semua Kategori</option>
+                  <option value="All">All Categories</option>
                   <option value="Mechanical">Mechanical</option>
                   <option value="Electrical">Electrical</option>
                   <option value="HVAC">HVAC</option>
@@ -527,7 +527,7 @@ export default function ReportsPage() {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold bg-white text-[#1A1A1A] cursor-pointer outline-none font-bold"
                 >
-                  <option value="All">Semua Status</option>
+                  <option value="All">All Statuses</option>
                   <option value="Approved">Approved</option>
                   <option value="Rejected">Rejected</option>
                 </select>
@@ -539,12 +539,12 @@ export default function ReportsPage() {
                 <thead>
                   <tr className="border-b-2 border-[#1A1A1A] font-bold text-xs uppercase tracking-wider text-gray-500">
                     <th className="pb-3 pr-4">Task Code</th>
-                    <th className="pb-3 px-4">Judul / Asset</th>
+                    <th className="pb-3 px-4">Title / Asset</th>
                     <th className="pb-3 px-4">Vendor</th>
-                    <th className="pb-3 px-4">Tanggal Audit</th>
+                    <th className="pb-3 px-4">Audit Date</th>
                     <th className="pb-3 px-4">Audit Status</th>
-                    <th className="pb-3 px-4">Catatan Peninjau</th>
-                    <th className="pb-3 pl-4 text-right">Aksi</th>
+                    <th className="pb-3 px-4">Reviewer Notes</th>
+                    <th className="pb-3 pl-4 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-xs">
@@ -574,14 +574,14 @@ export default function ReportsPage() {
                           <button
                             onClick={() => window.open(`/supervisor/tasks/report-preview?reportId=${report.reportId}`, "_blank")}
                             className="p-1.5 hover:bg-[#D32F2F]/10 rounded-full transition-all border border-[#1A1A1A] bg-white cursor-pointer text-[#1A1A1A] hover:text-[#D32F2F] flex items-center justify-center"
-                            title="Buka Laporan PDF"
+                            title="Open PDF Report"
                           >
                             <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
                           </button>
                           <button
                             onClick={() => handleDownload(report)}
                             className="p-1.5 hover:bg-[#D32F2F]/10 rounded-full transition-all border border-[#1A1A1A] bg-white cursor-pointer text-[#1A1A1A] hover:text-[#D32F2F] flex items-center justify-center"
-                            title="Unduh File Laporan"
+                            title="Download Report File"
                           >
                             <span className="material-symbols-outlined text-[16px]">download</span>
                           </button>
@@ -592,7 +592,7 @@ export default function ReportsPage() {
                   {filteredReports.length === 0 && (
                     <tr>
                       <td colSpan={7} className="py-8 text-center text-gray-400 font-bold uppercase text-[10px]">
-                        Belum ada riwayat audit yang selesai
+                        No completed audit history yet
                       </td>
                     </tr>
                   )}
@@ -636,22 +636,22 @@ export default function ReportsPage() {
                 <strong>Task Code:</strong> {viewTargetReport.id}
               </p>
               <p>
-                <strong>Asset Mesin:</strong> {viewTargetReport.asset}
+                <strong>Machine Asset:</strong> {viewTargetReport.asset}
               </p>
               <p>
                 <strong>Vendor Partner:</strong> {viewTargetReport.vendorName}
               </p>
               <p>
-                <strong>Craft Kategori:</strong> {viewTargetReport.category}
+                <strong>Category Craft:</strong> {viewTargetReport.category}
               </p>
               <p>
-                <strong>Tanggal Selesai:</strong> {viewTargetReport.date}
+                <strong>Completion Date:</strong> {viewTargetReport.date}
               </p>
             </div>
 
             <div className="space-y-2">
               <h4 className="font-headline-lg text-xs font-black uppercase tracking-wider text-gray-500 border-b pb-2">
-                Catatan Supervisor Audit
+                Audit Supervisor Notes
               </h4>
               <p className="text-xs text-gray-600 leading-relaxed font-medium bg-gray-50 p-3 rounded-lg border border-dashed">
                 {viewTargetReport.notes}
@@ -664,7 +664,7 @@ export default function ReportsPage() {
                 className="flex-1 bg-white text-[#1A1A1A] border-2 border-[#1A1A1A] rounded-full py-2.5 font-bold text-xs uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
               >
                 <span className="material-symbols-outlined text-[16px]">download</span>
-                Unduh Berkas Log
+                Download Log File
               </button>
               <button
                 onClick={() => setViewTargetReport(null)}

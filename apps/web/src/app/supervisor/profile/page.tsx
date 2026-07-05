@@ -66,7 +66,7 @@ export default function SupervisorProfilePage() {
         .single();
 
       if (error || !data) {
-        triggerToast("Gagal memuat profil.", "error");
+        triggerToast("Failed to load profile.", "error");
         setLoading(false);
         return;
       }
@@ -87,7 +87,7 @@ export default function SupervisorProfilePage() {
   const handleSaveGeneralInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email.trim()) {
-      triggerToast("Full Name dan Email wajib diisi.", "error");
+      triggerToast("Full Name and Email are required.", "error");
       return;
     }
     if (!profile) return;
@@ -104,9 +104,13 @@ export default function SupervisorProfilePage() {
 
     setIsSaving(false);
     if (error) {
-      triggerToast("Gagal menyimpan perubahan: " + error.message, "error");
+      triggerToast("Failed to save changes: " + error.message, "error");
     } else {
-      triggerToast("Profil Supervisor berhasil diperbarui.", "success");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userName", fullName);
+        window.dispatchEvent(new Event("profileUpdated"));
+      }
+      triggerToast("Supervisor profile updated successfully.", "success");
     }
   };
 
@@ -131,7 +135,7 @@ export default function SupervisorProfilePage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfilePhoto(reader.result as string);
-        triggerToast("Preview foto diperbarui (storage tidak tersedia).", "info");
+        triggerToast("Photo preview updated (storage not available).", "info");
       };
       reader.readAsDataURL(file);
       return;
@@ -142,11 +146,15 @@ export default function SupervisorProfilePage() {
 
     await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", profile.id);
     setProfilePhoto(publicUrl);
-    triggerToast("Foto profil berhasil diperbarui.", "success");
+    if (typeof window !== "undefined") {
+      localStorage.setItem("userAvatar", publicUrl);
+      window.dispatchEvent(new Event("profileUpdated"));
+    }
+    triggerToast("Profile photo updated successfully.", "success");
   };
 
   const handleLogout = async () => {
-    triggerToast("MENUTUP SESI SUPERVISOR...", "info");
+    triggerToast("CLOSING SUPERVISOR SESSION...", "info");
     await supabase.auth.signOut();
     setTimeout(() => {
       router.push("/");
@@ -160,7 +168,7 @@ export default function SupervisorProfilePage() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat Profil...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Profile...</p>
         </div>
       </div>
     );
@@ -241,7 +249,7 @@ export default function SupervisorProfilePage() {
       <header className="fixed top-0 right-0 w-[calc(100%-220px)] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-10 z-40">
         <div>
           <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Supervisor Profile</h2>
-          <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Kelola kredensial & detail profil auditor</p>
+          <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Manage credentials & auditor profile details</p>
         </div>
         <div className="flex items-center gap-4">
           <NotificationBell />
@@ -299,7 +307,7 @@ export default function SupervisorProfilePage() {
                 onClick={handlePhotoClick}
                 className="mt-2 text-xs font-bold text-[#D32F2F] hover:underline bg-transparent border-none cursor-pointer p-0"
               >
-                Ganti Foto Profil
+                Change Profile Photo
               </button>
             </div>
           </section>
@@ -310,15 +318,15 @@ export default function SupervisorProfilePage() {
             {/* General Info Card */}
             <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
               <div className="pb-4 border-b border-gray-100">
-                <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Detail Akun</h4>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Perbarui field informasi sistem</p>
+                <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Account Details</h4>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Update system information fields</p>
               </div>
 
               <form onSubmit={handleSaveGeneralInfo} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
-                      Nama Lengkap
+                      Full Name
                     </label>
                     <input
                       type="text"
@@ -329,7 +337,7 @@ export default function SupervisorProfilePage() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
-                      Departemen
+                      Department
                     </label>
                     <input
                       type="text"
@@ -342,7 +350,7 @@ export default function SupervisorProfilePage() {
 
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
-                    Alamat Email
+                    Email Address
                   </label>
                   <input
                     type="email"
@@ -350,12 +358,12 @@ export default function SupervisorProfilePage() {
                     readOnly
                     className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs font-semibold text-gray-400 cursor-not-allowed"
                   />
-                  <p className="text-[9px] text-gray-400 font-semibold mt-1">Email tidak dapat diubah.</p>
+                  <p className="text-[9px] text-gray-400 font-semibold mt-1">Email address cannot be changed.</p>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
-                    Nomor Telepon
+                    Phone Number
                   </label>
                   <input
                     type="text"
@@ -399,10 +407,10 @@ export default function SupervisorProfilePage() {
                   {isSaving ? (
                     <>
                       <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Menyimpan...
+                      Saving...
                     </>
                   ) : (
-                    "Simpan Perubahan"
+                    "Save Changes"
                   )}
                 </button>
               </form>
@@ -412,8 +420,8 @@ export default function SupervisorProfilePage() {
               {/* Account Stats Card */}
               <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
                 <div className="pb-4 border-b border-gray-100">
-                  <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Info Sistem</h4>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Status akun & keamanan</p>
+                  <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">System Info</h4>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Account status & security</p>
                 </div>
 
                 <div className="space-y-4">
@@ -452,7 +460,7 @@ export default function SupervisorProfilePage() {
                     className="w-full bg-white text-[#D32F2F] border-2 border-[#D32F2F] rounded-full py-3 font-bold text-xs uppercase tracking-wider hover:bg-[#D32F2F] hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-[16px]">logout</span>
-                    Keluar dari Sistem
+                    Log Out of System
                   </button>
                 </div>
               </section>

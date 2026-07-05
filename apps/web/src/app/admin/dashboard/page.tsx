@@ -46,6 +46,7 @@ export default function AdminDashboardPage() {
   });
   const [recentTasks, setRecentTasks] = useState<RecentTask[]>([]);
   const [adminName, setAdminName] = useState("Admin");
+  const [adminAvatar, setAdminAvatar] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Toast Helper
@@ -150,14 +151,26 @@ export default function AdminDashboardPage() {
       // Get admin name from localStorage or Supabase
       if (typeof window !== "undefined") {
         const storedName = localStorage.getItem("userName");
+        const storedAvatar = localStorage.getItem("userAvatar");
         if (storedName) setAdminName(storedName);
-        else if (profileRes.data?.user) {
+        if (storedAvatar) setAdminAvatar(storedAvatar);
+
+        if (profileRes.data?.user) {
           const { data: profile } = await supabase
             .from("profiles")
-            .select("full_name")
+            .select("full_name, avatar_url")
             .eq("id", profileRes.data.user.id)
             .single();
-          if (profile?.full_name) setAdminName(profile.full_name);
+          if (profile) {
+            if (profile.full_name) {
+              setAdminName(profile.full_name);
+              localStorage.setItem("userName", profile.full_name);
+            }
+            if (profile.avatar_url) {
+              setAdminAvatar(profile.avatar_url);
+              localStorage.setItem("userAvatar", profile.avatar_url);
+            }
+          }
         }
       }
     } catch (err) {
@@ -170,6 +183,15 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
+
+    const handleProfileUpdate = () => {
+      fetchDashboardData();
+    };
+
+    window.addEventListener("profileUpdated", handleProfileUpdate);
+    return () => {
+      window.removeEventListener("profileUpdated", handleProfileUpdate);
+    };
   }, [fetchDashboardData]);
 
   // Status badge helper
@@ -245,9 +267,17 @@ export default function AdminDashboardPage() {
               </p>
             </div>
             <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#D32F2F]">
-                account_circle
-              </span>
+              {adminAvatar ? (
+                <img
+                  className="w-full h-full object-cover"
+                  src={adminAvatar}
+                  alt="Admin Portrait"
+                />
+              ) : (
+                <span className="material-symbols-outlined text-[#D32F2F]">
+                  account_circle
+                </span>
+              )}
             </div>
           </div>
         </div>

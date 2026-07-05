@@ -1,5 +1,5 @@
 // ============================================================
-// Database Types untuk MAINTAIN.AI - PM Verification System
+// Database Types for MAINTAIN.AI - PM Verification System
 // ============================================================
 
 export type RoleType = 'admin' | 'supervisor' | 'vendor'
@@ -93,10 +93,10 @@ export type SignatureFormat = 'base64' | 'storage_url'
 
 export interface Signature {
   id: string
-  user_id: string              // Profile.id (Vendor atau Supervisor)
+  user_id: string              // Profile.id (Vendor or Supervisor)
   label: string                // e.g. "Default", "Formal", "Initials"
-  signature_data: string       // base64 data URL (image/png) ATAU storage path
-  is_default: boolean          // tanda tangan utama/aktif user
+  signature_data: string       // base64 data URL (image/png) OR storage path
+  is_default: boolean          // main/active signature of user
   created_at: string
   updated_at: string
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 interface Profile {
@@ -22,6 +23,7 @@ interface Message {
 }
 
 export default function ChatWidget() {
+  const pathname = usePathname();
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
@@ -58,7 +60,7 @@ export default function ChatWidget() {
     scrollToBottom();
   }, [messages, isOpen]);
 
-  // Fetch current user on mount
+  // Fetch current user on mount, auth state changes, or navigation
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -72,14 +74,32 @@ export default function ChatWidget() {
 
           if (profile && !error) {
             setCurrentUser(profile);
+          } else {
+            setCurrentUser(null);
           }
+        } else {
+          setCurrentUser(null);
         }
       } catch (err) {
         console.error("Error fetching user in ChatWidget:", err);
+        setCurrentUser(null);
       }
     };
+
     fetchUser();
-  }, []);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        fetchUser();
+      } else if (event === "SIGNED_OUT") {
+        setCurrentUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [pathname, supabase]);
 
   // Fetch unread messages
   useEffect(() => {
@@ -426,8 +446,8 @@ export default function ChatWidget() {
     setIsOpen(!isOpen);
   };
 
-  // Only render if a user is logged in
-  if (!currentUser) return null;
+  // Only render if a user is logged in and not on the login page
+  if (pathname === "/" || !currentUser) return null;
 
   const filteredContacts = contacts.filter((c) =>
     c.full_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -469,7 +489,7 @@ export default function ChatWidget() {
         className={`w-16 h-16 bg-[#D32F2F] text-white rounded-full border-2 border-[#1A1A1A] flex items-center justify-center transition-all cursor-grab active:cursor-grabbing shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 active:scale-95 border-none select-none ${
           isDragging ? "opacity-90 scale-105" : ""
         }`}
-        title="Hubungi Supervisor / Vendor (Drag untuk memindahkan)"
+        title="Contact Supervisor / Vendor (Drag to move)"
       >
         <span className="material-symbols-outlined text-3xl text-white pointer-events-none">
           {isOpen ? "close" : "forum"}
@@ -516,10 +536,10 @@ export default function ChatWidget() {
                 </span>
                 <div className="overflow-hidden flex-1">
                   <h4 className="font-extrabold text-xs uppercase tracking-wider truncate text-white leading-none">
-                    Komunikasi Portal
+                    Communication Portal
                   </h4>
                   <p className="text-[8px] text-gray-400 font-extrabold uppercase tracking-wider leading-none mt-0.5">
-                    Hubungkan Vendor & Supervisor
+                    Connect Vendor & Supervisor
                   </p>
                 </div>
               </>
@@ -536,7 +556,7 @@ export default function ChatWidget() {
                     <div className="flex flex-col items-center justify-center h-full gap-2">
                       <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
                       <span className="text-[10px] font-bold text-gray-400 uppercase">
-                        Memuat Obrolan...
+                        Loading Chat...
                       </span>
                     </div>
                   ) : messages.length === 0 ? (
@@ -545,10 +565,10 @@ export default function ChatWidget() {
                         forum
                       </span>
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                        Belum Ada Pesan
+                        No Messages Yet
                       </span>
                       <p className="text-[9px] text-gray-400 mt-1 max-w-[180px] font-medium leading-relaxed">
-                        Ketik pesan di bawah untuk memulai percakapan aman.
+                        Type a message below to start a secure conversation.
                       </p>
                     </div>
                   ) : (
@@ -592,7 +612,7 @@ export default function ChatWidget() {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Tulis pesan..."
+                    placeholder="Type a message..."
                     className="flex-1 border border-black/20 rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#D32F2F] placeholder-gray-400 bg-white text-black"
                   />
                   <button
@@ -619,7 +639,7 @@ export default function ChatWidget() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Cari kontak..."
+                      placeholder="Search contacts..."
                       className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-black/10 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#D32F2F] focus:bg-white text-black"
                     />
                   </div>
@@ -631,7 +651,7 @@ export default function ChatWidget() {
                     <div className="flex flex-col items-center justify-center h-full gap-2">
                       <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
                       <span className="text-[10px] font-bold text-gray-400 uppercase">
-                        Memuat Kontak...
+                        Loading Contacts...
                       </span>
                     </div>
                   ) : filteredContacts.length === 0 ? (
@@ -640,7 +660,7 @@ export default function ChatWidget() {
                         person_off
                       </span>
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                        Kontak Tidak Ditemukan
+                        Contact Not Found
                       </span>
                     </div>
                   ) : (
@@ -664,7 +684,7 @@ export default function ChatWidget() {
                               {contactUnread > 0 && (
                                 <span
                                   className="inline-block w-2.5 h-2.5 bg-[#D32F2F] rounded-full animate-pulse"
-                                  title={`${contactUnread} pesan baru`}
+                                  title={`${contactUnread} new messages`}
                                 />
                               )}
                             </p>

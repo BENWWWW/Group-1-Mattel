@@ -258,7 +258,7 @@ export default function ReviewDetailPage() {
       setTasks(formattedTasks);
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal memuat tugas: " + e.message, "error");
+      triggerToast("Failed to load tasks: " + e.message, "error");
     } finally {
       setLoading(false);
     }
@@ -380,7 +380,7 @@ export default function ReviewDetailPage() {
         if (reportError) throw reportError;
       }
 
-      triggerToast(`Task PM ${selectedTask.task_code} berhasil disetujui & ditandatangani.`, "success");
+      triggerToast(`PM Task ${selectedTask.task_code} successfully approved & signed.`, "success");
       setIsApproveModalOpen(false);
       clearSignature(approveCanvasRef.current, setApproveSigned);
       setNotes("");
@@ -389,7 +389,7 @@ export default function ReviewDetailPage() {
       await fetchTasks();
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal menyetujui tugas: " + e.message, "error");
+      triggerToast("Failed to approve task: " + e.message, "error");
     } finally {
       setLoading(false);
     }
@@ -398,7 +398,7 @@ export default function ReviewDetailPage() {
   // Rejection Submission to Supabase
   const handleConfirmRejection = async () => {
     if (!rejectSigned || !rejectReason.trim() || !selectedTask) {
-      triggerToast("Alasan penolakan wajib diisi.", "error");
+      triggerToast("Rejection reason is required.", "error");
       return;
     }
     setLoading(true);
@@ -456,7 +456,7 @@ export default function ReviewDetailPage() {
         if (reportError) throw reportError;
       }
 
-      triggerToast(`Task PM ${selectedTask.task_code} berhasil ditolak & dikembalikan ke vendor.`, "error");
+      triggerToast(`PM Task ${selectedTask.task_code} successfully rejected & returned to vendor.`, "error");
       setIsRejectModalOpen(false);
       clearSignature(rejectCanvasRef.current, setRejectSigned);
       setNotes("");
@@ -465,7 +465,7 @@ export default function ReviewDetailPage() {
       await fetchTasks();
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal menolak tugas: " + e.message, "error");
+      triggerToast("Failed to reject task: " + e.message, "error");
     } finally {
       setLoading(false);
     }
@@ -517,7 +517,7 @@ export default function ReviewDetailPage() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat Tugas...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Tasks...</p>
         </div>
       </div>
     );
@@ -645,16 +645,16 @@ export default function ReviewDetailPage() {
               <section className="col-span-12 lg:col-span-6 flex flex-col gap-6">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-headline-md text-lg font-extrabold border-l-[6px] border-[#D32F2F] pl-4 uppercase tracking-tighter text-[#1A1A1A]">
-                    Checklist Hasil
+                    Checklist Results
                   </h3>
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                    {selectedTask.checklist.filter(item => item.status === "Pass" || (item.type === "optional" && item.status === "Awaiting")).length} / {selectedTask.checklist.length} SELESAI
+                    {selectedTask.checklist.filter(item => item.status === "Pass" || (item.type === "optional" && item.status === "Awaiting")).length} / {selectedTask.checklist.length} COMPLETED
                   </span>
                 </div>
 
                 {selectedTask.checklist.length === 0 ? (
                   <div className="p-8 text-center bg-gray-50 border-2 border-[#1A1A1A] rounded-xl font-bold uppercase tracking-wider text-xs text-gray-400">
-                    Tidak ada item checklist dalam laporan
+                    No checklist items in the report
                   </div>
                 ) : (
                   selectedTask.checklist.map((item, idx) => (
@@ -733,14 +733,14 @@ export default function ReviewDetailPage() {
               <section className="col-span-12 lg:col-span-6 flex flex-col gap-6">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-headline-md text-lg font-extrabold border-l-[6px] border-[#D32F2F] pl-4 uppercase tracking-tighter text-[#1A1A1A]">
-                    Proses Review
+                    Review Process
                   </h3>
                 </div>
 
                 <div className="bg-white border-2 border-[#1A1A1A] rounded-xl p-6 flex flex-col gap-6">
                   {selectedTask.adminNotes && (
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] text-black font-black uppercase">Catatan Tambahan Admin</label>
+                      <label className="text-[10px] text-black font-black uppercase">Admin Additional Notes</label>
                       <div className="border-2 border-[#1A1A1A] rounded-xl p-4 font-body-md text-xs bg-black/5 text-gray-700 min-h-[60px] font-semibold whitespace-pre-wrap">
                         {selectedTask.adminNotes}
                       </div>
@@ -749,7 +749,7 @@ export default function ReviewDetailPage() {
 
                   {selectedTask.techNotes && (
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] text-black font-black uppercase">Catatan Vendor / Teknisi</label>
+                      <label className="text-[10px] text-black font-black uppercase">Vendor / Technician Notes</label>
                       <div className="border-2 border-[#1A1A1A] rounded-xl p-4 font-body-md text-xs bg-gray-50 text-gray-700 min-h-[60px] font-semibold whitespace-pre-wrap">
                         {selectedTask.techNotes}
                       </div>
@@ -759,8 +759,8 @@ export default function ReviewDetailPage() {
                   {selectedTask.aiConfidenceScore !== undefined && (
                     <div className="bg-amber-50 border-2 border-[#1A1A1A] rounded-xl p-4 flex items-center justify-between">
                       <div>
-                        <p className="text-[9px] font-black uppercase text-amber-800">Skor Keyakinan AI</p>
-                        <p className="text-xs text-gray-600 font-medium">Validasi sistem pendeteksi keandalan model</p>
+                        <p className="text-[9px] font-black uppercase text-amber-800">AI Confidence Score</p>
+                        <p className="text-xs text-gray-600 font-medium">System validation for model reliability</p>
                       </div>
                       <div className="text-right">
                         <span className="font-black text-2xl text-amber-700">{selectedTask.aiConfidenceScore}%</span>
@@ -769,12 +769,12 @@ export default function ReviewDetailPage() {
                   )}
 
                   <div className="flex flex-col gap-2">
-                    <label className="text-[10px] text-black font-black uppercase">Catatan Supervisor</label>
+                    <label className="text-[10px] text-black font-black uppercase">Supervisor Notes</label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       className="border-2 border-[#1A1A1A] rounded-xl p-4 font-body-md text-xs min-h-[140px] focus:ring-0 focus:border-[#D32F2F] transition-all resize-none bg-black/5"
-                      placeholder={selectedTask.supervisorNotes || "Tulis catatan verifikasi disini..."}
+                      placeholder={selectedTask.supervisorNotes || "Write verification notes here..."}
                     />
                   </div>
 
@@ -783,15 +783,15 @@ export default function ReviewDetailPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <button
                           onClick={() => setIsRejectModalOpen(true)}
-                          className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-black text-white hover:bg-[#D32F2F] transition-all cursor-pointer"
+                          className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-black text-white hover:bg-[#D32F2F] hover:border-[#D32F2F] transition-all cursor-pointer"
                         >
-                          TOLAK (REJECT)
+                          REJECT
                         </button>
                         <button
                           onClick={() => setIsApproveModalOpen(true)}
-                          className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-[#D32F2F] text-white hover:bg-black transition-all cursor-pointer"
+                          className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-black text-white hover:bg-[#2E7D32] hover:border-[#2E7D32] transition-all cursor-pointer"
                         >
-                          SETUJUI (APPROVE)
+                          APPROVE
                         </button>
                       </div>
                     )}
@@ -801,14 +801,14 @@ export default function ReviewDetailPage() {
                         className="py-4 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-[#D32F2F] text-white hover:bg-black transition-all cursor-pointer flex items-center justify-center gap-2"
                       >
                         <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
-                        BUKA / DOWNLOAD LAPORAN PDF RESMI
+                        OPEN / DOWNLOAD OFFICIAL PDF REPORT
                       </button>
                     )}
                   </div>
 
                   <div className="mt-4 pt-6 border-t-2 border-black">
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-[10px] font-black uppercase">Log Audit Sistem</span>
+                      <span className="text-[10px] font-black uppercase">System Audit Log</span>
                       <span className="material-symbols-outlined text-black text-base">receipt_long</span>
                     </div>
                     <ul className="space-y-4">
@@ -836,23 +836,23 @@ export default function ReviewDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-[#D32F2F]">
                 <div className="flex justify-between items-start">
-                  <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">Laporan Menunggu Review</span>
+                  <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">Reports Awaiting Review</span>
                   <span className="material-symbols-outlined text-[#D32F2F]">pending_actions</span>
                 </div>
                 <div className="mt-4">
                   <p className="font-headline-xl text-5xl font-extrabold text-[#D32F2F] tracking-tighter">{belumDiReviewCount}</p>
-                  <p className="text-xs text-red-600 font-bold uppercase mt-1">Memerlukan verifikasi supervisor</p>
+                  <p className="text-xs text-red-600 font-bold uppercase mt-1">Requires supervisor verification</p>
                 </div>
               </div>
 
               <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-green-600">
                 <div className="flex justify-between items-start">
-                  <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">Total Evaluasi Selesai</span>
+                  <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">Total Completed Evaluations</span>
                   <span className="material-symbols-outlined text-green-600">verified</span>
                 </div>
                 <div className="mt-4">
                   <p className="font-headline-xl text-5xl font-extrabold text-green-600 tracking-tighter">{sudahDiReviewCount}</p>
-                  <p className="text-xs text-green-700 font-bold uppercase mt-1">Telah disetujui / ditolak</p>
+                  <p className="text-xs text-green-700 font-bold uppercase mt-1">Approved / rejected</p>
                 </div>
               </div>
             </div>
@@ -863,14 +863,14 @@ export default function ReviewDetailPage() {
                 
                 {/* Search */}
                 <div className="flex-1 min-w-[240px]">
-                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Cari Tugas</label>
+                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Search Tasks</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400">search</span>
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Cari Kode, Asset, Vendor..."
+                      placeholder="Search Code, Asset, Vendor..."
                       className="w-full pl-10 pr-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm text-[#1A1A1A] focus:ring-[#D32F2F] focus:border-[#D32F2F] outline-none bg-white font-body-md"
                     />
                   </div>
@@ -878,13 +878,13 @@ export default function ReviewDetailPage() {
 
                 {/* Category Filter */}
                 <div className="flex-1 min-w-[200px]">
-                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Kategori</label>
+                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Category</label>
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="w-full px-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm text-[#1A1A1A] focus:ring-[#D32F2F] outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value="All Categories">Semua Kategori</option>
+                    <option value="All Categories">All Categories</option>
                     <option value="MECHANICAL">Mechanical</option>
                     <option value="ELECTRICAL">Electrical</option>
                     <option value="FACILITIES">Facilities</option>
@@ -893,13 +893,13 @@ export default function ReviewDetailPage() {
 
                 {/* Status Filter */}
                 <div className="flex-1 min-w-[200px]">
-                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Status Tugas</label>
+                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Task Status</label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full px-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm text-[#1A1A1A] focus:ring-[#D32F2F] outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value="All Statuses">Semua Status</option>
+                    <option value="All Statuses">All Statuses</option>
                     <option value="Submitted">Submitted (Review)</option>
                     <option value="Pending">Pending</option>
                     <option value="In_Progress">In Progress</option>
@@ -910,7 +910,7 @@ export default function ReviewDetailPage() {
 
                 {/* Date Filter: Start Date */}
                 <div className="flex-1 min-w-[160px]">
-                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Tanggal Awal</label>
+                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Start Date</label>
                   <input
                     type="date"
                     value={startDate}
@@ -921,7 +921,7 @@ export default function ReviewDetailPage() {
 
                 {/* Date Filter: End Date */}
                 <div className="flex-1 min-w-[160px]">
-                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Tanggal Akhir</label>
+                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">End Date</label>
                   <input
                     type="date"
                     value={endDate}
@@ -937,7 +937,7 @@ export default function ReviewDetailPage() {
               {paginatedTasks.length === 0 ? (
                 <div className="col-span-full py-16 text-center border-2 border-dashed border-gray-300 rounded-[20px]">
                   <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">find_in_page</span>
-                  <p className="font-extrabold uppercase text-gray-500 tracking-wider text-xs">Tidak ada tugas yang sesuai filter</p>
+                  <p className="font-extrabold uppercase text-gray-500 tracking-wider text-xs">No tasks match the filter</p>
                 </div>
               ) : (
                 paginatedTasks.map((task) => (
@@ -985,7 +985,7 @@ export default function ReviewDetailPage() {
                             : "bg-white text-black hover:bg-black/5"
                         }`}
                       >
-                        {task.status === "submitted" ? "Audit Laporan" : "Detail Tugas"}
+                        {task.status === "submitted" ? "Audit Report" : "Task Details"}
                       </button>
                     </div>
                   </div>
@@ -997,7 +997,7 @@ export default function ReviewDetailPage() {
             {totalPages > 1 && (
               <footer className="flex justify-between items-center bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] shadow-none">
                 <p className="text-xs font-bold text-gray-500 uppercase">
-                  Menampilkan {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredTasks.length)} dari {filteredTasks.length} tugas
+                  Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredTasks.length)} of {filteredTasks.length} tasks
                 </p>
                 <div className="flex items-center gap-2">
                   <button
@@ -1062,34 +1062,34 @@ export default function ReviewDetailPage() {
                 </span>
               </div>
               <div>
-                <h3 className="font-headline-lg text-xl font-extrabold uppercase tracking-tighter">Setujui Laporan PM?</h3>
-                <p className="text-xs text-gray-500">Tugas akan diverifikasi dan diposting ke log ledger.</p>
+                <h3 className="font-headline-lg text-xl font-extrabold uppercase tracking-tighter">Approve PM Report?</h3>
+                <p className="text-xs text-gray-500">The task will be verified and posted to the ledger log.</p>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase text-black">Catatan Reviewer (Opsional)</label>
+              <label className="text-[10px] font-black uppercase text-black">Reviewer Notes (Optional)</label>
               <textarea
                 value={approveNotes}
                 onChange={(e) => setApproveNotes(e.target.value)}
                 className="border-2 border-black/10 rounded-xl p-3 font-body-md text-xs min-h-[80px] focus:ring-0 focus:border-[#D32F2F] transition-all resize-none bg-black/5"
-                placeholder="Tambahkan catatan tambahan..."
+                placeholder="Add additional notes..."
               />
             </div>
 
             {/* Signature Area */}
             <div className="flex flex-col gap-4 border-t-2 border-black pt-4">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-black uppercase text-black">Tanda Tangan Supervisor</label>
+                <label className="text-[10px] font-black uppercase text-black">Supervisor Signature</label>
                 <button onClick={() => clearSignature(approveCanvasRef.current, setApproveSigned)} className="text-[9px] font-extrabold uppercase text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent">
-                  Hapus Tanda Tangan
+                  Clear Signature
                 </button>
               </div>
 
               <div className="w-full h-32 bg-black/5 border-2 border-black rounded-xl flex items-center justify-center relative overflow-hidden">
                 {!approveSigned && (
                   <span className="absolute text-gray-400 text-[10px] font-bold uppercase tracking-widest pointer-events-none">
-                    Gambar tanda tangan Anda disini
+                    Draw your signature here
                   </span>
                 )}
                 <canvas
@@ -1110,7 +1110,7 @@ export default function ReviewDetailPage() {
 
             <div className="grid grid-cols-2 gap-4 pt-2">
               <button onClick={() => setIsApproveModalOpen(false)} className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-white text-black hover:bg-black/5 transition-all cursor-pointer">
-                Batal
+                Cancel
               </button>
               <button
                 onClick={handleConfirmApproval}
@@ -1119,7 +1119,7 @@ export default function ReviewDetailPage() {
                   approveSigned ? "bg-[#D32F2F] hover:bg-black" : "bg-gray-300 opacity-50 cursor-not-allowed"
                 }`}
               >
-                Konfirmasi Setuju
+                Confirm Approval
               </button>
             </div>
           </div>
@@ -1138,18 +1138,18 @@ export default function ReviewDetailPage() {
                 </span>
               </div>
               <div>
-                <h3 className="font-headline-lg text-xl font-extrabold uppercase tracking-tighter">Tolak Laporan PM?</h3>
-                <p className="text-xs text-gray-500">Kembalikan tugas ke vendor untuk revisi.</p>
+                <h3 className="font-headline-lg text-xl font-extrabold uppercase tracking-tighter">Reject PM Report?</h3>
+                <p className="text-xs text-gray-500">Return the task to vendor for revision.</p>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase text-black">Alasan Penolakan (Wajib)</label>
+              <label className="text-[10px] font-black uppercase text-black">Rejection Reason (Required)</label>
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 className="border-2 border-[#D32F2F] rounded-xl p-3 font-body-md text-xs min-h-[80px] focus:ring-0 focus:border-[#D32F2F] transition-all resize-none bg-black/5"
-                placeholder="Jelaskan alasan penolakan..."
+                placeholder="Explain reason for rejection..."
                 required
               />
             </div>
@@ -1157,16 +1157,16 @@ export default function ReviewDetailPage() {
             {/* Signature Area */}
             <div className="flex flex-col gap-4 border-t-2 border-black pt-4">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-black uppercase text-black">Tanda Tangan Supervisor</label>
+                <label className="text-[10px] font-black uppercase text-black">Supervisor Signature</label>
                 <button onClick={() => clearSignature(rejectCanvasRef.current, setRejectSigned)} className="text-[9px] font-extrabold uppercase text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent">
-                  Hapus Tanda Tangan
+                  Clear Signature
                 </button>
               </div>
 
               <div className="w-full h-32 bg-black/5 border-2 border-black rounded-xl flex items-center justify-center relative overflow-hidden">
                 {!rejectSigned && (
                   <span className="absolute text-gray-400 text-[10px] font-bold uppercase tracking-widest pointer-events-none">
-                    Gambar tanda tangan Anda disini
+                    Draw your signature here
                   </span>
                 )}
                 <canvas
@@ -1187,7 +1187,7 @@ export default function ReviewDetailPage() {
 
             <div className="grid grid-cols-2 gap-4 pt-2">
               <button onClick={() => setIsRejectModalOpen(false)} className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-white text-black hover:bg-black/5 transition-all cursor-pointer">
-                Batal
+                Cancel
               </button>
               <button
                 onClick={handleConfirmRejection}
@@ -1196,7 +1196,7 @@ export default function ReviewDetailPage() {
                   rejectSigned && rejectReason.trim() ? "bg-black hover:bg-[#D32F2F]" : "bg-gray-300 opacity-50 cursor-not-allowed"
                 }`}
               >
-                Konfirmasi Tolak
+                Confirm Rejection
               </button>
             </div>
           </div>

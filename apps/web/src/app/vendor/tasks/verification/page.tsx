@@ -223,7 +223,7 @@ function AIVerificationScoreContent() {
 
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal memuat verifikasi: " + e.message, "error");
+      triggerToast("Failed to load verification: " + e.message, "error");
     } finally {
       setLoading(false);
     }
@@ -294,7 +294,7 @@ function AIVerificationScoreContent() {
 
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal memproses verifikasi: " + e.message, "error");
+      triggerToast("Failed to process verification: " + e.message, "error");
       setIsProcessingAI(false);
     }
   };
@@ -405,7 +405,7 @@ function AIVerificationScoreContent() {
 
     } catch (err: any) {
       console.error(err);
-      triggerToast("Gagal submit report: " + err.message, "error");
+      triggerToast("Failed to submit report: " + err.message, "error");
       setIsSubmitting(false);
     }
   };
@@ -421,7 +421,7 @@ function AIVerificationScoreContent() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memproses Telemetri AI...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Processing AI Telemetry...</p>
         </div>
       </div>
     );
@@ -862,22 +862,16 @@ function AIVerificationScoreContent() {
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <button
-                    onClick={() => {
-                      setSelectedItem((prev) => (prev ? { ...prev, hasPhoto: true, photoUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuC5PUuGyQj5iS4K8OsIciVH7soDv1iZxtqoatUCeaCmEEKmdhA1x8m6nw1yuqlGdGaC5Xd-Pi7ruxFFEFOzDJVJvI6jxfhNEwxOGSYYK3aqTn7bUyWkASIk5CfpFsqtupp3qdntxCuEE23lVt4HpQDmVifRZ_F75McxZHaG7m2q474o047fSPROxEORil2stcLkoeNGCABR5wGRtbNqpZ-omsxPX5lnF_k7-26BkpXXV66DAYAi_HNPfpPywwFX6H2QGo1H3p6WAJ5U" } : null));
-                      triggerToast("Replacement photo uploaded successfully.", "success");
-                    }}
-                    className="flex items-center justify-center gap-2 py-3 border-2 border-[#1A1A1A] font-black uppercase text-[10px] rounded-lg hover:bg-[#1A1A1A] hover:text-white transition-colors bg-white cursor-pointer"
+                    disabled
+                    className="flex items-center justify-center gap-2 py-3 border-2 border-gray-300 font-black uppercase text-[10px] rounded-lg opacity-50 cursor-not-allowed bg-gray-100 text-gray-400"
                   >
-                    <span className="material-symbols-outlined text-sm">upload</span> Upload Mock
+                    <span className="material-symbols-outlined text-sm">lock</span> Mock Disabled
                   </button>
                   <button
-                    onClick={() => {
-                      setSelectedItem((prev) => (prev ? { ...prev, hasPhoto: true, photoUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAX4GvgHbE6sHyxp1a6pBEHGlqiB3qbDj7HQ9fAQQgIpN-FXUXfzK-5aP8hhrPe1Kkqj1yk2J5s97U-QDn6E3TRIzT6NNO05RRzoMHu2bqEtWH8svew-mlHLs_trG8FHB5rYfbOrculRtZAM7aKd9sbt6YDkuJEXCTwWMzNcV1Bx_5UHoRyUnMIWdhehZGhZyjrZvpvxBcJ-WlTPdoDS7j_0wtK24YZKQViUaWOl_lwxV_8XpxKddnKm4kkMOSbMVDmjTmzzqp-at5y" } : null));
-                      triggerToast("Mock device camera accessed. Evidence re-recorded.", "success");
-                    }}
-                    className="flex items-center justify-center gap-2 py-3 border-2 border-[#1A1A1A] font-black uppercase text-[10px] rounded-lg hover:bg-[#1A1A1A] hover:text-white transition-colors bg-white cursor-pointer"
+                    disabled
+                    className="flex items-center justify-center gap-2 py-3 border-2 border-gray-300 font-black uppercase text-[10px] rounded-lg opacity-50 cursor-not-allowed bg-gray-100 text-gray-400"
                   >
-                    <span className="material-symbols-outlined text-sm">photo_camera</span> Retake Mock
+                    <span className="material-symbols-outlined text-sm">lock</span> Camera Disabled
                   </button>
                 </div>
               </section>

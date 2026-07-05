@@ -80,7 +80,7 @@ function ConfirmationContent() {
         }
       }
     } catch (e) {
-      console.error("Gagal memuat profile user: ", e);
+      console.error("Failed to load user profile: ", e);
     }
   };
 

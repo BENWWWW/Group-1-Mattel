@@ -113,7 +113,7 @@ export default function ReportsPage() {
   // ─── Download CSV ────────────────────────────────────────────────────────────
   const handleDownloadCSV = async () => {
     setIsExportingCSV(true);
-    triggerToast("Menyiapkan CSV export...", "info");
+    triggerToast("Preparing CSV export...", "info");
     try {
       // Fetch ALL reports (no pagination) matching current status filter
       let query = supabase
@@ -221,9 +221,9 @@ export default function ReportsPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      triggerToast(`CSV berhasil diunduh (${exportRows.length} baris).`, "success");
+      triggerToast(`CSV successfully downloaded (${exportRows.length} rows).`, "success");
     } catch (err: any) {
-      triggerToast("Gagal export CSV: " + (err.message || "Unknown error"), "error");
+      triggerToast("Failed to export CSV: " + (err.message || "Unknown error"), "error");
     } finally {
       setIsExportingCSV(false);
     }

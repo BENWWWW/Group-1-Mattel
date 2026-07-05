@@ -137,7 +137,7 @@ export default function VPMHistoryPage() {
 
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal memuat history PM: " + e.message, "error");
+      triggerToast("Failed to load PM history: " + e.message, "error");
     } finally {
       setLoading(false);
     }
@@ -187,7 +187,7 @@ export default function VPMHistoryPage() {
   };
 
   const handleDownloadReport = () => {
-    triggerToast("Unduhan laporan telemetri telah dimulai.", "info");
+    triggerToast("Telemetry report download started.", "info");
   };
 
   const avatarSrc = currentUser?.avatar_url ||
@@ -198,7 +198,7 @@ export default function VPMHistoryPage() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat History PM...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading PM History...</p>
         </div>
       </div>
     );
@@ -501,7 +501,7 @@ export default function VPMHistoryPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => triggerToast("Memutar audio telemetry...", "info")}
+                    onClick={() => triggerToast("Playing audio telemetry...", "info")}
                     className="px-4 py-2 border-2 border-black rounded-lg text-xs font-bold uppercase hover:bg-black hover:text-white transition-colors cursor-pointer bg-white text-black"
                   >
                     Play Summary

@@ -228,7 +228,7 @@ export default function PMChecklistPage() {
       setTasks(mapped);
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal memuat tugas: " + e.message, "error");
+      triggerToast("Failed to load tasks: " + e.message, "error");
     } finally {
       setLoading(false);
     }
@@ -270,7 +270,7 @@ export default function PMChecklistPage() {
         .eq("id", taskId);
       if (error) throw error;
     } catch (e: any) {
-      console.error("Gagal menyimpan progress checklist ke DB: ", e.message);
+      console.error("Failed to save checklist progress to DB: ", e.message);
     }
   };
   // Start task helper to update DB status to in_progress
@@ -282,12 +282,12 @@ export default function PMChecklistPage() {
         .eq("id", taskId);
       if (error) throw error;
       
-      triggerToast("Tugas dimulai! Silakan isi checklist pengerjaan.", "success");
+      triggerToast("Task started! Please fill out the checklist.", "success");
       await loadTasksData();
       setSelectedTaskId(taskId);
     } catch (e: any) {
-      console.error("Gagal memulai tugas:", e.message);
-      triggerToast("Gagal memulai tugas: " + e.message, "error");
+      console.error("Failed to start task:", e.message);
+      triggerToast("Failed to start task: " + e.message, "error");
     }
   };
   const handleRemovePhoto = async (itemId: string) => {
@@ -314,10 +314,10 @@ export default function PMChecklistPage() {
       );
 
       await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
-      triggerToast("Foto bukti dihapus dan status direset ke Awaiting.", "info");
+      triggerToast("Evidence photo deleted and status reset to Awaiting.", "info");
     } catch (e: any) {
-      console.error("Gagal menghapus foto:", e.message);
-      triggerToast("Gagal menghapus foto: " + e.message, "error");
+      console.error("Failed to delete photo:", e.message);
+      triggerToast("Failed to delete photo: " + e.message, "error");
     }
   };
 
@@ -374,7 +374,7 @@ export default function PMChecklistPage() {
       return item.status !== "Pass";
     });
     if (incompleteTasks.length > 0) {
-      triggerToast(`Laporan tidak dapat dikirim! Ada ${incompleteTasks.length} item checklist wajib yang belum diselesaikan (status PASS).`, "error");
+      triggerToast(`Report cannot be submitted! There are ${incompleteTasks.length} required checklist items that are not completed (status PASS).`, "error");
       return;
     }
 
@@ -389,7 +389,7 @@ export default function PMChecklistPage() {
       return needsImage && !item.image;
     });
     if (missingImages.length > 0) {
-      triggerToast(`Laporan tidak dapat dikirim! Foto bukti belum diunggah untuk ${missingImages.length} item checklist.`, "error");
+      triggerToast(`Report cannot be submitted! Evidence photo has not been uploaded for ${missingImages.length} checklist items.`, "error");
       return;
     }
 
@@ -455,7 +455,7 @@ export default function PMChecklistPage() {
 
     } catch (e: any) {
       console.error(e);
-      triggerToast("Gagal menyimpan report: " + e.message, "error");
+      triggerToast("Failed to save report: " + e.message, "error");
     }
   };
 
@@ -466,29 +466,7 @@ export default function PMChecklistPage() {
   };
 
   const handleSelectMockImage = async (imageUrl: string) => {
-    if (!uploadTargetId || !selectedTask || isLocked) return;
-
-    const itemId = uploadTargetId;
-    const updatedChecklist = selectedTask.checklist.map((item) =>
-      item.id === itemId
-        ? {
-            ...item,
-            status: "AI Processing" as const,
-            image: imageUrl,
-            errorMessage: undefined,
-          }
-        : item
-    );
-
-    setTasks((prevTasks) =>
-      prevTasks.map((t) =>
-        t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t
-      )
-    );
-
-    await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
-    triggerToast(`EVIDENCE REGISTERED. LAUNCHING NEURAL ANALYSIS...`, "info");
-    setUploadTargetId(null);
+    triggerToast("Example template images cannot be used as evidence! Please upload an actual photo.", "error");
   };
 
   // Real File Upload to Supabase Storage
@@ -496,7 +474,7 @@ export default function PMChecklistPage() {
     const file = e.target.files?.[0];
     if (file && uploadTargetId && selectedTask) {
       try {
-        triggerToast("Mengunggah foto bukti...", "info");
+        triggerToast("Uploading evidence photo...", "info");
         const fileExt = file.name.split('.').pop();
         const filePath = `${selectedTask.id}-${uploadTargetId}-${Math.random()}.${fileExt}`;
 
@@ -527,11 +505,11 @@ export default function PMChecklistPage() {
         );
 
         await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
-        triggerToast("Foto bukti berhasil diunggah. AI memproses...", "success");
+        triggerToast("Evidence photo uploaded successfully. AI processing...", "success");
         setUploadTargetId(null);
       } catch (err: any) {
         console.error(err);
-        triggerToast("Gagal mengunggah foto bukti: " + err.message, "error");
+        triggerToast("Failed to upload evidence photo: " + err.message, "error");
       }
     }
   };
@@ -607,7 +585,7 @@ export default function PMChecklistPage() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Memuat Tugas Checklist...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Checklist Tasks...</p>
         </div>
       </div>
     );
@@ -798,7 +776,7 @@ export default function PMChecklistPage() {
               <div className="bg-black/5 border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-black">
                   <span className="material-symbols-outlined text-base">sticky_note_2</span>
-                  <span className="text-[10px] font-black uppercase tracking-wider">Catatan Tambahan Admin</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider">Admin Additional Notes</span>
                 </div>
                 <p className="text-xs text-gray-700 font-semibold leading-relaxed whitespace-pre-wrap">
                   {selectedTask.adminNotes}
@@ -939,9 +917,9 @@ export default function PMChecklistPage() {
                 <div className="flex flex-col gap-6 w-full">
                   <div className="flex flex-col items-center justify-center gap-4 text-center py-6 bg-yellow-50/50 rounded-xl border-2 border-dashed border-yellow-400 p-6">
                     <span className="material-symbols-outlined text-5xl text-yellow-600 animate-pulse">hourglass_empty</span>
-                    <h4 className="font-headline-md text-lg font-black uppercase text-black">LAPORAN PM SEDANG DI-REVIEW</h4>
+                    <h4 className="font-headline-md text-lg font-black uppercase text-black">PM REPORT UNDER REVIEW</h4>
                     <p className="text-xs text-gray-500 font-medium max-w-md font-body-md">
-                      Laporan pemeliharaan preventif ini telah dikirimkan dan saat ini sedang menunggu tinjauan serta persetujuan dari Supervisor/Admin. Detail tugas terkunci untuk pengeditan.
+                      This preventative maintenance report has been submitted and is currently awaiting review and approval from the Supervisor/Admin. Task details are locked for editing.
                     </p>
                   </div>
                   <div>
@@ -956,14 +934,14 @@ export default function PMChecklistPage() {
               ) : selectedTask.status === "Completed" || selectedTask.dbStatus === "approved" || selectedTask.dbStatus === "completed" ? (
                 <div className="flex flex-col items-center justify-center gap-4 text-center py-6 w-full">
                   <span className="material-symbols-outlined text-5xl text-green-600">verified</span>
-                  <h4 className="font-headline-md text-lg font-black uppercase text-black">LAPORAN PM SELESAI & TERVERIFIKASI</h4>
-                  <p className="text-xs text-gray-500 font-medium max-w-md font-body-md">Laporan pemeliharaan preventif ini telah diaudit dan disetujui oleh Supervisor. Anda dapat mengunduh berkas laporan resmi PDF.</p>
+                  <h4 className="font-headline-md text-lg font-black uppercase text-black">PM REPORT COMPLETED & VERIFIED</h4>
+                  <p className="text-xs text-gray-500 font-medium max-w-md font-body-md">This preventative maintenance report has been audited and approved by the Supervisor. You can download the official PDF report file.</p>
                   <button
                     onClick={() => window.open(`/supervisor/tasks/report-preview?taskId=${selectedTask.id}`, "_blank")}
                     className="bg-[#D32F2F] text-white border-2 border-black rounded-xl px-8 py-4 font-black text-xs uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
-                    BUKA / DOWNLOAD LAPORAN PDF RESMI
+                    OPEN / DOWNLOAD OFFICIAL PDF REPORT
                   </button>
                 </div>
               ) : (
@@ -1235,7 +1213,7 @@ export default function PMChecklistPage() {
                             onClick={() => handleStartTask(task.id)}
                             className="px-5 py-2 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer bg-[#2F80ED] text-white hover:bg-black hover:border-black"
                           >
-                            Mulai Tugas
+                            Start Task
                           </button>
                         ) : (
                           <button
@@ -1340,45 +1318,41 @@ export default function PMChecklistPage() {
             </header>
 
             <p className="text-xs text-gray-500 font-bold uppercase tracking-wide leading-relaxed">
-              Capture or choose proof of work. You can upload a real photo from your camera/device or select a template image:
+              Capture or choose proof of work. Please upload a real photo from your camera or device (template images are for reference only):
             </p>
 
             <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() =>
-                  handleSelectMockImage(
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuC5PUuGyQj5iS4K8OsIciVH7soDv1iZxtqoatUCeaCmEEKmdhA1x8m6nw1yuqlGdGaC5Xd-Pi7ruxFFEFOzDJVJvI6jxfhNEwxOGSYYK3aqTn7bUyWkASIk5CfpFsqtupp3qdntxCuEE23lVt4HpQDmVifRZ_F75McxZHaG7m2q474o047fSPROxEORil2stcLkoeNGCABR5wGRtbNqpZ-omsxPX5lnF_k7-26BkpXXV66DAYAi_HNPfpPywwFX6H2QGo1H3p6WAJ5U"
-                  )
-                }
-                className="border-2 border-black rounded-[16px] overflow-hidden p-2 hover:border-[#D32F2F] hover:translate-y-[-2px] transition-all flex flex-col gap-2 text-center bg-gray-50 hover:bg-gray-100 cursor-pointer"
+              <div
+                className="border-2 border-gray-300 rounded-[16px] overflow-hidden p-2 flex flex-col gap-2 text-center bg-gray-50 opacity-60 cursor-not-allowed relative group"
               >
-                <div className="h-20 w-full overflow-hidden rounded-[10px] border border-black/10">
+                <div className="h-20 w-full overflow-hidden rounded-[10px] border border-black/10 select-none pointer-events-none">
                   <img
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5PUuGyQj5iS4K8OsIciVH7soDv1iZxtqoatUCeaCmEEKmdhA1x8m6nw1yuqlGdGaC5Xd-Pi7ruxFFEFOzDJVJvI6jxfhNEwxOGSYYK3aqTn7bUyWkASIk5CfpFsqtupp3qdntxCuEE23lVt4HpQDmVifRZ_F75McxZHaG7m2q474o047fSPROxEORil2stcLkoeNGCABR5wGRtbNqpZ-omsxPX5lnF_k7-26BkpXXV66DAYAi_HNPfpPywwFX6H2QGo1H3p6WAJ5U"
                     className="w-full h-full object-cover"
                     alt="Inspection 1"
                   />
                 </div>
-                <span className="font-extrabold text-[9px] uppercase tracking-wide">Template: Air Mesh</span>
-              </button>
+                <span className="font-extrabold text-[9px] uppercase tracking-wide text-gray-400">Example: Air Mesh (Static)</span>
+                <div className="absolute inset-0 flex items-center justify-center bg-white/70 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[10px] font-bold text-red-600 uppercase tracking-tight">Reference Only</span>
+                </div>
+              </div>
 
-              <button
-                onClick={() =>
-                  handleSelectMockImage(
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuAX4GvgHbE6sHyxp1a6pBEHGlqiB3qbDj7HQ9fAQQgIpN-FXUXfzK-5aP8hhrPe1Kkqj1yk2J5s97U-QDn6E3TRIzT6NNO05RRzoMHu2bqEtWH8svew-mlHLs_trG8FHB5rYfbOrculRtZAM7aKd9sbt6YDkuJEXCTwWMzNcV1Bx_5UHoRyUnMIWdhehZGhZyjrZvpvxBcJ-WlTPdoDS7j_0wtK24YZKQViUaWOl_lwxV_8XpxKddnKm4kkMOSbMVDmjTmzzqp-at5y"
-                  )
-                }
-                className="border-2 border-black rounded-[16px] overflow-hidden p-2 hover:border-[#D32F2F] hover:translate-y-[-2px] transition-all flex flex-col gap-2 text-center bg-gray-50 hover:bg-gray-100 cursor-pointer"
+              <div
+                className="border-2 border-gray-300 rounded-[16px] overflow-hidden p-2 flex flex-col gap-2 text-center bg-gray-50 opacity-60 cursor-not-allowed relative group"
               >
-                <div className="h-20 w-full overflow-hidden rounded-[10px] border border-black/10">
+                <div className="h-20 w-full overflow-hidden rounded-[10px] border border-black/10 select-none pointer-events-none">
                   <img
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuAX4GvgHbE6sHyxp1a6pBEHGlqiB3qbDj7HQ9fAQQgIpN-FXUXfzK-5aP8hhrPe1Kkqj1yk2J5s97U-QDn6E3TRIzT6NNO05RRzoMHu2bqEtWH8svew-mlHLs_trG8FHB5rYfbOrculRtZAM7aKd9sbt6YDkuJEXCTwWMzNcV1Bx_5UHoRyUnMIWdhehZGhZyjrZvpvxBcJ-WlTPdoDS7j_0wtK24YZKQViUaWOl_lwxV_8XpxKddnKm4kkMOSbMVDmjTmzzqp-at5y"
                     className="w-full h-full object-cover"
                     alt="Inspection 2"
                   />
                 </div>
-                <span className="font-extrabold text-[9px] uppercase tracking-wide">Template: Grille</span>
-              </button>
+                <span className="font-extrabold text-[9px] uppercase tracking-wide text-gray-400">Example: Grille (Static)</span>
+                <div className="absolute inset-0 flex items-center justify-center bg-white/70 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[10px] font-bold text-red-600 uppercase tracking-tight">Reference Only</span>
+                </div>
+              </div>
 
               <button
                 onClick={() => fileInputRef.current?.click()}
