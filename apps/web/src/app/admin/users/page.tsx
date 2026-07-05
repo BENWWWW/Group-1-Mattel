@@ -153,6 +153,9 @@ export default function UserManagementPage() {
     if (drawerMode === "add" && !formPassword.trim()) {
       triggerToast("Password is required for new users.", "error"); return;
     }
+    if (formPassword.trim() && formPassword.trim().length < 6) {
+      triggerToast("Password must be at least 6 characters.", "error"); return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -189,6 +192,16 @@ export default function UserManagementPage() {
           department: formDept.trim() || null,
         }).eq("id", editingUserId!);
         if (error) throw error;
+
+        // If a password was specified in the edit form, execute the secure password update RPC
+        if (formPassword.trim()) {
+          const { error: pwdErr } = await supabase.rpc("admin_update_user_password", {
+            target_user_id: editingUserId!,
+            new_password: formPassword.trim()
+          });
+          if (pwdErr) throw pwdErr;
+        }
+
         triggerToast("User details updated.", "success");
       }
       setIsDrawerOpen(false);
@@ -461,13 +474,18 @@ export default function UserManagementPage() {
                       className="w-full border-2 border-gray-200 p-3 rounded-[12px] font-bold focus:border-[#D32F2F] bg-white text-[#1A1A1A] outline-none disabled:opacity-50 disabled:bg-gray-50"/>
                   </div>
                 ))}
-                {drawerMode === "add" && (
-                  <div className="space-y-2">
-                    <label className="block text-xs font-black uppercase opacity-40">Initial Password *</label>
-                    <input type="password" value={formPassword} onChange={e=>setFormPassword(e.target.value)} placeholder="Min. 6 characters"
-                      className="w-full border-2 border-gray-200 p-3 rounded-[12px] font-bold focus:border-[#D32F2F] bg-white text-[#1A1A1A] outline-none"/>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <label className="block text-xs font-black uppercase opacity-40">
+                    {drawerMode === "edit" ? "Reset User Password (Leave blank to keep unchanged)" : "Initial Password *"}
+                  </label>
+                  <input
+                    type="password"
+                    value={formPassword}
+                    onChange={(e) => setFormPassword(e.target.value)}
+                    placeholder={drawerMode === "edit" ? "Enter new password to reset..." : "Min. 6 characters"}
+                    className="w-full border-2 border-gray-200 p-3 rounded-[12px] font-bold focus:border-[#D32F2F] bg-white text-[#1A1A1A] outline-none"
+                  />
+                </div>
                 <div className="pt-4">
                   <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-[#D32F2F] text-white font-black uppercase tracking-widest rounded-[20px] border-2 border-[#1A1A1A] hover:bg-black transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
                     {isSubmitting?<><span className="material-symbols-outlined animate-spin text-base">progress_activity</span>SAVING...</>:(drawerMode==="edit"?"Save Changes":"Create User")}

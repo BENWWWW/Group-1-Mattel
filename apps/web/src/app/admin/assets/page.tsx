@@ -12,6 +12,7 @@ interface Asset {
   location: string;
   status: string;
   updated_at: string;
+  is_deleted?: boolean;
 }
 
 interface ToastType { id: string; message: string; type: "success" | "error" | "info"; }
@@ -27,6 +28,7 @@ export default function AssetManagementPage() {
   const supabase = createClient();
 
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [allAssetCodes, setAllAssetCodes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
@@ -60,13 +62,16 @@ export default function AssetManagementPage() {
   const fetchAssets = useCallback(async () => {
     setIsLoading(true);
     try {
-      let query = supabase.from("assets").select("id,asset_code,name,type,category,location,status,updated_at").or("is_deleted.is.null,is_deleted.eq.false");
+      let query = supabase.from("assets").select("id,asset_code,name,type,category,location,status,updated_at,is_deleted");
       if (sortBy === "NAME") query = query.order("name");
       else if (sortBy === "ID") query = query.order("asset_code");
       else query = query.order("updated_at", { ascending: false });
       const { data, error } = await query;
       if (error) throw error;
-      setAssets(data || []);
+      
+      const activeAssets = (data || []).filter((a: any) => !a.is_deleted);
+      setAssets(activeAssets);
+      setAllAssetCodes((data || []).map((a: any) => a.asset_code));
     } catch {
       triggerToast("Failed to load assets.", "error");
     } finally {
@@ -100,8 +105,8 @@ export default function AssetManagementPage() {
     const regex = new RegExp(`^${prefix}-(\\d+)$`);
     let maxNum = 0;
 
-    assets.forEach((asset) => {
-      const code = asset.asset_code.toUpperCase();
+    allAssetCodes.forEach((codeStr) => {
+      const code = codeStr.toUpperCase();
       const match = code.match(regex);
       if (match) {
         const num = parseInt(match[1], 10);
@@ -114,7 +119,7 @@ export default function AssetManagementPage() {
     const nextNum = maxNum + 1;
     const paddedNum = String(nextNum).padStart(3, "0");
     return `${prefix}-${paddedNum}`;
-  }, [assets]);
+  }, [allAssetCodes]);
 
   const handleOpenAddDrawer = () => {
     setDrawerMode("add"); setEditingAssetId(null);

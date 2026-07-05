@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import NotificationBell from "@/components/NotificationBell";
+
 
 interface ToastType {
   id: string;
@@ -293,15 +295,7 @@ export default function ReviewQueuePage() {
           />
         </div>
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => triggerToast("Semua sistem berjalan normal.", "info")}
-            className="relative p-2 hover:bg-[#D32F2F]/5 rounded-full transition-all border-none bg-transparent cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[#1A1A1A]">notifications</span>
-            {stats.pending > 0 && (
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#D32F2F] rounded-full border border-white" />
-            )}
-          </button>
+          <NotificationBell />
           <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
             <img className="w-full h-full object-cover" src={avatarSrc} alt="User Profile" />
           </div>

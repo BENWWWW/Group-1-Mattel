@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import NotificationBell from "@/components/NotificationBell";
 
 interface AuditReportItem {
   id: string;
@@ -313,6 +314,12 @@ export default function ReportsPage() {
           <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
             Monitor precision statistics and compliance rates
           </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <NotificationBell />
+          <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
+            <img className="w-full h-full object-cover" src={avatarSrc} alt="User Profile" />
+          </div>
         </div>
       </header>
 

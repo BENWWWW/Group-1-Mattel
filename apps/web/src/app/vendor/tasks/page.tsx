@@ -78,15 +78,7 @@ export default function PMChecklistPage() {
   // File upload input ref for actual evidence file upload
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // AI Chat Assistant Panel State
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
-  const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState<Array<{ sender: "user" | "ai"; text: string }>>([
-    {
-      sender: "ai",
-      text: "Hello Operator. I am your Assist Copilot. I can help resolve image recognition failures, provide specifications, or explain checklist tasks.",
-    },
-  ]);
+
 
   // Evidence Upload Modal State
   const [uploadTargetId, setUploadTargetId] = useState<string | null>(null);
@@ -544,37 +536,7 @@ export default function PMChecklistPage() {
     }
   };
 
-  // Handle AI Assist Questions
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
 
-    const userText = chatInput;
-    setChatMessages((prev) => [...prev, { sender: "user", text: userText }]);
-    setChatInput("");
-
-    setTimeout(() => {
-      let aiText =
-        "Affirmative. Analysing request. Please capture sharp macro closeups of lubrication grease fittings or drive belt grooves to assist recognition.";
-
-      const query = userText.toLowerCase();
-      if (query.includes("lubrication") || query.includes("error") || query.includes("failed")) {
-        aiText =
-          "LUBRICATION FAILURE ADVISORY: Reflection from ambient metal can cause lens flare. Retake the photo directly overhead at a distance of 15cm from the bearing port. Ensure adequate grease presence is visible.";
-      } else if (query.includes("belt") || query.includes("tension")) {
-        aiText =
-          "BELT TENSION VERIFICATION: Target drive belt deflection should be 1/64 inch per inch of span under 4.5 kg force. Submit photo showing tensioner contact alignment.";
-      } else if (query.includes("model") || query.includes("spec")) {
-        aiText =
-          "Specifications: Nominal airflow 400 CFM per ton, requires 2-inch MERV 8 filters. Run current balancing: Phase A 14.2A, Phase B 14.1A, Phase C 14.5A.";
-      } else if (query.includes("pressure")) {
-        aiText =
-          "Standard suction pressure for Carrier R-410A system on floor 4 should hover around 118-125 PSI with superheat target of 12°F.";
-      }
-
-      setChatMessages((prev) => [...prev, { sender: "ai", text: aiText }]);
-    }, 1000);
-  };
 
   const handleLogout = async () => {
     triggerToast("CLOSING VENDOR TERMINAL...", "info");
@@ -1351,60 +1313,7 @@ export default function PMChecklistPage() {
         </main>
       )}
 
-      {/* Floating AI Assistant Panel */}
-      <button
-        onClick={() => setIsAssistantOpen(!isAssistantOpen)}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-[#D32F2F] text-white rounded-full border-2 border-[#1A1A1A] flex items-center justify-center hover:scale-110 transition-all z-50 cursor-pointer shadow-lg active:scale-95 border-none"
-      >
-        <span className="material-symbols-outlined text-3xl text-white">
-          {isAssistantOpen ? "close" : "smart_toy"}
-        </span>
-      </button>
 
-      {isAssistantOpen && (
-        <aside className="fixed bottom-28 right-8 w-80 h-[450px] bg-white border-2 border-[#1A1A1A] rounded-[20px] shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
-          <header className="bg-[#D32F2F] text-white px-5 py-4 border-b-2 border-[#1A1A1A] flex justify-between items-center shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-lg">smart_toy</span>
-              <span className="font-extrabold text-xs tracking-wider uppercase font-bold">PM AI ASSISTANT</span>
-            </div>
-            <span className="text-[9px] bg-white/20 px-2 py-0.5 rounded font-black tracking-tight uppercase">
-              V4.2 Online
-            </span>
-          </header>
-
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 scroll-container bg-gray-50">
-            {chatMessages.map((msg, i) => (
-              <div
-                key={i}
-                className={`max-w-[85%] rounded-[15px] p-3 text-xs leading-normal font-semibold ${
-                  msg.sender === "user"
-                    ? "bg-[#1A1A1A] text-white ml-auto rounded-tr-none"
-                    : "bg-white text-black border border-[#1A1A1A]/10 mr-auto rounded-tl-none"
-                }`}
-              >
-                {msg.text}
-              </div>
-            ))}
-          </div>
-
-          <form onSubmit={handleSendMessage} className="p-3 border-t border-black/10 bg-white flex gap-2 shrink-0">
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ask AI Copilot..."
-              className="flex-1 border border-black/20 rounded-md px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#D32F2F] placeholder-gray-400 bg-white text-black"
-            />
-            <button
-              type="submit"
-              className="bg-[#D32F2F] text-white border border-[#1A1A1A] rounded-md px-3 flex items-center justify-center hover:bg-[#1A1A1A] transition-colors cursor-pointer border-none"
-            >
-              <span className="material-symbols-outlined text-sm text-white">send</span>
-            </button>
-          </form>
-        </aside>
-      )}
 
       {/* Hidden real file input trigger */}
       <input

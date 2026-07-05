@@ -38,19 +38,20 @@ export default function CreatePMAssignmentPage() {
     setIsLoading(true);
     try {
       const [aRes, vRes, sRes, tRes, taskRes] = await Promise.all([
-        supabase.from("assets").select("id,name,asset_code,status").or("status.eq.under maintenance,status.eq.decommissioned").order("name"),
+        supabase.from("assets").select("id,name,asset_code,status,is_deleted").or("status.eq.under maintenance,status.eq.decommissioned").order("name"),
         supabase.from("profiles").select("id,full_name").eq("role","vendor").eq("is_active",true).order("full_name"),
         supabase.from("profiles").select("id,full_name").eq("role","supervisor").eq("is_active",true).order("full_name"),
         supabase.from("pm_templates").select("id,title").eq("is_active",true).order("title"),
         supabase.from("pm_tasks").select(`id,task_code,status,priority,due_date,assets(name),vendor:profiles!pm_tasks_assigned_vendor_id_fkey(full_name),supervisor:profiles!pm_tasks_assigned_supervisor_id_fkey(full_name)`).order("created_at",{ascending:false}).limit(10),
       ]);
-      setAssets(aRes.data||[]);
+      const activeAssets = (aRes.data||[]).filter((a: any) => !a.is_deleted);
+      setAssets(activeAssets);
       setVendors(vRes.data||[]);
       setSupervisors(sRes.data||[]);
       setTemplates(tRes.data||[]);
       setTasks((taskRes.data||[]).map((t:any)=>({id:t.id,task_code:t.task_code,status:t.status,priority:t.priority,due_date:t.due_date,asset_name:t.assets?.name??"—",vendor_name:t.vendor?.full_name??"—",supervisor_name:t.supervisor?.full_name??"—"})));
-      if(aRes.data?.length) {
-        setSelectedAsset(aRes.data[0].id);
+      if(activeAssets.length) {
+        setSelectedAsset(activeAssets[0].id);
       } else {
         setSelectedAsset("");
       }

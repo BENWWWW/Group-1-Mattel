@@ -89,17 +89,23 @@ export default function LoginPage() {
     triggerToast("INITIALIZING SECURE SESSION...", "info");
 
     try {
-      // 1. Look up the profile by employee_id to find role and registered email
+      // 1. Look up the profile by employee_id to find role, registered email, and active status
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("email, full_name, role")
+        .select("email, full_name, role, is_active")
         .eq("employee_id", idValue.trim())
-        .eq("is_active", true)
         .single();
 
       if (profileError || !profileData) {
-        triggerToast("ID NOT FOUND OR ACCOUNT DEACTIVATED.", "error");
+        triggerToast("ID NOT FOUND.", "error");
         setIdError("Invalid Employee ID.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!profileData.is_active) {
+        triggerToast("AKUN DINONAKTIFKAN. SILAKAN HUBUNGI ADMIN SEGERA.", "error");
+        setIdError("Akun dinonaktifkan. Hubungi admin segera.");
         setIsLoading(false);
         return;
       }

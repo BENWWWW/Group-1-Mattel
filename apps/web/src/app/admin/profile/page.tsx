@@ -77,7 +77,10 @@ export default function AdminProfilePage() {
         department: department.trim() || null,
       }).eq("id", userId);
       if (error) throw error;
-      if (typeof window !== "undefined") localStorage.setItem("userName", fullName.trim());
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userName", fullName.trim());
+        window.dispatchEvent(new Event("profileUpdated"));
+      }
       triggerToast("Profile updated successfully.", "success");
     } catch (err: any) {
       triggerToast(err.message || "Update failed.", "error");
@@ -115,6 +118,9 @@ export default function AdminProfilePage() {
       const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
       await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
       setProfilePhoto(publicUrl);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("profileUpdated"));
+      }
       triggerToast("Profile picture updated.", "success");
     } catch (err: any) {
       triggerToast(err.message || "Photo upload failed.", "error");
