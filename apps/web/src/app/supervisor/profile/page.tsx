@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import NotificationBell from "@/components/NotificationBell";
 
 interface ToastType {
   id: string;
@@ -242,13 +243,16 @@ export default function SupervisorProfilePage() {
           <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Supervisor Profile</h2>
           <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Kelola kredensial & detail profil auditor</p>
         </div>
-        <button
-          onClick={() => router.push("/supervisor/dashboard")}
-          className="flex items-center gap-2 border-2 border-[#1A1A1A] rounded-full px-4 py-2 font-bold text-xs uppercase hover:bg-gray-100 transition-all cursor-pointer bg-transparent"
-        >
-          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-          <span>Dashboard</span>
-        </button>
+        <div className="flex items-center gap-4">
+          <NotificationBell />
+          <button
+            onClick={() => router.push("/supervisor/dashboard")}
+            className="flex items-center gap-2 border-2 border-[#1A1A1A] rounded-full px-4 py-2 font-bold text-xs uppercase hover:bg-gray-100 transition-all cursor-pointer bg-transparent"
+          >
+            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+            <span>Dashboard</span>
+          </button>
+        </div>
       </header>
 
       {/* Main Content Area */}
@@ -404,60 +408,55 @@ export default function SupervisorProfilePage() {
               </form>
             </section>
 
-            {/* Account Stats Card */}
-            <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
-              <div className="pb-4 border-b border-gray-100">
-                <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Info Sistem</h4>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Status akun & keamanan</p>
-              </div>
+            <div className="space-y-8">
+              {/* Account Stats Card */}
+              <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
+                <div className="pb-4 border-b border-gray-100">
+                  <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Info Sistem</h4>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Status akun & keamanan</p>
+                </div>
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                  <div>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Status Akun</p>
-                    <p className="font-extrabold text-sm mt-0.5">
-                      {profile?.is_active ? (
-                        <span className="text-green-600">● Active</span>
-                      ) : (
-                        <span className="text-red-500">● Inactive</span>
-                      )}
-                    </p>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Status Akun</p>
+                      <p className="font-extrabold text-sm mt-0.5">
+                        {profile?.is_active ? (
+                          <span className="text-green-600">● Active</span>
+                        ) : (
+                          <span className="text-red-500">● Inactive</span>
+                        )}
+                      </p>
+                    </div>
+                    <span className="material-symbols-outlined text-green-600">verified_user</span>
                   </div>
-                  <span className="material-symbols-outlined text-green-600">verified_user</span>
-                </div>
 
-                <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                  <div>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Role</p>
-                    <p className="font-extrabold text-sm mt-0.5 uppercase">{profile?.role || "supervisor"}</p>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Role</p>
+                      <p className="font-extrabold text-sm mt-0.5 uppercase">{profile?.role || "supervisor"}</p>
+                    </div>
+                    <span className="material-symbols-outlined text-[#D32F2F]">admin_panel_settings</span>
                   </div>
-                  <span className="material-symbols-outlined text-[#D32F2F]">admin_panel_settings</span>
-                </div>
 
-                <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                  <div>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Employee ID</p>
-                    <p className="font-extrabold text-sm mt-0.5 font-mono">{profile?.employee_id || "—"}</p>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Employee ID</p>
+                      <p className="font-extrabold text-sm mt-0.5 font-mono">{profile?.employee_id || "—"}</p>
+                    </div>
+                    <span className="material-symbols-outlined text-gray-400">badge</span>
                   </div>
-                  <span className="material-symbols-outlined text-gray-400">badge</span>
-                </div>
 
-                <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-xl flex items-start gap-3">
-                  <span className="material-symbols-outlined text-amber-500 text-sm mt-0.5">info</span>
-                  <p className="text-xs text-amber-700 font-medium leading-relaxed">
-                    Untuk mengubah email atau password, hubungi administrator sistem.
-                  </p>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full bg-white text-[#D32F2F] border-2 border-[#D32F2F] rounded-full py-3 font-bold text-xs uppercase tracking-wider hover:bg-[#D32F2F] hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">logout</span>
+                    Keluar dari Sistem
+                  </button>
                 </div>
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full bg-white text-[#D32F2F] border-2 border-[#D32F2F] rounded-full py-3 font-bold text-xs uppercase tracking-wider hover:bg-[#D32F2F] hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[16px]">logout</span>
-                  Keluar dari Sistem
-                </button>
-              </div>
-            </section>
+              </section>
+            </div>
           </div>
         </div>
       </main>

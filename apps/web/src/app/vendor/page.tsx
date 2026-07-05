@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import NotificationBell from "@/components/NotificationBell";
+
 
 // Define Task interface matching the industrial requirements
 interface Task {
@@ -306,13 +308,7 @@ export default function VendorDashboardPage() {
         </div>
 
         <div className="flex items-center gap-6">
-          <button
-            onClick={() => triggerToast("Vendor notifications: nominal. No new alerts.", "info")}
-            className="relative p-2 hover:bg-[#D32F2F]/10 rounded-full transition-all cursor-pointer border-none bg-transparent flex items-center justify-center outline-none"
-          >
-            <span className="material-symbols-outlined text-[#1A1A1A]">notifications</span>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D32F2F] rounded-full border border-white"></span>
-          </button>
+          <NotificationBell />
           <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
             <img
               className="w-full h-full object-cover"

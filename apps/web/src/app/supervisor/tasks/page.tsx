@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import NotificationBell from "@/components/NotificationBell";
 
 interface ChecklistItem {
   item_id: string;
@@ -624,6 +625,12 @@ export default function ReviewDetailPage() {
               <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Queue Review Supervisor</p>
             </div>
           )}
+        </div>
+        <div className="flex items-center gap-4">
+          <NotificationBell />
+          <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
+            <img className="w-full h-full object-cover" src={avatarSrc} alt="User Profile" />
+          </div>
         </div>
       </header>
 

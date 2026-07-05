@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import NotificationBell from "@/components/NotificationBell";
+
 
 interface ToastType {
   id: string;
@@ -74,7 +76,7 @@ export default function AdminDashboardPage() {
         profileRes,
       ] = await Promise.all([
         // Total assets
-        supabase.from("assets").select("id", { count: "exact", head: true }),
+        supabase.from("assets").select("id", { count: "exact", head: true }).or("is_deleted.is.null,is_deleted.eq.false"),
 
         // Active PM tasks (in_progress or pending)
         supabase
@@ -231,23 +233,9 @@ export default function AdminDashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-6">
-          <button
-            onClick={() =>
-              triggerToast(
-                `${stats.criticalTasks} critical task(s) require attention.`,
-                stats.criticalTasks > 0 ? "error" : "info"
-              )
-            }
-            className="relative p-2 hover:bg-[#D32F2F]/10 rounded-full transition-all cursor-pointer border-none bg-transparent flex items-center justify-center outline-none"
-          >
-            <span className="material-symbols-outlined text-[#1A1A1A]">
-              notifications
-            </span>
-            {stats.criticalTasks > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D32F2F] rounded-full border border-white animate-pulse" />
-            )}
-          </button>
+          <NotificationBell />
           <div className="flex items-center gap-2">
+
             <div className="text-right hidden sm:block">
               <p className="text-xs font-extrabold uppercase text-[#1A1A1A] leading-none">
                 {adminName}

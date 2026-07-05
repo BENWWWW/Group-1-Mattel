@@ -93,7 +93,7 @@ export default function VendorProfilePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
+      let { error } = await supabase
         .from("profiles")
         .update({
           full_name: fullName,
@@ -104,6 +104,20 @@ export default function VendorProfilePage() {
           avatar_url: profilePhoto
         })
         .eq("id", user.id);
+
+      if (error && (error.message.includes("column") || error.message.includes("does not exist") || error.code === "42703")) {
+        console.warn("Falling back to update profiles table without company and facility fields...", error);
+        const fallbackRes = await supabase
+          .from("profiles")
+          .update({
+            full_name: fullName,
+            department,
+            phone,
+            avatar_url: profilePhoto
+          })
+          .eq("id", user.id);
+        error = fallbackRes.error;
+      }
 
       if (error) throw error;
       triggerToast("Profil berhasil diperbarui.", "success");
@@ -334,7 +348,7 @@ export default function VendorProfilePage() {
           </section>
 
           {/* Form Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <div className="max-w-2xl">
             
             {/* General Info Card */}
             <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">

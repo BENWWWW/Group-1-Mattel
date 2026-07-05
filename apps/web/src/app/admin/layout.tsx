@@ -13,11 +13,45 @@ export default function AdminLayout({
   const pathname = usePathname();
   const supabase = createClient();
 
+  const [profile, setProfile] = React.useState<{ full_name: string; avatar_url: string | null } | null>(null);
+
+  const fetchProfile = React.useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", user.id)
+        .single();
+      if (data) {
+        setProfile(data);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("userName", data.full_name);
+          if (data.avatar_url) localStorage.setItem("userAvatar", data.avatar_url);
+        }
+      }
+    }
+  }, [supabase]);
+
+  React.useEffect(() => {
+    fetchProfile();
+
+    const handleProfileUpdate = () => {
+      fetchProfile();
+    };
+
+    window.addEventListener("profileUpdated", handleProfileUpdate);
+    return () => {
+      window.removeEventListener("profileUpdated", handleProfileUpdate);
+    };
+  }, [fetchProfile]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     if (typeof window !== "undefined") {
       localStorage.removeItem("userRole");
       localStorage.removeItem("userName");
+      localStorage.removeItem("userAvatar");
     }
     router.push("/");
   };
@@ -80,16 +114,20 @@ export default function AdminLayout({
             onClick={() => router.push("/admin/profile")}
             className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
           >
-            <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
-              <img
-                className="w-full h-full object-cover"
-                alt="Chief Engineer"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJ0lqCvCFTMHV-5d-jF9CXdtIjRE7PPpB_7tcW7NSFlI9XbK0XtawNKofq-koZRd4wRJOwdiJ2F4FsRK9MVgoNsBm3_KjfK11UmFw0oPj0DbuNKNciWyC9ghqfI-345wjcVVovYfYGj2v9XL7C_VmeFsANijVLphj_aL4A_WfsAmmYkuVqZuddWEL6f_ywBh6ECi8kydXVGurG3bflx6h96Awt_xjTt1ePSbrR0MfifQOOZH1wXWVQSBvOe62LU_uus2cfVBWtjxd2"
-              />
+            <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0 bg-white/10 flex items-center justify-center">
+              {profile?.avatar_url ? (
+                <img
+                  className="w-full h-full object-cover"
+                  alt="Admin Portrait"
+                  src={profile.avatar_url}
+                />
+              ) : (
+                <span className="material-symbols-outlined text-white text-xl">account_circle</span>
+              )}
             </div>
             <div className="overflow-hidden">
               <p className="font-label-md text-xs truncate text-white uppercase font-bold tracking-tight leading-none mb-1">
-                Chief Engineer
+                {profile?.full_name || "Admin User"}
               </p>
               <p className="text-[10px] uppercase font-bold text-white/40">Admin Access</p>
             </div>

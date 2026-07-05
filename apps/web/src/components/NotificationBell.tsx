@@ -1,0 +1,285 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: string;
+  is_read: boolean;
+  link: string | null;
+  created_at: string;
+}
+
+export default function NotificationBell() {
+  const supabase = createClient();
+  const router = useRouter();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch current user and notifications
+  useEffect(() => {
+    const fetchUserAndNotifications = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserId(user.id);
+
+          const { data, error } = await supabase
+            .from("notifications")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(20);
+
+          if (data && !error) {
+            setNotifications(data);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
+    fetchUserAndNotifications();
+  }, []);
+
+  // Subscribe to realtime database changes for notifications
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`user_notifications_${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const newNotif = payload.new as Notification;
+          setNotifications((prev) => {
+            if (prev.some((n) => n.id === newNotif.id)) return prev;
+            return [newNotif, ...prev];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const updatedNotif = payload.new as Notification;
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === updatedNotif.id ? updatedNotif : n))
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  // Click outside handler to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  const handleMarkAllAsRead = async () => {
+    if (!userId) return;
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("user_id", userId)
+        .eq("is_read", false);
+
+      if (!error) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      }
+    } catch (err) {
+      console.error("Failed to mark all notifications as read:", err);
+    }
+  };
+
+  const handleNotificationClick = async (notif: Notification) => {
+    setIsOpen(false);
+    if (!notif.is_read) {
+      try {
+        const { error } = await supabase
+          .from("notifications")
+          .update({ is_read: true })
+          .eq("id", notif.id);
+
+        if (!error) {
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to mark notification as read:", err);
+      }
+    }
+
+    if (notif.link) {
+      router.push(notif.link);
+    }
+  };
+
+  // Icon selector based on notification type
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "task_assigned":
+        return "assignment_ind";
+      case "report_submitted":
+        return "assignment_turned_in";
+      case "report_approved":
+        return "check_circle";
+      case "report_rejected":
+        return "cancel";
+      default:
+        return "notifications";
+    }
+  };
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case "task_assigned":
+        return "text-blue-500 bg-blue-50";
+      case "report_submitted":
+        return "text-orange-500 bg-orange-50";
+      case "report_approved":
+        return "text-green-500 bg-green-50";
+      case "report_rejected":
+        return "text-[#D32F2F] bg-red-50";
+      default:
+        return "text-[#1A1A1A] bg-gray-50";
+    }
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative p-2 hover:bg-[#D32F2F]/10 rounded-full transition-all cursor-pointer border-none bg-transparent flex items-center justify-center outline-none"
+        title="Notifikasi"
+      >
+        <span className="material-symbols-outlined text-[#1A1A1A] text-2xl">
+          notifications
+        </span>
+        {unreadCount > 0 && (
+          <span className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-1 bg-[#D32F2F] border border-white text-white text-[9px] font-black rounded-full flex items-center justify-center animate-bounce shadow">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <aside className="absolute right-0 mt-3 w-80 bg-white border-4 border-black rounded-[20px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          {/* Header */}
+          <header className="bg-[#1A1A1A] text-white px-4 py-3 border-b-2 border-black flex justify-between items-center shrink-0">
+            <div>
+              <h4 className="font-extrabold text-xs uppercase tracking-wider text-white leading-none">
+                Notifikasi
+              </h4>
+              <p className="text-[8px] text-gray-400 font-extrabold uppercase tracking-wider leading-none mt-1">
+                {unreadCount} Belum Dibaca
+              </p>
+            </div>
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllAsRead}
+                className="text-[9px] font-black uppercase text-[#D32F2F] bg-transparent border-none cursor-pointer hover:underline p-0"
+              >
+                Baca Semua
+              </button>
+            )}
+          </header>
+
+          {/* Body List */}
+          <div className="max-h-[320px] overflow-y-auto bg-gray-50 divide-y divide-gray-200 scroll-container">
+            {notifications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">
+                  notifications_off
+                </span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                  Tidak Ada Notifikasi
+                </span>
+              </div>
+            ) : (
+              notifications.map((notif) => (
+                <button
+                  key={notif.id}
+                  onClick={() => handleNotificationClick(notif)}
+                  className={`w-full text-left p-3.5 flex gap-3 transition-colors hover:bg-gray-100/80 cursor-pointer border-none bg-transparent ${
+                    !notif.is_read ? "bg-white" : ""
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-black/10 ${getNotificationColor(
+                      notif.type
+                    )}`}
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      {getNotificationIcon(notif.type)}
+                    </span>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="flex justify-between items-baseline mb-0.5">
+                      <h5 className="font-extrabold text-xs text-black uppercase leading-tight truncate">
+                        {notif.title}
+                      </h5>
+                      <span className="text-[8px] font-bold text-gray-400 shrink-0 ml-2">
+                        {new Date(notif.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-gray-600 font-medium leading-normal break-words">
+                      {notif.message}
+                    </p>
+                    {!notif.is_read && (
+                      <span className="inline-block w-2.5 h-2.5 bg-[#D32F2F] rounded-full mt-1.5 animate-pulse" />
+                    )}
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </aside>
+      )}
+    </div>
+  );
+}
