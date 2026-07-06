@@ -20,6 +20,29 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Roboflow AI Object Detection
+
+This project integrates the **Mattel Object Detection** model via Roboflow's serverless inference API to verify vendor-uploaded evidence photos with AI confidence scoring.
+
+### How It Works
+
+1. Vendor uploads an evidence photo on the **Tasks** checklist page
+2. Photo is stored in Supabase Storage and the checklist item status becomes **"AI Processing"**
+3. The frontend calls `POST /api/classify` with the image URL
+4. The API route fetches the image, converts to base64, and sends it to Roboflow
+5. Roboflow returns object detection predictions with confidence scores
+6. Based on the result:
+   - **≥80% confidence + correct class** → Pass
+   - **50-79% confidence** → Pass with warning (flagged for supervisor review)
+   - **<50% confidence** → Error (vendor asked to re-upload)
+   - **Wrong class detected** → Error
+
+### Architecture
+
+- **`src/lib/roboflow.ts`** — Reusable Roboflow client with retries, timeouts, and typed errors
+- **`src/app/api/classify/route.ts`** — Next.js API route that wraps the client
+- **`src/app/vendor/tasks/page.tsx`** — Frontend that triggers classification on photo upload
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

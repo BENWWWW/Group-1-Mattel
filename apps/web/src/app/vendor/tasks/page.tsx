@@ -15,6 +15,8 @@ interface ChecklistItem {
   notes?: string;
   type?: "optional" | "required" | "urgent";
   requireImage?: boolean;
+  aiConfidence?: number;
+  aiPredictedClass?: string;
 }
 
 interface Task {
@@ -38,6 +40,7 @@ interface Task {
   techNotes?: string;
   adminNotes?: string;
   createdAt?: string;
+  assetType?: string;
 }
 
 interface Toast {
@@ -117,6 +120,7 @@ export default function PMChecklistPage() {
           assets (
             name,
             asset_code,
+            type,
             category,
             location
           ),
@@ -199,7 +203,8 @@ export default function PMChecklistPage() {
           checklist: checklistMapped,
           techNotes: t.description || "",
           adminNotes: t.notes || "",
-          createdAt: t.created_at
+          createdAt: t.created_at,
+          assetType: t.assets?.type || t.assets?.name || ""
         };
       });
 
@@ -243,7 +248,7 @@ export default function PMChecklistPage() {
         setSelectedTaskId(taskId);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -257,7 +262,7 @@ export default function PMChecklistPage() {
   }, []);
 
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
-  const isLocked = selectedTask 
+  const isLocked = selectedTask
     ? (selectedTask.dbStatus === "submitted" || selectedTask.dbStatus === "approved" || selectedTask.dbStatus === "completed" || selectedTask.status === "Completed")
     : false;
 
@@ -281,7 +286,7 @@ export default function PMChecklistPage() {
         .update({ status: "in_progress" })
         .eq("id", taskId);
       if (error) throw error;
-      
+
       triggerToast("Task started! Please fill out the checklist.", "success");
       await loadTasksData();
       setSelectedTaskId(taskId);
@@ -297,12 +302,12 @@ export default function PMChecklistPage() {
       const updatedChecklist = selectedTask.checklist.map((item) =>
         item.id === itemId
           ? {
-              ...item,
-              status: "Awaiting" as const,
-              image: undefined,
-              evidenceTime: undefined,
-              errorMessage: undefined,
-            }
+            ...item,
+            status: "Awaiting" as const,
+            image: undefined,
+            evidenceTime: undefined,
+            errorMessage: undefined,
+          }
           : item
       );
 
@@ -321,40 +326,116 @@ export default function PMChecklistPage() {
     }
   };
 
-  // Simulating continuous AI analysis for the selected task's "AI Processing" items
+  // AI classification via Roboflow API for items in "AI Processing" status
+  const classifyImageWithAI = async (imageUrl: string, expectedClass: string) => {
+    try {
+      const response = await fetch("/api/classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl, expectedClass }),
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Classification API failed");
+      }
+      return await response.json();
+    } catch (err: any) {
+      console.error("AI classification error:", err);
+      return null;
+    }
+  };
+
+  // Process items that enter "AI Processing" status — call real Roboflow API
   useEffect(() => {
     if (!selectedTask) return;
     const processingItem = selectedTask.checklist.find((item) => item.status === "AI Processing");
-    if (processingItem) {
-      const timer = setTimeout(async () => {
-        const updatedChecklist = selectedTask.checklist.map((item) =>
-          item.id === processingItem.id
-            ? {
-                ...item,
-                status: "Pass" as const,
-                evidenceTime: new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
-              }
-            : item
-        );
+    if (!processingItem || !processingItem.image) return;
 
-        setTasks((prevTasks) =>
-          prevTasks.map((t) =>
-            t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t
-          )
-        );
+    let cancelled = false;
 
-        await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
-        triggerToast(`${processingItem.title.toUpperCase()} PASSED AUTOMATED AI AUDIT.`, "success");
-      }, 4000);
-      return () => clearTimeout(timer);
-    }
+    const runClassification = async () => {
+      // Derive expected class from the asset type/name
+      const assetType = (selectedTask.assetType || selectedTask.asset || "").toLowerCase();
+      const validClasses = ["bearing", "gauge", "pump", "valve"];
+      const expectedClass = validClasses.find((c) => assetType.includes(c)) || "";
+
+      const result = await classifyImageWithAI(processingItem.image!, expectedClass);
+
+      if (cancelled) return;
+
+      let newStatus: "Pass" | "Error" = "Pass";
+      let errorMessage: string | undefined;
+      let confidence = 0;
+      let predictedClass = "";
+
+      if (result) {
+        confidence = result.confidence;
+        predictedClass = result.predictedClass;
+
+        if (!result.isMatch) {
+          // Wrong class detected
+          newStatus = "Error";
+          errorMessage = `AI detected "${predictedClass}" but expected "${expectedClass || "unknown"}". Confidence: ${confidence}%`;
+        } else if (confidence < 50) {
+          // Low confidence
+          newStatus = "Error";
+          errorMessage = `AI confidence too low (${confidence}%). Predicted: "${predictedClass}". Please re-upload a clearer photo.`;
+        } else if (confidence < 80) {
+          // Medium confidence — pass with warning
+          newStatus = "Pass";
+          errorMessage = `Medium confidence (${confidence}%). Flagged for supervisor review.`;
+        }
+        // High confidence (>=80%) — clean pass
+      } else {
+        // API call failed — set error
+        newStatus = "Error";
+        errorMessage = "AI classification service unavailable. Please try again.";
+      }
+
+      const updatedChecklist = selectedTask.checklist.map((item) =>
+        item.id === processingItem.id
+          ? {
+            ...item,
+            status: newStatus,
+            evidenceTime: newStatus === "Pass" ? new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }) : undefined,
+            errorMessage: errorMessage,
+            aiConfidence: confidence,
+            aiPredictedClass: predictedClass,
+          }
+          : item
+      );
+
+      setTasks((prevTasks) =>
+        prevTasks.map((t) =>
+          t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t
+        )
+      );
+
+      await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
+
+      if (newStatus === "Pass") {
+        triggerToast(
+          `${processingItem.title.toUpperCase()} — AI VERIFIED: ${predictedClass.toUpperCase()} (${confidence}% confidence)`,
+          "success"
+        );
+      } else {
+        triggerToast(
+          errorMessage || "AI classification failed.",
+          "error"
+        );
+      }
+    };
+
+    runClassification();
+
+    return () => { cancelled = true; };
   }, [tasks, selectedTaskId]);
 
   // Compute progress for selected task (Optional tasks that are "Awaiting" are excluded from total count)
-  const activeCheckItems = selectedTask 
+  const activeCheckItems = selectedTask
     ? selectedTask.checklist.filter((item) => !(item.type === "optional" && item.status === "Awaiting"))
     : [];
   const doneCount = activeCheckItems.filter((item) => item.status === "Pass").length;
@@ -430,7 +511,11 @@ export default function PMChecklistPage() {
           findings: techNotes || "Inspection checklist successfully passed all model thresholds.",
           recommendations: "Nominal operational rating status verified. Maintenance cycle repeated per standard schedules.",
           photos_urls: photosArray,
-          ai_confidence_score: 98,
+          ai_confidence_score: (() => {
+            const scored = selectedTask.checklist.filter((c) => c.aiConfidence !== undefined && c.aiConfidence > 0);
+            if (scored.length === 0) return 95;
+            return Math.round(scored.reduce((acc, c) => acc + (c.aiConfidence || 0), 0) / scored.length);
+          })(),
           status: "submitted"
         });
 
@@ -490,11 +575,11 @@ export default function PMChecklistPage() {
         const updatedChecklist = selectedTask.checklist.map((item) =>
           item.id === itemId
             ? {
-                ...item,
-                status: "AI Processing" as const,
-                image: publicUrl,
-                errorMessage: undefined,
-              }
+              ...item,
+              status: "AI Processing" as const,
+              image: publicUrl,
+              errorMessage: undefined,
+            }
             : item
         );
 
@@ -705,9 +790,8 @@ export default function PMChecklistPage() {
                 <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
                   {selectedTask.task_code}
                 </h2>
-                <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[10px] font-bold text-white uppercase tracking-wider ${
-                  selectedTask.status === "Completed" ? "bg-green-600" : selectedTask.status === "Pending" ? "bg-black" : "bg-[#D32F2F]"
-                }`}>
+                <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[10px] font-bold text-white uppercase tracking-wider ${selectedTask.status === "Completed" ? "bg-green-600" : selectedTask.status === "Pending" ? "bg-black" : "bg-[#D32F2F]"
+                  }`}>
                   {selectedTask.status}
                 </span>
               </div>
@@ -733,7 +817,7 @@ export default function PMChecklistPage() {
         /* ================== TASK DETAIL CHECKLIST VIEW ================== */
         <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)] scroll-container">
           <div className="min-h-[calc(100vh-80px)] py-10 px-10 max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-300">
-            
+
             {/* Sub-header & Asset Info */}
             <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-gray-100">
               <div>
@@ -795,21 +879,19 @@ export default function PMChecklistPage() {
                 return (
                   <div
                     key={item.id}
-                    className={`bg-white border-4 border-[#1A1A1A] rounded-[24px] p-6 flex flex-col justify-between transition-all relative ${
-                      isError ? "bg-red-50/30" : ""
-                    } ${
-                      isLocked ? "" : "hover:translate-x-[-4px] hover:translate-y-[-4px] hover:shadow-[8px_8px_0px_0px_#1A1A1A]"
-                    }`}
+                    className={`bg-white border-4 border-[#1A1A1A] rounded-[24px] p-6 flex flex-col justify-between transition-all relative ${isError ? "bg-red-50/30" : ""
+                      } ${isLocked ? "" : "hover:translate-x-[-4px] hover:translate-y-[-4px] hover:shadow-[8px_8px_0px_0px_#1A1A1A]"
+                      }`}
                   >
                     <div className="flex gap-6 items-start">
                       {/* Left Column: Image / Upload Placeholder */}
                       <div className="relative shrink-0">
                         {item.image ? (
                           <div className="relative w-28 h-28 rounded-[16px] border-2 border-[#1A1A1A] overflow-hidden group">
-                            <img 
-                              className={`w-full h-full object-cover ${isProcessing ? "blur-[2px]" : ""}`} 
-                              src={item.image} 
-                              alt={item.title} 
+                            <img
+                              className={`w-full h-full object-cover ${isProcessing ? "blur-[2px]" : ""}`}
+                              src={item.image}
+                              alt={item.title}
                             />
                             {!isProcessing && !isLocked && (
                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-1">
@@ -837,9 +919,8 @@ export default function PMChecklistPage() {
                           <button
                             onClick={() => !isLocked && handleOpenUpload(item.id)}
                             disabled={isLocked}
-                            className={`w-28 h-28 rounded-[16px] border-2 border-dashed border-gray-400 bg-gray-50 flex flex-col items-center justify-center gap-2 transition-colors ${
-                              isLocked ? "cursor-not-allowed opacity-50" : "hover:bg-gray-100 hover:border-[#1A1A1A] cursor-pointer group"
-                            }`}
+                            className={`w-28 h-28 rounded-[16px] border-2 border-dashed border-gray-400 bg-gray-50 flex flex-col items-center justify-center gap-2 transition-colors ${isLocked ? "cursor-not-allowed opacity-50" : "hover:bg-gray-100 hover:border-[#1A1A1A] cursor-pointer group"
+                              }`}
                           >
                             <span className="material-symbols-outlined text-3xl text-gray-400 transition-transform group-hover:scale-110">
                               add_a_photo
@@ -855,9 +936,8 @@ export default function PMChecklistPage() {
                           <h4 className="font-headline-md text-sm uppercase font-extrabold text-black leading-snug">
                             {item.title}
                           </h4>
-                          <span className={`px-2.5 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white shrink-0 ${
-                            isPass ? "bg-green-600" : isProcessing ? "bg-yellow-600" : isError ? "bg-[#D32F2F]" : "bg-black"
-                          }`}>
+                          <span className={`px-2.5 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white shrink-0 ${isPass ? "bg-green-600" : isProcessing ? "bg-yellow-600" : isError ? "bg-[#D32F2F]" : "bg-black"
+                            }`}>
                             {item.status}
                           </span>
                         </div>
@@ -866,47 +946,46 @@ export default function PMChecklistPage() {
                         </p>
 
                         {/* Quick Action Button for awaiting */}
-                         {isAwaiting && !isLocked && (
-                           <button
-                             onClick={() => handleOpenUpload(item.id)}
-                             className="w-fit border-2 border-black rounded-full px-4 py-1 font-bold text-[9px] uppercase hover:bg-black hover:text-white transition-all flex items-center gap-1.5 cursor-pointer bg-transparent mt-1"
-                           >
-                             Capture Evidence
-                             <span className="material-symbols-outlined text-[12px]">photo_camera</span>
-                           </button>
-                         )}
-                       </div>
-                     </div>
- 
-                     {/* Lower part: Textarea for repair notes if image is present */}
-                     {item.image && !isProcessing && (
-                       <div className="mt-4 pt-4 border-t border-dashed border-gray-200 animate-in fade-in duration-200">
-                         <label className="text-[9px] text-gray-500 font-extrabold uppercase tracking-wider block mb-1">
-                           Notes / Observations (Optional) {isLocked && "(Locked)"}
-                         </label>
-                         <textarea
-                           value={item.notes || ""}
-                           disabled={isLocked}
-                           onChange={(e) => {
-                             if (isLocked) return;
-                             const val = e.target.value;
-                             const updatedChecklist = selectedTask.checklist.map((c) =>
-                               c.id === item.id ? { ...c, notes: val } : c
-                             );
-                             setTasks((prevTasks) =>
-                               prevTasks.map((t) =>
-                                 t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t
-                               )
-                             );
-                             saveChecklistToDatabase(selectedTask.id, updatedChecklist);
-                           }}
-                           className={`w-full h-14 border border-[#1A1A1A] rounded-lg p-2 text-xs focus:border-[#D32F2F] focus:ring-0 outline-none resize-none font-semibold text-black ${
-                             isLocked ? "bg-gray-50 text-gray-500 cursor-not-allowed" : "bg-white"
-                           }`}
-                           placeholder={isLocked ? "No details provided" : "Provide details about the inspection result..."}
-                         />
-                       </div>
-                     )}
+                        {isAwaiting && !isLocked && (
+                          <button
+                            onClick={() => handleOpenUpload(item.id)}
+                            className="w-fit border-2 border-black rounded-full px-4 py-1 font-bold text-[9px] uppercase hover:bg-black hover:text-white transition-all flex items-center gap-1.5 cursor-pointer bg-transparent mt-1"
+                          >
+                            Capture Evidence
+                            <span className="material-symbols-outlined text-[12px]">photo_camera</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Lower part: Textarea for repair notes if image is present */}
+                    {item.image && !isProcessing && (
+                      <div className="mt-4 pt-4 border-t border-dashed border-gray-200 animate-in fade-in duration-200">
+                        <label className="text-[9px] text-gray-500 font-extrabold uppercase tracking-wider block mb-1">
+                          Notes / Observations (Optional) {isLocked && "(Locked)"}
+                        </label>
+                        <textarea
+                          value={item.notes || ""}
+                          disabled={isLocked}
+                          onChange={(e) => {
+                            if (isLocked) return;
+                            const val = e.target.value;
+                            const updatedChecklist = selectedTask.checklist.map((c) =>
+                              c.id === item.id ? { ...c, notes: val } : c
+                            );
+                            setTasks((prevTasks) =>
+                              prevTasks.map((t) =>
+                                t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t
+                              )
+                            );
+                            saveChecklistToDatabase(selectedTask.id, updatedChecklist);
+                          }}
+                          className={`w-full h-14 border border-[#1A1A1A] rounded-lg p-2 text-xs focus:border-[#D32F2F] focus:ring-0 outline-none resize-none font-semibold text-black ${isLocked ? "bg-gray-50 text-gray-500 cursor-not-allowed" : "bg-white"
+                            }`}
+                          placeholder={isLocked ? "No details provided" : "Provide details about the inspection result..."}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -987,7 +1066,7 @@ export default function PMChecklistPage() {
         /* ================== TASKS QUEUE LIST VIEW ================== */
         <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)] scroll-container">
           <div className="min-h-[calc(100vh-80px)] py-10 px-10 max-w-[1400px] mx-auto space-y-10 animate-in fade-in duration-300">
-            
+
             {/* Stats Overview Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-[#D32F2F]">
@@ -1033,7 +1112,7 @@ export default function PMChecklistPage() {
             {/* Filter and Control Panel */}
             <div className="flex flex-wrap justify-between items-end gap-6 bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A]">
               <div className="flex flex-wrap gap-4 flex-grow lg:flex-nowrap">
-                
+
                 {/* Search */}
                 <div className="flex-grow min-w-[200px]">
                   <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">
@@ -1157,28 +1236,27 @@ export default function PMChecklistPage() {
                             {task.confidence}
                           </span>
                         </div>
-                        
+
                         {/* Status badge */}
-                        <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${
-                          task.dbStatus === "approved" || task.dbStatus === "completed"
-                            ? "bg-green-600" 
+                        <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${task.dbStatus === "approved" || task.dbStatus === "completed"
+                            ? "bg-green-600"
                             : task.dbStatus === "submitted"
-                            ? "bg-[#D32F2F]" 
-                            : task.dbStatus === "rejected"
-                            ? "bg-orange-600"
-                            : task.dbStatus === "in_progress"
-                            ? "bg-[#2F80ED]"
-                            : "bg-[#1A1A1A]"
-                        }`}>
+                              ? "bg-[#D32F2F]"
+                              : task.dbStatus === "rejected"
+                                ? "bg-orange-600"
+                                : task.dbStatus === "in_progress"
+                                  ? "bg-[#2F80ED]"
+                                  : "bg-[#1A1A1A]"
+                          }`}>
                           {task.dbStatus === "pending"
                             ? "Awaiting Start"
                             : task.dbStatus === "in_progress"
-                            ? "In Progress"
-                            : task.dbStatus === "submitted"
-                            ? "Submitted"
-                            : task.dbStatus === "rejected"
-                            ? "Rejected"
-                            : "Completed"}
+                              ? "In Progress"
+                              : task.dbStatus === "submitted"
+                                ? "Submitted"
+                                : task.dbStatus === "rejected"
+                                  ? "Rejected"
+                                  : "Completed"}
                         </span>
                       </div>
 
@@ -1207,7 +1285,7 @@ export default function PMChecklistPage() {
                           <span className="material-symbols-outlined text-xs">schedule</span>
                           {task.time}
                         </span>
-                        
+
                         {task.dbStatus === "pending" ? (
                           <button
                             onClick={() => handleStartTask(task.id)}
@@ -1225,17 +1303,16 @@ export default function PMChecklistPage() {
                                 setTechNotes(task.techNotes || "");
                               }
                             }}
-                            className={`px-5 py-2 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer ${
-                              task.dbStatus === "in_progress" || task.dbStatus === "rejected"
+                            className={`px-5 py-2 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer ${task.dbStatus === "in_progress" || task.dbStatus === "rejected"
                                 ? "bg-[#D32F2F] text-white hover:bg-black hover:border-black"
                                 : "bg-white text-black hover:bg-black/5"
-                            }`}
+                              }`}
                           >
                             {task.dbStatus === "submitted"
                               ? "Awaiting Audit"
                               : task.dbStatus === "approved" || task.dbStatus === "completed"
-                              ? "View PDF"
-                              : "Open Checklist"}
+                                ? "View PDF"
+                                : "Open Checklist"}
                           </button>
                         )}
                       </div>
@@ -1265,11 +1342,10 @@ export default function PMChecklistPage() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-10 h-10 rounded-lg font-bold text-xs uppercase transition-all cursor-pointer ${
-                          currentPage === page
+                        className={`w-10 h-10 rounded-lg font-bold text-xs uppercase transition-all cursor-pointer ${currentPage === page
                             ? "bg-[#D32F2F] text-white border-2 border-[#D32F2F]"
                             : "border-2 border-[#1A1A1A] hover:bg-gray-100 text-black bg-transparent"
-                        }`}
+                          }`}
                       >
                         {page}
                       </button>
@@ -1309,8 +1385,8 @@ export default function PMChecklistPage() {
           <div className="relative bg-white border-4 border-black p-8 rounded-[24px] max-w-md w-full z-10 flex flex-col gap-6 text-left shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <header className="flex justify-between items-center pb-4 border-b-2 border-black">
               <h3 className="font-headline-md text-base uppercase font-black tracking-tight">Upload Evidence Photo</h3>
-              <button 
-                onClick={() => setUploadTargetId(null)} 
+              <button
+                onClick={() => setUploadTargetId(null)}
                 className="w-8 h-8 flex items-center justify-center border-2 border-black rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer bg-white"
               >
                 <span className="material-symbols-outlined text-sm">close</span>
@@ -1374,19 +1450,18 @@ export default function PMChecklistPage() {
             className="pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-[20px] border-2 border-[#1A1A1A] bg-white text-black animate-in fade-in slide-in-from-top-4 duration-300"
           >
             <span
-              className={`material-symbols-outlined ${
-                toast.type === "success"
+              className={`material-symbols-outlined ${toast.type === "success"
                   ? "text-green-600"
                   : toast.type === "error"
-                  ? "text-[#D32F2F]"
-                  : "text-blue-500"
-              }`}
+                    ? "text-[#D32F2F]"
+                    : "text-blue-500"
+                }`}
             >
               {toast.type === "success"
                 ? "check_circle"
                 : toast.type === "error"
-                ? "error"
-                : "info"}
+                  ? "error"
+                  : "info"}
             </span>
             <span className="font-label-md text-xs uppercase font-bold">{toast.message}</span>
           </div>
