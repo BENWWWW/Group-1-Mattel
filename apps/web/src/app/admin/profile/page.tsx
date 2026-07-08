@@ -144,18 +144,18 @@ export default function AdminProfilePage() {
 
   return (
     <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md overflow-hidden relative">
-      <header className="fixed top-0 right-0 w-[calc(100%-220px)] bg-white border-b-2 border-[#1A1A1A] h-20 px-10 flex justify-between items-center z-40">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b-2 border-[#1A1A1A] h-20 px-4 lg:px-10 flex justify-between items-center z-40 gap-4">
         <div>
-          <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Admin Profile</h2>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Manage system account & security</p>
+          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Admin Profile</h2>
+          <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-bold">Manage system account & security</p>
         </div>
-        <button onClick={()=>router.push("/admin/dashboard")} className="flex items-center gap-2 border-2 border-[#1A1A1A] rounded-full px-4 py-2 font-bold text-xs uppercase hover:bg-gray-100 transition-all cursor-pointer bg-transparent">
-          <span className="material-symbols-outlined text-[16px]">arrow_back</span><span>Dashboard</span>
+        <button onClick={()=>router.push("/admin/dashboard")} className="flex items-center gap-2 border-2 border-[#1A1A1A] rounded-full px-4 py-2 font-bold text-xs uppercase hover:bg-gray-100 transition-all cursor-pointer bg-transparent shrink-0">
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span><span className="hidden sm:inline">Dashboard</span>
         </button>
       </header>
 
-      <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)]">
-        <div className="p-10 max-w-[1200px] mx-auto space-y-10">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] pb-24 lg:pb-8">
+        <div className="p-4 lg:p-10 max-w-[1200px] mx-auto space-y-6 lg:space-y-10">
 
           {/* Profile Header */}
           <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 flex flex-col md:flex-row items-center gap-8">

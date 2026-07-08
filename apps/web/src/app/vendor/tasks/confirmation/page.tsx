@@ -170,7 +170,7 @@ function ConfirmationContent() {
       `}</style>
 
       {/* SideNavBar */}
-      <aside className="fixed h-screen left-0 top-0 w-[220px] border-r-2 border-[#1A1A1A] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] border-r-2 border-[#1A1A1A] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
           <p className="text-[10px] font-bold tracking-widest text-white opacity-70 uppercase">
@@ -246,7 +246,7 @@ function ConfirmationContent() {
       </aside>
 
       {/* TopNavBar */}
-      <header className="fixed top-0 right-0 w-[calc(100%-220px)] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-10 z-40">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-6 lg:px-10 z-40">
         <div className="flex items-center gap-4">
           <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
             Task Completion
@@ -255,11 +255,11 @@ function ConfirmationContent() {
       </header>
 
       {/* Main Content Area */}
-      <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)] scroll-container">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
         {/* Centering Wrapper */}
-        <div className="min-h-[calc(100vh-80px)] flex flex-col justify-center items-center p-12">
+        <div className="min-h-[calc(100vh-80px)] flex flex-col justify-center items-center p-4 sm:p-12">
           {/* Success Confirmation Card */}
-          <div className="relative z-10 w-full max-w-3xl bg-white border-2 border-[#1A1A1A] rounded-[20px] p-12 flex flex-col items-center text-center">
+          <div className="relative z-10 w-full max-w-3xl bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 sm:p-12 flex flex-col items-center text-center">
             {/* Animated Success Icon Container */}
             <div className="mb-8 relative">
               <div id="success-icon" className="w-32 h-32 rounded-full bg-primary flex items-center justify-center text-white">
@@ -281,8 +281,8 @@ function ConfirmationContent() {
             </p>
 
             {/* Submission Summary Card */}
-            <div className="w-full bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 mb-10 text-left grid grid-cols-2 gap-y-6 gap-x-8">
-              <div className="col-span-2 pb-4 border-b-2 border-[#1A1A1A] flex justify-between items-center">
+            <div className="w-full bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 sm:p-8 mb-10 text-left grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
+              <div className="col-span-1 sm:col-span-2 pb-4 border-b-2 border-[#1A1A1A] flex justify-between items-center">
                 <span className="text-xs uppercase tracking-wider text-[#1A1A1A] font-bold">
                   System Analysis
                 </span>

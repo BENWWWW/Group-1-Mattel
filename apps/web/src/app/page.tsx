@@ -228,6 +228,17 @@ export default function LoginPage() {
       {/* Left Section: Login / Forgot Password form */}
       <section className="w-full lg:w-[45%] flex flex-col justify-center items-center px-gutter relative bg-white">
         <div className="w-full max-w-md flex flex-col space-y-stack-lg">
+          {/* Mobile Only: Mattel Logo & Subtitle */}
+          <div className="lg:hidden flex flex-col items-center justify-center mb-4">
+            <img
+              alt="Mattel Logo"
+              className="h-24 w-auto object-contain select-none pointer-events-none mb-1"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtLhmKKaxMWpfyIdxAxXT2PW77wSmdzuzitBMr0-qusXCw1bZvkr6MSvPAUclFOEfu8-3-E6_kMnbI0hd_tY7eE9RcTMU1_QxhGSNmLseWDGnkZSVDNctyE5eqi8yOT50NZfXcy3iU-9o9KVfajuilIs2PPixdr2NHKfKIHUQ-cgvzS3NHF215rAqCj7bbyyEOJ9qe7NCYSCUpYO_JlSSxrILPRlyAuehXMl8r4w1PCh7xD2K8cdjT4k5HPSiindss_p_NSQSNJRsJ"
+            />
+            <h2 className="font-headline-md text-lg text-black font-extrabold tracking-tight uppercase leading-none">MAINTAIN.AI</h2>
+            <p className="text-[8px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1 leading-none">Industrial Precision</p>
+          </div>
+
           <div className="content-transition">
             {!isInlineForgot ? (
               // LOGIN FORM STATE

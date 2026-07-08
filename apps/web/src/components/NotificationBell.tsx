@@ -256,7 +256,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <aside className="absolute right-0 mt-3 w-80 bg-white border-4 border-black rounded-[20px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <aside className="fixed left-4 right-4 md:absolute md:left-auto md:right-0 top-20 md:top-auto mt-3 w-auto md:w-80 bg-white border-4 border-black rounded-[20px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {/* Header */}
           <header className="bg-[#1A1A1A] text-white px-4 py-3 border-b-2 border-black flex justify-between items-center shrink-0">
             <div>

@@ -185,7 +185,7 @@ export default function SupervisorProfilePage() {
       `}</style>
 
       {/* SideNavBar */}
-      <aside className="fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
           <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
@@ -246,13 +246,15 @@ export default function SupervisorProfilePage() {
       </aside>
 
       {/* TopNavBar */}
-      <header className="fixed top-0 right-0 w-[calc(100%-220px)] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-10 z-40">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] w-full lg:w-[calc(100%-220px)] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-6 lg:px-10 z-40">
         <div>
-          <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Supervisor Profile</h2>
-          <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Manage credentials & auditor profile details</p>
+          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Supervisor Profile</h2>
+          <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-wide">Manage credentials & auditor profile details</p>
         </div>
         <div className="flex items-center gap-4">
-          <NotificationBell />
+          <div className="hidden sm:block">
+            <NotificationBell />
+          </div>
           <button
             onClick={() => router.push("/supervisor/dashboard")}
             className="flex items-center gap-2 border-2 border-[#1A1A1A] rounded-full px-4 py-2 font-bold text-xs uppercase hover:bg-gray-100 transition-all cursor-pointer bg-transparent"
@@ -264,8 +266,8 @@ export default function SupervisorProfilePage() {
       </header>
 
       {/* Main Content Area */}
-      <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)] scroll-container">
-        <div className="p-10 max-w-[1200px] mx-auto space-y-10">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+        <div className="p-4 lg:p-10 max-w-[1200px] mx-auto space-y-6 lg:space-y-10">
 
           {/* Profile Header Card */}
           <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">

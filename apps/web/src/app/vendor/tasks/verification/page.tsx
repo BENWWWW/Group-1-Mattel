@@ -38,6 +38,28 @@ function AIVerificationScoreContent() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [flaggedItems, setFlaggedItems] = useState<FlaggedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const canvas = sigCanvasRef.current;
+      if (canvas && canvas.parentElement) {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        if (canvas.width !== rect.width || canvas.height !== rect.height) {
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+          setSigned(false);
+        }
+      }
+    };
+
+    const timer = setTimeout(handleResize, 100);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   // Stats State
   const [totalCount, setTotalCount] = useState(0);
@@ -194,7 +216,7 @@ function AIVerificationScoreContent() {
                 taskId: t.id,
                 taskCode: t.task_code || "TK-DB",
                 title: `${t.assets?.name || "PM Task"} - ${item.title || "Checklist"}`,
-                issueType: item.status === "Error" ? "Image Clarity Failure" : item.status === "Awaiting" ? "Missing Photo Evidence" : "Low Confidence (64%)",
+                issueType: item.status === "Error" ? "Image Clarity Failure" : item.status === "Awaiting" ? "Missing Photo Evidence" : "Low Confidence (64)",
                 issueColor: item.status === "Error" ? "bg-[#D32F2F]" : "bg-[#1A1A1A]",
                 subColor: item.status === "Error" ? "text-[#D32F2F]" : "text-[#1A1A1A]",
                 icon: item.status === "Error" ? "image_not_supported" : "warning",
@@ -328,7 +350,7 @@ function AIVerificationScoreContent() {
       if (urlTaskId) {
         query = query.eq("id", urlTaskId);
       } else {
-        query = query.in("status", ["submitted", "in_progress", "pending"]);
+        query = query.in("status", ["submitted", "in_progress", "pending", "rejected"]);
       }
 
       const { data: tasksToUpdate } = await query;
@@ -380,7 +402,7 @@ function AIVerificationScoreContent() {
                 task_id: t.id,
                 submitted_by: currentUser.id,
                 findings: t.description || "Resolved anomalies. Precision score nominal.",
-                recommendations: "Routine check completed.",
+                recommendations: "Nominal operational rating status verified. Maintenance cycle repeated per standard schedules.",
                 status: "submitted",
                 ai_confidence_score: confidence,
                 photos_urls: photosArray,
@@ -430,7 +452,7 @@ function AIVerificationScoreContent() {
   return (
     <div className="flex h-screen w-full select-none bg-white text-on-surface font-body-md overflow-hidden relative">
       {/* SideNavBar */}
-      <aside className="fixed h-screen left-0 top-0 w-[220px] border-r-2 border-[#1A1A1A] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
           <p className="font-label-sm text-[10px] text-white/60 tracking-wider uppercase font-bold">
@@ -507,9 +529,9 @@ function AIVerificationScoreContent() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="ml-[220px] h-screen flex flex-col relative w-[calc(100%-220px)] bg-white">
+      <main className="lg:ml-[220px] h-screen flex flex-col relative w-full lg:w-[calc(100%-220px)] bg-white pb-20 lg:pb-0">
         {/* TopNavBar */}
-        <header className="flex justify-between items-center h-20 px-10 border-b-2 border-[#1A1A1A] bg-white shrink-0 z-40">
+        <header className="flex justify-between items-center h-20 px-6 lg:px-10 border-b-2 border-[#1A1A1A] bg-white shrink-0 z-40">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/vendor/tasks")}
@@ -524,86 +546,10 @@ function AIVerificationScoreContent() {
         </header>
 
         {/* Content Canvas */}
-        <div className="flex-grow overflow-y-auto p-10 bg-white scroll-container">
-          <div className="grid grid-cols-12 gap-6 h-full items-start">
-            {/* Left: Scores & Confidence Panel */}
-            <div className="col-span-12 lg:col-span-5 flex flex-col gap-6">
-              <div className="bg-[#1A1A1A] text-white p-10 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col items-center justify-center relative overflow-hidden min-h-[500px]">
-                {/* High Contrast Background Pattern */}
-                <div
-                  className="absolute inset-0 opacity-5 pointer-events-none"
-                  style={{
-                    backgroundImage:
-                      "repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)",
-                    backgroundSize: "10px 10px",
-                  }}
-                ></div>
-                <h3 className="font-label-md text-xs uppercase tracking-[0.2em] mb-8 text-white/80 font-bold">
-                  Aggregate Verification
-                </h3>
-
-                <div className="relative w-64 h-64 flex items-center justify-center mb-8">
-                  {/* Circular Progress SVG */}
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 256 256">
-                    <circle
-                      cx="128"
-                      cy="128"
-                      fill="transparent"
-                      r="110"
-                      stroke="rgba(255, 255, 255, 0.1)"
-                      strokeWidth="24"
-                    ></circle>
-                    <circle
-                      cx="128"
-                      cy="128"
-                      fill="transparent"
-                      r="110"
-                      stroke="#D32F2F"
-                      strokeLinecap="square"
-                      strokeWidth="24"
-                      style={{
-                        strokeDasharray: "691",
-                        strokeDashoffset: offset,
-                        transition: "stroke-dashoffset 1.5s cubic-bezier(0.65, 0, 0.35, 1)",
-                      }}
-                    ></circle>
-                  </svg>
-                  <div className="absolute flex flex-col items-center">
-                    <span className="text-[72px] leading-none text-white font-extrabold">
-                      {confidence}%
-                    </span>
-                    <span className="font-bold text-[10px] text-white/80 mt-2 tracking-widest uppercase">
-                      CONFIDENCE
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-primary border-2 border-primary px-8 py-2 rounded-lg mb-12">
-                  <span className="text-white font-black tracking-[0.2em] uppercase text-xs">
-                    {confidence >= 90 ? "High Confidence" : confidence >= 70 ? "Medium Confidence" : "Low Confidence"}
-                  </span>
-                </div>
-
-                {/* Stats Row */}
-                <div className="grid grid-cols-3 w-full gap-4 text-center">
-                  <div className="border-r-2 border-white/20 px-4">
-                    <p className="text-white/60 font-bold text-[10px] uppercase mb-1">Total</p>
-                    <p className="text-2xl font-extrabold">{totalCount}</p>
-                  </div>
-                  <div className="border-r-2 border-white/20 px-4">
-                    <p className="text-primary font-bold text-[10px] uppercase mb-1">Valid</p>
-                    <p className="text-2xl font-extrabold text-primary">{validCount}</p>
-                  </div>
-                  <div className="px-4">
-                    <p className="text-white font-bold text-[10px] uppercase mb-1">Review</p>
-                    <p className="text-2xl font-extrabold text-white">{reviewCount}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Flagged Items */}
-            <div className="col-span-12 lg:col-span-7 flex flex-col gap-6">
+        <div className="flex-grow overflow-y-auto p-4 lg:p-10 bg-white scroll-container">
+          <div className="max-w-4xl mx-auto w-full flex flex-col gap-6">
+            {/* Flagged Items & Signature Capture */}
+            <div className="flex flex-col gap-6 w-full">
               <div className="flex flex-col sm:flex-row justify-between sm:items-end mb-4 px-2 gap-4">
                 <div>
                   <h3 className="text-2xl text-[#1A1A1A] font-black uppercase tracking-tight">
@@ -703,8 +649,6 @@ function AIVerificationScoreContent() {
                   )}
                   <canvas
                     ref={sigCanvasRef}
-                    width={500}
-                    height={128}
                     onMouseDown={(e) => startDrawing(e, sigCanvasRef.current, setIsDrawing)}
                     onMouseMove={(e) => draw(e, sigCanvasRef.current, isDrawing, setSigned)}
                     onMouseUp={() => stopDrawing(setIsDrawing)}
@@ -824,7 +768,7 @@ function AIVerificationScoreContent() {
                   </div>
                   <div>
                     <p className="text-[9px] uppercase font-bold text-white/50 mb-1">AI Score</p>
-                    <p className="text-xl font-black text-primary">{selectedItem.confidence}%</p>
+                    <p className="text-xl font-black text-primary">{selectedItem.confidence}</p>
                   </div>
                 </div>
               </section>

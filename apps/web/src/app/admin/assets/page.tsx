@@ -229,14 +229,14 @@ export default function AssetManagementPage() {
 
   return (
     <div className="flex h-screen w-full bg-[#FFFFFF] text-[#1A1A1A] font-body-md overflow-hidden">
-      <main className="ml-[220px] h-screen flex flex-col overflow-hidden bg-white flex-grow relative">
-        <header className="h-24 bg-white border-b-2 border-[#1A1A1A] flex justify-between items-center px-10 shrink-0 z-40">
+      <main className="lg:ml-[220px] h-screen flex flex-col overflow-hidden bg-white w-full lg:w-[calc(100%-220px)] flex-grow relative pb-24 lg:pb-0">
+        <header className="min-h-24 bg-white border-b-2 border-[#1A1A1A] flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 z-40">
           <div>
-            <h2 className="font-headline-md text-2xl text-[#1A1A1A] uppercase font-extrabold tracking-tight">Asset Management</h2>
-            <p className="text-sm text-gray-500 font-bold uppercase tracking-wide">Manage facilities and heavy machinery</p>
+            <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] uppercase font-extrabold tracking-tight">Asset Management</h2>
+            <p className="text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wide">Manage facilities and heavy machinery</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="relative w-64">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-none sm:w-48 md:w-64">
               <input type="text" placeholder="SEARCH ASSETS..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                 className="w-full p-2.5 pr-8 border-2 border-[#1A1A1A] rounded-[12px] bg-white text-xs font-bold focus:outline-none uppercase"/>
               <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">search</span>
@@ -244,7 +244,17 @@ export default function AssetManagementPage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-10 bg-[#f9f9f9] pb-28">
+        {/* Mobile-only Add Asset FAB — fixed above bottom nav, hidden on desktop */}
+        <button
+          onClick={handleOpenAddDrawer}
+          style={{ display: 'flex' }}
+          className="lg:!hidden fixed bottom-24 right-5 z-[50] w-14 h-14 bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-[18px] items-center justify-center shadow-lg cursor-pointer active:scale-95 transition-transform"
+          title="Add Asset"
+        >
+          <span className="material-symbols-outlined text-[30px] font-black">add</span>
+        </button>
+
+        <div className="flex-1 overflow-y-auto p-4 lg:p-10 bg-[#f9f9f9] pb-28">
           {/* Filters */}
           <section className="mb-10 flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-6">

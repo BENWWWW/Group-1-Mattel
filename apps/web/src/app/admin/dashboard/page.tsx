@@ -245,16 +245,16 @@ export default function AdminDashboardPage() {
     <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md overflow-hidden">
 
       {/* TopNavBar */}
-      <header className="fixed top-0 right-0 w-[calc(100%-220px)] bg-white border-b-2 border-[#1A1A1A] h-20 px-10 flex justify-between items-center z-40">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b-2 border-[#1A1A1A] h-20 px-4 lg:px-10 flex justify-between items-center z-40 gap-4">
         <div>
-          <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
             Admin Dashboard
           </h2>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+          <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-bold">
             System overview &amp; management
           </p>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 lg:gap-6">
           <NotificationBell />
           <div className="flex items-center gap-2">
 
@@ -284,11 +284,11 @@ export default function AdminDashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)]">
-        <div className="p-10 max-w-[1400px] mx-auto space-y-10">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] pb-24 lg:pb-8">
+        <div className="p-4 lg:p-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10">
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
             {statCards.map((stat) => (
               <div
                 key={stat.label}
@@ -340,7 +340,7 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
-            <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] overflow-hidden">
+            <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] overflow-hidden overflow-x-auto">
               {isLoading ? (
                 <div className="p-10 space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -445,7 +445,7 @@ export default function AdminDashboardPage() {
                   color: "bg-[#1A1A1A] text-white border-[#1A1A1A]",
                   hover: "hover:bg-white hover:text-[#1A1A1A]",
                   action: () => {
-                    if (typeof window !== "undefined") {
+                    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
                       sessionStorage.setItem("autoOpenAddAsset", "true");
                     }
                     router.push("/admin/assets");
@@ -459,7 +459,7 @@ export default function AdminDashboardPage() {
                   color: "bg-white text-[#1A1A1A] border-[#1A1A1A]",
                   hover: "hover:bg-[#1A1A1A] hover:text-white",
                   action: () => {
-                    if (typeof window !== "undefined") {
+                    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
                       sessionStorage.setItem("autoOpenAddUser", "true");
                     }
                     router.push("/admin/users");
@@ -473,7 +473,7 @@ export default function AdminDashboardPage() {
                   color: "bg-[#2E7D32] text-white border-[#2E7D32]",
                   hover: "hover:bg-white hover:text-[#2E7D32]",
                   action: () => {
-                    if (typeof window !== "undefined") {
+                    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
                       sessionStorage.setItem("autoOpenAddTemplate", "true");
                     }
                     router.push("/admin/pm");
