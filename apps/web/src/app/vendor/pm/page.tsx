@@ -187,7 +187,11 @@ export default function VPMHistoryPage() {
   };
 
   const handleDownloadReport = () => {
-    triggerToast("Telemetry report download started.", "info");
+    if (selectedRecord?.reportId) {
+      window.open(`/supervisor/tasks/report-preview?reportId=${selectedRecord.reportId}`, "_blank");
+    } else {
+      triggerToast("Telemetry report download started.", "info");
+    }
   };
 
   const avatarSrc = currentUser?.avatar_url ||
@@ -226,7 +230,7 @@ export default function VPMHistoryPage() {
       `}</style>
 
       {/* SideNavBar */}
-      <aside className="fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
           <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
@@ -304,9 +308,9 @@ export default function VPMHistoryPage() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="ml-[220px] h-screen overflow-y-auto bg-white flex-1 flex flex-col relative w-[calc(100%-220px)]">
+      <main className="lg:ml-[220px] h-screen overflow-y-auto bg-white flex-grow flex flex-col relative w-full lg:w-[calc(100%-220px)] pb-20 lg:pb-0">
         {/* TopNavBar */}
-        <header className="flex justify-between items-center h-20 px-10 border-b-2 border-[#1A1A1A] bg-white shrink-0 z-40">
+        <header className="flex justify-between items-center h-20 px-6 lg:px-10 border-b-2 border-[#1A1A1A] bg-white shrink-0 z-40">
           <div>
             <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
               Preventive Maintenance History
@@ -318,9 +322,9 @@ export default function VPMHistoryPage() {
         </header>
 
         {/* Content Canvas */}
-        <div className="flex-grow p-10 space-y-10 max-w-[1400px] w-full mx-auto">
+        <div className="flex-grow p-4 lg:p-10 space-y-6 lg:space-y-10 max-w-[1400px] w-full mx-auto">
           {/* Filters controls panel */}
-          <div className="flex flex-wrap justify-between items-end gap-6 bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A]">
+          <div className="flex flex-wrap justify-between items-end gap-4 lg:gap-6 bg-white p-4 lg:p-6 rounded-[20px] border-2 border-[#1A1A1A]">
             <div className="flex flex-wrap gap-4 flex-grow">
               <div className="flex-grow min-w-[250px]">
                 <label className="block text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Search Records</label>
@@ -537,7 +541,7 @@ export default function VPMHistoryPage() {
             </div>
 
             {/* Bottom Actions */}
-            <div className="p-8 border-t-2 border-[#1A1A1A] bg-white grid grid-cols-2 gap-4 shrink-0">
+            <div className="p-8 pb-24 lg:pb-8 border-t-2 border-[#1A1A1A] bg-white grid grid-cols-2 gap-4 shrink-0">
               <button
                 onClick={handleDownloadReport}
                 className="w-full py-4 border-2 border-black text-black font-black uppercase text-xs rounded-lg hover:bg-black hover:text-white transition-all cursor-pointer bg-white"
@@ -556,7 +560,7 @@ export default function VPMHistoryPage() {
       </aside>
 
       {/* Floating Toast Containers */}
-      <div className="fixed top-10 right-10 z-[60] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed top-10 right-10 z-[100] flex flex-col gap-3 pointer-events-none">
         {toasts.map((t) => (
           <div key={t.id} className="pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-[20px] border-2 border-black bg-white text-black animate-in fade-in slide-in-from-top-4 duration-300">
             <span className={`material-symbols-outlined ${

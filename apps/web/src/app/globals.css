@@ -42,46 +42,46 @@
 }
 
 @utility text-headline-xl {
-  font-size: 48px;
-  line-height: 56px;
+  font-size: 52px;
+  line-height: 60px;
   letter-spacing: -0.02em;
   font-weight: 800;
 }
 @utility text-label-md {
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 15px;
+  line-height: 22px;
   letter-spacing: 0.05em;
   font-weight: 700;
 }
 @utility text-label-sm {
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 13px;
+  line-height: 18px;
   font-weight: 600;
 }
 @utility text-body-lg {
-  font-size: 18px;
-  line-height: 28px;
+  font-size: 19px;
+  line-height: 30px;
   font-weight: 500;
 }
 @utility text-body-md {
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 17px;
+  line-height: 26px;
   font-weight: 400;
 }
 @utility text-headline-md {
-  font-size: 24px;
-  line-height: 32px;
+  font-size: 26px;
+  line-height: 34px;
   font-weight: 700;
 }
 @utility text-headline-lg {
-  font-size: 32px;
-  line-height: 40px;
+  font-size: 34px;
+  line-height: 42px;
   letter-spacing: -0.01em;
   font-weight: 800;
 }
 @utility text-headline-lg-mobile {
-  font-size: 24px;
-  line-height: 32px;
+  font-size: 26px;
+  line-height: 34px;
   font-weight: 800;
 }
 
@@ -108,6 +108,10 @@
 .content-transition.switching {
   opacity: 0;
   transform: translateY(-5px);
+}
+
+html {
+  font-size: 108%;
 }
 
 body {
@@ -302,6 +306,43 @@ input:checked + .slider-urgent:before {
 input::-ms-reveal,
 input::-ms-clear {
   display: none !important;
+}
+
+/* Global Responsive Layout Overrides (Mobile & Tablet) */
+@media (max-width: 1024px) {
+  main, header {
+    margin-left: 0 !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+
+  /* Hide all sidebars on mobile/tablet, except the Admin layout sidebar */
+  aside:not(.admin-sidebar) {
+    display: none !important;
+  }
+
+  /* Add bottom padding to prevent overlap with sticky bottom navigation */
+  main {
+    padding-bottom: 80px !important;
+  }
+
+  /* Hide sidebar overlays for Vendor/Supervisor on mobile */
+  div.fixed.inset-0.bg-black\/50.z-50 {
+    display: none !important;
+  }
+
+
+  /* Set standard padding on mobile for all headers including admin */
+  header, .admin-container header {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* Hide FAB buttons on mobile/tablet to avoid overlapping bottom navigation bars */
+  .fab-button {
+    display: none !important;
+  }
 }
 
 

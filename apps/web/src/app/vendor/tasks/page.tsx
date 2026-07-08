@@ -54,6 +54,7 @@ export default function PMChecklistPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Search & Filter state variables
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,11 +134,11 @@ export default function PMChecklistPage() {
 
       const mapped: Task[] = (tasksData || []).map((t: any) => {
         let statusStr: "Active" | "Pending" | "Completed" = "Active";
-        if (t.status === "pending" || t.status === "submitted") {
+        if (t.status === "submitted") {
           statusStr = "Pending";
         } else if (t.status === "approved" || t.status === "completed") {
           statusStr = "Completed";
-        } else if (t.status === "in_progress" || t.status === "rejected") {
+        } else if (t.status === "in_progress" || t.status === "rejected" || t.status === "pending") {
           statusStr = "Active";
         }
 
@@ -353,28 +354,28 @@ export default function PMChecklistPage() {
     }
   }, [tasks, selectedTaskId]);
 
-  // Compute progress for selected task (Optional tasks that are "Awaiting" are excluded from total count)
-  const activeCheckItems = selectedTask 
-    ? selectedTask.checklist.filter((item) => !(item.type === "optional" && item.status === "Awaiting"))
-    : [];
-  const doneCount = activeCheckItems.filter((item) => item.status === "Pass").length;
-  const totalCheckItems = activeCheckItems.length;
+  // Compute progress for selected task (based strictly on uploaded photos count and total checklist items)
+  const totalCheckItems = selectedTask ? selectedTask.checklist.length : 0;
+  const doneCount = selectedTask ? selectedTask.checklist.filter((item) => !!item.image).length : 0;
   const progressPercent = totalCheckItems > 0 ? Math.round((doneCount / totalCheckItems) * 100) : 0;
 
   // Submit PM Report action to Supabase
   const handleSubmitReport = async () => {
     if (!selectedTask || isLocked) return;
 
-    // Check if required/urgent items are completed (status === "Pass")
+    // Check if required/urgent items are completed (status === "Pass", "Error", or "AI Processing")
     // and that optional items that are started (status !== "Awaiting") are completed
     const incompleteTasks = selectedTask.checklist.filter((item) => {
       if (item.type === "optional" && item.status === "Awaiting") {
         return false;
       }
+      if (item.status === "Error" || item.status === "AI Processing") {
+        return false;
+      }
       return item.status !== "Pass";
     });
     if (incompleteTasks.length > 0) {
-      triggerToast(`Report cannot be submitted! There are ${incompleteTasks.length} required checklist items that are not completed (status PASS).`, "error");
+      triggerToast(`Cannot proceed! There are ${incompleteTasks.length} required checklist items that are not completed (status PASS/ERROR).`, "error");
       return;
     }
 
@@ -389,7 +390,7 @@ export default function PMChecklistPage() {
       return needsImage && !item.image;
     });
     if (missingImages.length > 0) {
-      triggerToast(`Report cannot be submitted! Evidence photo has not been uploaded for ${missingImages.length} checklist items.`, "error");
+      triggerToast(`Cannot proceed! Evidence photo has not been uploaded for ${missingImages.length} checklist items.`, "error");
       return;
     }
 
@@ -401,7 +402,7 @@ export default function PMChecklistPage() {
     }
 
     try {
-      triggerToast("COMPILING EVIDENCE & TELEMETRY. LAUNCHING AI AUDIT...", "info");
+      triggerToast("SAVING CHECKLIST DATA...", "info");
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -409,45 +410,18 @@ export default function PMChecklistPage() {
         return;
       }
 
-      // Gather evidence photos
-      const photosArray = selectedTask.checklist
-        .map((c) => c.image)
-        .filter((img): img is string => !!img);
-
-      const checklistObj = {
-        items: selectedTask.checklist || [],
-        vendorSignature: `digital:${currentUser?.full_name || "Vendor Partner"}`,
-        vendorName: currentUser?.full_name || "Vendor Partner"
-      };
-
-      // Create new report entry in pm_reports
-      const { error: reportError } = await supabase
-        .from("pm_reports")
-        .insert({
-          task_id: selectedTask.id,
-          submitted_by: user.id,
-          checklist_results: checklistObj,
-          findings: techNotes || "Inspection checklist successfully passed all model thresholds.",
-          recommendations: "Nominal operational rating status verified. Maintenance cycle repeated per standard schedules.",
-          photos_urls: photosArray,
-          ai_confidence_score: 98,
-          status: "submitted"
-        });
-
-      if (reportError) throw reportError;
-
-      // Update task status to submitted
+      // Update task checklist and notes directly, but do not set status to submitted or insert pm_reports yet
       const { error: taskError } = await supabase
         .from("pm_tasks")
         .update({
-          status: "submitted",
-          description: techNotes
+          checklist: selectedTask.checklist,
+          description: techNotes || ""
         })
         .eq("id", selectedTask.id);
 
       if (taskError) throw taskError;
 
-      triggerToast("PM Report submitted to supervisor database.", "success");
+      triggerToast("Checklist progress saved. Proceeding to signature page...", "success");
 
       setTimeout(() => {
         router.push(`/vendor/tasks/verification?taskId=${selectedTask.id}`);
@@ -455,7 +429,7 @@ export default function PMChecklistPage() {
 
     } catch (e: any) {
       console.error(e);
-      triggerToast("Failed to save report: " + e.message, "error");
+      triggerToast("Failed to save progress: " + e.message, "error");
     }
   };
 
@@ -613,7 +587,7 @@ export default function PMChecklistPage() {
       `}</style>
 
       {/* SideNavBar (matching vendor main/profile sidebar styles) */}
-      <aside className="fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
           <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
@@ -688,7 +662,7 @@ export default function PMChecklistPage() {
       </aside>
 
       {/* Main Top Navigation Header */}
-      <header className="fixed top-0 right-0 w-[calc(100%-220px)] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-10 z-40">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-6 lg:px-10 z-40">
         <div className="flex items-center gap-4">
           {selectedTaskId !== null && (
             <button
@@ -731,8 +705,8 @@ export default function PMChecklistPage() {
       {/* Main Content Layout */}
       {selectedTask ? (
         /* ================== TASK DETAIL CHECKLIST VIEW ================== */
-        <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)] scroll-container">
-          <div className="min-h-[calc(100vh-80px)] py-10 px-10 max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-300">
+        <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+          <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-8 animate-in fade-in duration-300">
             
             {/* Sub-header & Asset Info */}
             <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-gray-100">
@@ -756,10 +730,7 @@ export default function PMChecklistPage() {
               <div className="bg-white border-2 border-[#1A1A1A] p-6 rounded-[20px] min-w-[320px]">
                 <div className="flex justify-between items-center mb-3">
                   <span className="font-label-md text-xs font-bold uppercase">
-                    PROGRESS {doneCount}/{totalCheckItems}
-                  </span>
-                  <span className="font-label-md text-xs text-[#D32F2F] font-bold uppercase">
-                    {progressPercent}% COMPLETE
+                    PHOTOS UPLOADED {doneCount}/{totalCheckItems}
                   </span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-4 border-2 border-[#1A1A1A] overflow-hidden">
@@ -973,7 +944,7 @@ export default function PMChecklistPage() {
                       onClick={handleSubmitReport}
                       className="w-full sm:w-auto bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full px-10 py-4 font-bold text-sm hover:bg-[#1A1A1A] transition-all flex items-center justify-center gap-3 uppercase cursor-pointer border-none"
                     >
-                      Submit PM Report
+                      Next Step
                       <span className="material-symbols-outlined">arrow_forward</span>
                     </button>
                   </div>
@@ -985,8 +956,8 @@ export default function PMChecklistPage() {
         </main>
       ) : (
         /* ================== TASKS QUEUE LIST VIEW ================== */
-        <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)] scroll-container">
-          <div className="min-h-[calc(100vh-80px)] py-10 px-10 max-w-[1400px] mx-auto space-y-10 animate-in fade-in duration-300">
+        <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+          <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10 animate-in fade-in duration-300">
             
             {/* Stats Overview Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -1247,7 +1218,7 @@ export default function PMChecklistPage() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <footer className="flex justify-between items-center bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A]">
+              <footer className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A]">
                 <p className="text-xs font-bold text-gray-500 uppercase">
                   Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredTasks.length)} of {filteredTasks.length} tasks
                 </p>

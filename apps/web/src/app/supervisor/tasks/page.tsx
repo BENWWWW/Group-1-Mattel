@@ -535,7 +535,7 @@ export default function ReviewDetailPage() {
       `}</style>
 
       {/* Side Navigation Bar */}
-      <aside className="fixed h-screen left-0 top-0 w-[220px] border-r-2 border-[#1A1A1A] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
           <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest font-bold">Industrial Precision</p>
@@ -596,7 +596,7 @@ export default function ReviewDetailPage() {
       </aside>
 
       {/* Main Top Navigation Header */}
-      <header className="fixed top-0 right-0 w-[calc(100%-220px)] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-10 z-40">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] w-full lg:w-[calc(100%-220px)] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-6 lg:px-10 z-40">
         <div className="flex items-center gap-4">
           {selectedTaskId !== null && (
             <button
@@ -609,20 +609,20 @@ export default function ReviewDetailPage() {
           
           {selectedTask ? (
             <div>
-              <div className="flex items-center gap-3">
-                <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">{selectedTask.task_code}</h2>
-                <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[10px] font-bold text-white uppercase tracking-wider ${
+              <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
+                <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight whitespace-nowrap">{selectedTask.task_code}</h2>
+                <span className={`px-2 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[8px] sm:text-[10px] font-bold text-white uppercase tracking-wider ${
                   selectedTask.status === "approved" ? "bg-green-600" : selectedTask.status === "rejected" ? "bg-black" : "bg-[#D32F2F]"
                 }`}>
                   {selectedTask.status.replace("_", " ")}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Reviewing: {selectedTask.asset}</p>
+              <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-wide truncate max-w-[150px] sm:max-w-none">Reviewing: {selectedTask.asset}</p>
             </div>
           ) : (
             <div>
-              <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Tasks Review Portal</h2>
-              <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Queue Review Supervisor</p>
+              <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Tasks Review Portal</h2>
+              <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-wide">Queue Review Supervisor</p>
             </div>
           )}
         </div>
@@ -637,8 +637,8 @@ export default function ReviewDetailPage() {
       {/* Main Content Layout */}
       {selectedTask ? (
         /* ================== DETAILED REVIEW VIEW ================== */
-        <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)] scroll-container">
-          <div className="min-h-[calc(100vh-80px)] py-10 px-10 max-w-[1400px] mx-auto animate-in fade-in duration-300">
+        <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+          <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto animate-in fade-in duration-300">
             <div className="grid grid-cols-12 gap-8">
               
               {/* Column 1: Checklist Results */}
@@ -783,13 +783,13 @@ export default function ReviewDetailPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <button
                           onClick={() => setIsRejectModalOpen(true)}
-                          className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-black text-white hover:bg-[#D32F2F] hover:border-[#D32F2F] transition-all cursor-pointer"
+                          className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-[#D32F2F] text-white hover:bg-black hover:border-black active:scale-95 transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                         >
                           REJECT
                         </button>
                         <button
                           onClick={() => setIsApproveModalOpen(true)}
-                          className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-black text-white hover:bg-[#2E7D32] hover:border-[#2E7D32] transition-all cursor-pointer"
+                          className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-[#2E7D32] text-white hover:bg-black hover:border-black active:scale-95 transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                         >
                           APPROVE
                         </button>
@@ -829,8 +829,8 @@ export default function ReviewDetailPage() {
         </main>
       ) : (
         /* ================== TASKS LIST VIEW ================== */
-        <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)] scroll-container">
-          <div className="min-h-[calc(100vh-80px)] py-10 px-10 max-w-[1400px] mx-auto space-y-10 animate-in fade-in duration-300">
+        <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+          <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10 animate-in fade-in duration-300">
             
             {/* Stats Overview Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -995,7 +995,7 @@ export default function ReviewDetailPage() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <footer className="flex justify-between items-center bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] shadow-none">
+              <footer className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] shadow-none">
                 <p className="text-xs font-bold text-gray-500 uppercase">
                   Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredTasks.length)} of {filteredTasks.length} tasks
                 </p>
