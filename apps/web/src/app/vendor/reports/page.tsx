@@ -357,7 +357,7 @@ export default function VendorReportsPage() {
         {/* Content Canvas */}
         <div className="flex-grow p-4 lg:p-10 space-y-6 lg:space-y-10 max-w-[1400px] w-full mx-auto">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-4 sm:p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-[#D32F2F]">
               <div className="flex justify-between items-start gap-2">
                 <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider flex-1">Total Reports</span>
@@ -388,17 +388,6 @@ export default function VendorReportsPage() {
               <div className="mt-4">
                 <p className="font-headline-xl text-4xl font-extrabold text-black tracking-tighter">{pendingReportsCount}</p>
                 <p className="text-xs text-gray-700 font-bold uppercase mt-1">Pending approval from audit lead</p>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 sm:p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-blue-600">
-              <div className="flex justify-between items-start gap-2">
-                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider flex-1">Avg Confidence</span>
-                <span className="material-symbols-outlined text-blue-600 shrink-0">analytics</span>
-              </div>
-              <div className="mt-4">
-                <p className="font-headline-xl text-4xl font-extrabold text-blue-600 tracking-tighter">{avgConfidence}%</p>
-                <p className="text-xs text-blue-700 font-bold uppercase mt-1">Combined model accuracy rating</p>
               </div>
             </div>
           </div>
@@ -472,7 +461,6 @@ export default function VendorReportsPage() {
                     <th className="py-4 px-6">Report Ref</th>
                     <th className="py-4 px-6">Task Reference</th>
                     <th className="py-4 px-6">Audited Category</th>
-                    <th className="py-4 px-6 text-center">Score</th>
                     <th className="py-4 px-6 text-center">Audit Status</th>
                     <th className="py-4 px-6 text-right">Actions</th>
                   </tr>
@@ -480,7 +468,7 @@ export default function VendorReportsPage() {
                 <tbody className="divide-y-2 divide-gray-100">
                   {paginatedReports.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-gray-500 font-bold uppercase tracking-wider text-xs">
+                      <td colSpan={5} className="py-12 text-center text-gray-500 font-bold uppercase tracking-wider text-xs">
                         No reports logged in database matching filters.
                       </td>
                     </tr>
@@ -500,9 +488,6 @@ export default function VendorReportsPage() {
                           <span className="border-2 border-[#1A1A1A] text-[#1A1A1A] px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
                             {rep.category}
                           </span>
-                        </td>
-                        <td className="py-4 px-6 text-center">
-                          <span className="font-headline-md font-extrabold text-sm text-[#D32F2F]">{rep.confidence}%</span>
                         </td>
                         <td className="py-4 px-6 text-center">
                           <span className={`px-3 py-0.5 border border-black rounded-full text-[9px] font-black uppercase tracking-wider text-white ${
@@ -592,8 +577,8 @@ export default function VendorReportsPage() {
                 <h3 className="font-headline-md text-xl text-black font-extrabold uppercase mt-1">{selectedReport.taskTitle}</h3>
               </div>
 
-              {/* Status & Confidence block */}
-              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 border border-black/10 rounded-xl">
+              {/* Status block */}
+              <div className="bg-gray-50 p-4 border border-black/10 rounded-xl">
                 <div>
                   <p className="text-[9px] uppercase font-bold text-gray-400">Audit Status</p>
                   <span className={`mt-1 inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase text-white ${
@@ -601,10 +586,6 @@ export default function VendorReportsPage() {
                   }`}>
                     {selectedReport.status}
                   </span>
-                </div>
-                <div>
-                  <p className="text-[9px] uppercase font-bold text-gray-400">Confidence Score</p>
-                  <p className="font-extrabold text-sm text-[#D32F2F] mt-1">{selectedReport.confidence}% Accurate</p>
                 </div>
               </div>
 
