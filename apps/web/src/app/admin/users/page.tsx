@@ -257,28 +257,28 @@ export default function UserManagementPage() {
 
   return (
     <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md overflow-hidden">
-      <main className="ml-[220px] h-screen flex flex-col overflow-hidden bg-white flex-grow">
+      <main className="lg:ml-[220px] h-screen flex flex-col overflow-hidden bg-white w-full lg:w-[calc(100%-220px)] flex-grow pb-24 lg:pb-0">
         {/* Header */}
-        <header className="h-24 bg-white border-b-2 border-[#1A1A1A] flex justify-between items-center px-10 shrink-0 z-40">
+        <header className="min-h-24 bg-white border-b-2 border-[#1A1A1A] flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 z-40">
           <div>
-            <h2 className="font-headline-md text-2xl text-[#1A1A1A] uppercase font-extrabold tracking-tight">User Management</h2>
-            <p className="text-sm text-gray-500 font-bold uppercase tracking-wide">Vendors & Supervisors</p>
+            <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] uppercase font-extrabold tracking-tight">User Management</h2>
+            <p className="text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wide">Vendors & Supervisors</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="relative w-64">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-grow sm:flex-grow-0 sm:w-48 md:w-64">
               <input type="text" placeholder="SEARCH USERS..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}
                 className="w-full p-2.5 pr-8 border-2 border-[#1A1A1A] rounded-[12px] bg-white text-xs font-bold focus:outline-none uppercase"/>
               <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">search</span>
             </div>
-            <button onClick={handleOpenAddDrawer} className="flex items-center gap-2 bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full px-5 py-2.5 font-bold text-xs uppercase hover:bg-black transition-colors cursor-pointer">
+            <button onClick={handleOpenAddDrawer} className="flex items-center justify-center gap-2 bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full px-4 py-2.5 font-bold text-xs uppercase hover:bg-black transition-colors cursor-pointer shrink-0">
               <span className="material-symbols-outlined text-[18px]">person_add</span>Add User
             </button>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-10 space-y-8 pb-28">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-10 space-y-6 lg:space-y-8 pb-28">
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
             {[
               { label:"Total Users", value:targetUsers.length, icon:"group", color:"text-[#D32F2F]" },
               { label:"Vendors", value:vendorCount, icon:"handyman", color:"text-blue-600" },
@@ -317,7 +317,7 @@ export default function UserManagementPage() {
           )}
 
           {/* Tabs */}
-          <div className="flex gap-3 border-b-2 border-gray-200 pb-0">
+          <div className="flex gap-3 border-b-2 border-gray-200 pb-0 overflow-x-auto shrink-0">
             {[
               { id: "all", label: "All Users", count: targetUsers.length },
               { id: "vendor", label: "Vendors", count: vendorCount },
@@ -326,7 +326,7 @@ export default function UserManagementPage() {
               <button
                 key={tab.id}
                 onClick={() => setRoleFilter(tab.id as any)}
-                className={`px-6 py-3 font-black text-xs uppercase tracking-wider border-b-4 transition-all cursor-pointer ${
+                className={`px-6 py-3 font-black text-xs uppercase tracking-wider border-b-4 transition-all cursor-pointer shrink-0 ${
                   roleFilter === tab.id
                     ? "border-[#D32F2F] text-[#D32F2F]"
                     : "border-transparent text-gray-400 hover:text-gray-600"

@@ -263,7 +263,7 @@ export default function VendorReportsPage() {
       `}</style>
 
       {/* SideNavBar */}
-      <aside className="fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
           <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
@@ -341,9 +341,9 @@ export default function VendorReportsPage() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="ml-[220px] h-screen overflow-y-auto bg-white flex-1 flex flex-col relative w-[calc(100%-220px)]">
+      <main className="lg:ml-[220px] h-screen overflow-y-auto bg-white flex-grow flex flex-col relative w-full lg:w-[calc(100%-220px)] pb-20 lg:pb-0">
         {/* TopNavBar */}
-        <header className="flex justify-between items-center h-20 px-10 border-b-2 border-[#1A1A1A] bg-white shrink-0 z-40">
+        <header className="flex justify-between items-center h-20 px-6 lg:px-10 border-b-2 border-[#1A1A1A] bg-white shrink-0 z-40">
           <div>
             <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
               Task Reports
@@ -355,13 +355,13 @@ export default function VendorReportsPage() {
         </header>
 
         {/* Content Canvas */}
-        <div className="flex-grow p-10 space-y-10 max-w-[1400px] w-full mx-auto">
+        <div className="flex-grow p-4 lg:p-10 space-y-6 lg:space-y-10 max-w-[1400px] w-full mx-auto">
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-[#D32F2F]">
-              <div className="flex justify-between items-start">
-                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">Total Reports</span>
-                <span className="material-symbols-outlined text-[#D32F2F]">assessment</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-4 sm:p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-[#D32F2F]">
+              <div className="flex justify-between items-start gap-2">
+                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider flex-1">Total Reports</span>
+                <span className="material-symbols-outlined text-[#D32F2F] shrink-0">assessment</span>
               </div>
               <div className="mt-4">
                 <p className="font-headline-xl text-4xl font-extrabold text-[#D32F2F] tracking-tighter">{totalReportsCount}</p>
@@ -369,10 +369,10 @@ export default function VendorReportsPage() {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-green-600">
-              <div className="flex justify-between items-start">
-                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">Approved Logs</span>
-                <span className="material-symbols-outlined text-green-600">verified</span>
+            <div className="bg-white p-4 sm:p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-green-600">
+              <div className="flex justify-between items-start gap-2">
+                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider flex-1">Approved Logs</span>
+                <span className="material-symbols-outlined text-green-600 shrink-0">verified</span>
               </div>
               <div className="mt-4">
                 <p className="font-headline-xl text-4xl font-extrabold text-green-600 tracking-tighter">{approvedReportsCount}</p>
@@ -380,25 +380,14 @@ export default function VendorReportsPage() {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-black">
-              <div className="flex justify-between items-start">
-                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">Awaiting Review</span>
-                <span className="material-symbols-outlined text-black">hourglass_empty</span>
+            <div className="bg-white p-4 sm:p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-black">
+              <div className="flex justify-between items-start gap-2">
+                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider flex-1">Awaiting Review</span>
+                <span className="material-symbols-outlined text-black shrink-0">hourglass_empty</span>
               </div>
               <div className="mt-4">
                 <p className="font-headline-xl text-4xl font-extrabold text-black tracking-tighter">{pendingReportsCount}</p>
                 <p className="text-xs text-gray-700 font-bold uppercase mt-1">Pending approval from audit lead</p>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-blue-600">
-              <div className="flex justify-between items-start">
-                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">Avg Confidence</span>
-                <span className="material-symbols-outlined text-blue-600">analytics</span>
-              </div>
-              <div className="mt-4">
-                <p className="font-headline-xl text-4xl font-extrabold text-blue-600 tracking-tighter">{avgConfidence}%</p>
-                <p className="text-xs text-blue-700 font-bold uppercase mt-1">Combined model accuracy rating</p>
               </div>
             </div>
           </div>
@@ -472,7 +461,6 @@ export default function VendorReportsPage() {
                     <th className="py-4 px-6">Report Ref</th>
                     <th className="py-4 px-6">Task Reference</th>
                     <th className="py-4 px-6">Audited Category</th>
-                    <th className="py-4 px-6 text-center">Score</th>
                     <th className="py-4 px-6 text-center">Audit Status</th>
                     <th className="py-4 px-6 text-right">Actions</th>
                   </tr>
@@ -480,7 +468,7 @@ export default function VendorReportsPage() {
                 <tbody className="divide-y-2 divide-gray-100">
                   {paginatedReports.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-gray-500 font-bold uppercase tracking-wider text-xs">
+                      <td colSpan={5} className="py-12 text-center text-gray-500 font-bold uppercase tracking-wider text-xs">
                         No reports logged in database matching filters.
                       </td>
                     </tr>
@@ -500,9 +488,6 @@ export default function VendorReportsPage() {
                           <span className="border-2 border-[#1A1A1A] text-[#1A1A1A] px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
                             {rep.category}
                           </span>
-                        </td>
-                        <td className="py-4 px-6 text-center">
-                          <span className="font-headline-md font-extrabold text-sm text-[#D32F2F]">{rep.confidence}%</span>
                         </td>
                         <td className="py-4 px-6 text-center">
                           <span className={`px-3 py-0.5 border border-black rounded-full text-[9px] font-black uppercase tracking-wider text-white ${
@@ -536,7 +521,7 @@ export default function VendorReportsPage() {
 
             {/* Pagination Panel */}
             {totalPages > 1 && (
-              <div className="p-6 border-t-2 border-gray-100 flex justify-between items-center bg-white">
+              <div className="p-6 border-t-2 border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center bg-white">
                 <p className="text-xs font-bold text-gray-500 uppercase">
                   Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredReports.length)} of {filteredReports.length} reports
                 </p>
@@ -592,8 +577,8 @@ export default function VendorReportsPage() {
                 <h3 className="font-headline-md text-xl text-black font-extrabold uppercase mt-1">{selectedReport.taskTitle}</h3>
               </div>
 
-              {/* Status & Confidence block */}
-              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 border border-black/10 rounded-xl">
+              {/* Status block */}
+              <div className="bg-gray-50 p-4 border border-black/10 rounded-xl">
                 <div>
                   <p className="text-[9px] uppercase font-bold text-gray-400">Audit Status</p>
                   <span className={`mt-1 inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase text-white ${
@@ -601,10 +586,6 @@ export default function VendorReportsPage() {
                   }`}>
                     {selectedReport.status}
                   </span>
-                </div>
-                <div>
-                  <p className="text-[9px] uppercase font-bold text-gray-400">Confidence Score</p>
-                  <p className="font-extrabold text-sm text-[#D32F2F] mt-1">{selectedReport.confidence}% Accurate</p>
                 </div>
               </div>
 
@@ -669,7 +650,7 @@ export default function VendorReportsPage() {
             </div>
 
             {/* Sticky Actions */}
-            <div className="p-8 border-t-2 border-[#1A1A1A] bg-white grid grid-cols-2 gap-4 shrink-0">
+            <div className="p-8 pb-24 lg:pb-8 border-t-2 border-[#1A1A1A] bg-white grid grid-cols-2 gap-4 shrink-0">
               <button
                 onClick={handleDownloadPDF}
                 className="w-full py-4 border-2 border-black text-black font-black uppercase text-xs rounded-lg hover:bg-black hover:text-white transition-all cursor-pointer bg-white"
@@ -688,7 +669,7 @@ export default function VendorReportsPage() {
       </aside>
 
       {/* Floating Toast Containers */}
-      <div className="fixed top-10 right-10 z-[60] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed top-10 right-10 z-[100] flex flex-col gap-3 pointer-events-none">
         {toasts.map((t) => (
           <div key={t.id} className="pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-[20px] border-2 border-black bg-white text-black animate-in fade-in slide-in-from-top-4 duration-300">
             <span className={`material-symbols-outlined ${

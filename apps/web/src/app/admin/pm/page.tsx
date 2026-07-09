@@ -186,23 +186,23 @@ export default function PMTemplatesPage() {
   );
 
   return (
-    <div className="flex h-screen w-full bg-[#f9f9f9] text-on-surface font-body-md overflow-hidden">
-      <main className="ml-[220px] w-[calc(100%-220px)] h-screen flex flex-col overflow-hidden bg-[#f9f9f9] flex-grow">
-        <header className="h-24 bg-white border-b-2 border-[#1A1A1A] flex justify-between items-center px-10 shrink-0 z-40">
+    <div className="flex h-screen w-full bg-[#f9f9f9] text-[#1A1A1A] font-body-md overflow-hidden">
+      <main className="lg:ml-[220px] w-full lg:w-[calc(100%-220px)] h-screen flex flex-col overflow-hidden bg-[#f9f9f9] flex-grow pb-24 lg:pb-0">
+        <header className="min-h-24 bg-white border-b-2 border-[#1A1A1A] flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 z-40">
           <div>
-            <h2 className="font-headline-md text-2xl text-[#1A1A1A] uppercase font-extrabold tracking-tight">Checklist Templates</h2>
-            <p className="text-sm text-gray-500 font-bold uppercase tracking-wide">Standardized operational protocols</p>
+            <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] uppercase font-extrabold tracking-tight">Checklist Templates</h2>
+            <p className="text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wide">Standardized operational protocols</p>
           </div>
-          <button className="pill-button-sharp bg-[#D32F2F] text-white border-black hover:opacity-90 cursor-pointer" onClick={switchToCreateMode}>
+          <button className="pill-button-sharp bg-[#D32F2F] text-white border-black hover:opacity-90 cursor-pointer shrink-0" onClick={switchToCreateMode}>
             <span className="material-symbols-outlined">add</span><span>New Template</span>
           </button>
         </header>
 
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
           {/* Left: Template Library */}
-          <section className="w-[450px] border-r-2 border-gray-200 p-8 flex flex-col bg-white overflow-hidden shrink-0">
-            <div className="flex flex-col gap-4 mb-8 shrink-0">
-              <h3 className="font-headline-md text-xl uppercase font-extrabold tracking-tight">Template Library</h3>
+          <section className="w-full lg:w-[450px] border-b-2 lg:border-b-0 lg:border-r-2 border-gray-200 p-4 lg:p-8 flex flex-col bg-white h-[350px] lg:h-auto overflow-hidden shrink-0">
+            <div className="flex flex-col gap-4 mb-4 lg:mb-8 shrink-0">
+              <h3 className="font-headline-md text-base lg:text-xl uppercase font-extrabold tracking-tight">Template Library</h3>
               <div className="flex gap-2.5">
                 <select value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)} className="flex-1 p-2 border-2 border-gray-200 rounded bg-white text-xs font-bold outline-none cursor-pointer uppercase min-w-0">
                   <option value="ALL">ALL CATEGORIES</option>
@@ -228,10 +228,10 @@ export default function PMTemplatesPage() {
                     <div className="flex justify-between items-start">
                       <div className="space-y-3">
                         <div className="flex flex-wrap gap-2">
-                          <span className="status-badge-sharp bg-white text-on-surface">{temp.category}</span>
+                          <span className="status-badge-sharp bg-white text-[#1A1A1A]">{temp.category}</span>
                           <span className={`status-badge-sharp text-white border-0 ${temp.is_active?"bg-green-600":"bg-gray-400"}`}>{temp.is_active?"ACTIVE":"DRAFT"}</span>
                         </div>
-                        <h4 className="font-headline-md text-lg font-extrabold leading-tight">{temp.title}</h4>
+                        <h4 className="font-headline-md text-sm lg:text-lg font-extrabold leading-tight">{temp.title}</h4>
                         {temp.description && (
                           <p className="text-[11px] font-bold text-gray-500 line-clamp-2 uppercase leading-normal">
                             {temp.description}
@@ -257,11 +257,11 @@ export default function PMTemplatesPage() {
           </section>
 
           {/* Right: Action Panel */}
-          <section className="flex-1 p-10 bg-white/50 overflow-y-auto">
-            <div className="industrial-card max-w-4xl mx-auto min-h-[700px] flex flex-col bg-white border-black rounded-xl">
-              <div className="flex justify-between items-center mb-10">
-                <div className="flex items-center gap-4">
-                  <h3 className="font-headline-lg text-3xl uppercase font-extrabold tracking-tighter">{currentMode==="create"?"CREATE NEW TEMPLATE":"EDIT TEMPLATE"}</h3>
+          <section className="flex-1 p-4 lg:p-10 bg-white/50 overflow-y-auto">
+            <div className="industrial-card max-w-4xl mx-auto min-h-[500px] lg:min-h-[700px] flex flex-col bg-white border-black rounded-xl">
+              <div className="flex justify-between items-center mb-6 lg:mb-10">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h3 className="font-headline-lg text-lg lg:text-3xl uppercase font-extrabold tracking-tighter">{currentMode==="create"?"CREATE NEW TEMPLATE":"EDIT TEMPLATE"}</h3>
                   <span className={`status-badge-sharp text-white border-none ${currentMode==="create"?"bg-[#D32F2F]":"bg-[#1a1c1c]"}`}>{currentMode==="create"?"NEW PROTOCOL":"EDITING"}</span>
                 </div>
               </div>

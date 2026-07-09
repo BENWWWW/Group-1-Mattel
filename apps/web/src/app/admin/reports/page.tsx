@@ -285,22 +285,22 @@ export default function ReportsPage() {
 
   return (
     <div className="flex h-screen w-full bg-[#fff8f7] text-[#1A1A1A] font-body-md overflow-hidden">
-      <main className="ml-[220px] w-[calc(100%-220px)] h-screen flex flex-col overflow-hidden bg-[#fff8f7] relative">
+      <main className="lg:ml-[220px] w-full lg:w-[calc(100%-220px)] h-screen flex flex-col overflow-hidden bg-[#fff8f7] relative pb-24 lg:pb-0">
         {/* TopNavBar */}
-        <header className="h-20 px-10 flex justify-between items-center bg-[#fff8f7] border-b-2 border-[#1A1A1A] sticky top-0 z-40">
+        <header className="min-h-20 bg-[#fff8f7] border-b-2 border-[#1A1A1A] flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 sticky top-0 z-40">
           <div>
-            <h2 className="font-headline-md text-2xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Reports</h2>
-            <p className="text-[10px] text-gray-500 uppercase font-bold">PM Submission & Audit Trail</p>
+            <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Reports</h2>
+            <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase font-bold">PM Submission &amp; Audit Trail</p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-[#1A1A1A]">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-[#1A1A1A] w-full sm:w-auto">
             <span className="material-symbols-outlined text-[#D32F2F] text-xl">search</span>
-            <input type="text" value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search reports..." className="bg-transparent border-none focus:ring-0 text-xs w-48 outline-none font-bold uppercase"/>
+            <input type="text" value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search reports..." className="bg-transparent border-none focus:ring-0 text-xs w-full sm:w-48 outline-none font-bold uppercase"/>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-10 space-y-8 pb-28">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-10 space-y-6 lg:space-y-8 pb-28">
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
             {[
               { label: "Total Reports", value: stats.total, icon: "description", color: "text-[#D32F2F]" },
               { label: "Approved", value: stats.approved, icon: "check_circle", color: "text-green-600", accent: "border-l-8 border-l-green-600" },
@@ -320,7 +320,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Controls */}
-          <div className="flex flex-wrap justify-between items-end gap-6 bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A]">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A]">
             <div className="flex gap-4 flex-wrap">
               <div className="flex-1 min-w-[200px]">
                 <label className="block text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Status Filter</label>
@@ -355,7 +355,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Table */}
-          <div className="border-2 border-[#1A1A1A] rounded-[20px] overflow-hidden bg-white">
+          <div className="border-2 border-[#1A1A1A] rounded-[20px] overflow-hidden bg-white overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#1A1A1A] text-white uppercase text-xs tracking-wider">
@@ -392,7 +392,7 @@ export default function ReportsPage() {
                       <div className="flex gap-2">
                         {/* Download PDF — opens same report-preview used by vendor & supervisor */}
                         <button
-                          onClick={() => handleDownloadPDF(report)}
+                           onClick={() => handleDownloadPDF(report)}
                           className="p-1.5 rounded-lg border border-[#1A1A1A] hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer"
                           title="Download PDF"
                         >
@@ -408,7 +408,7 @@ export default function ReportsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <footer className="flex justify-between items-center bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A]">
+            <footer className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 lg:p-6 rounded-[20px] border-2 border-[#1A1A1A] gap-4">
               <p className="text-xs font-bold text-gray-500 uppercase opacity-60">
                 Showing {(currentPage-1)*PAGE_SIZE+1}–{Math.min(currentPage*PAGE_SIZE,totalCount)} of {totalCount.toLocaleString()} reports
               </p>

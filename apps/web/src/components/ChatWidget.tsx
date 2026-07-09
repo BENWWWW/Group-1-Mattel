@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -24,7 +25,7 @@ interface Message {
 
 export default function ChatWidget() {
   const pathname = usePathname();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [isOpen, setIsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [contacts, setContacts] = useState<Profile[]>([]);
@@ -39,6 +40,7 @@ export default function ChatWidget() {
   // Draggable states
   const [position, setPosition] = useState({ x: -1, y: -1 });
   const [isDragging, setIsDragging] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedContactRef = useRef<Profile | null>(null);
@@ -50,6 +52,11 @@ export default function ChatWidget() {
   useEffect(() => {
     selectedContactRef.current = selectedContact;
   }, [selectedContact]);
+
+  // Mount flag for portal safety (must be client-side)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Scroll to bottom helper
   const scrollToBottom = () => {
@@ -477,6 +484,7 @@ export default function ChatWidget() {
   const panelVerticalClass = isTopHalf ? "top-20" : "bottom-20";
 
   return (
+    <>
     <div
       style={containerStyle}
       className="fixed z-[9999] transition-shadow duration-150"
@@ -501,212 +509,180 @@ export default function ChatWidget() {
         )}
       </button>
 
-      {/* Floating Chat Box Panel */}
-      {isOpen && (
-        <aside
-          className={`absolute ${panelVerticalClass} ${panelAlignmentClass} w-80 h-[480px] bg-white border-4 border-black rounded-[24px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] z-[9999] flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300`}
-        >
-          {/* Header */}
-          <header className="bg-[#1A1A1A] text-white px-4 py-3.5 border-b-2 border-black flex items-center gap-3 shrink-0">
-            {selectedContact ? (
-              <>
+      {/* Desktop Chat Panel removed — panel is always via portal below */}
+    </div>
+
+    {/* Chat Panel — always via createPortal into document.body.
+         On mobile: full-width bottom sheet above bottom nav.
+         On desktop: fixed panel at bottom-right corner. */}
+    {mounted && isOpen && createPortal(
+      <div
+        className="fixed z-[99999] animate-in slide-in-from-bottom-5 duration-300 bg-white border-4 border-black rounded-[24px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col overflow-hidden bottom-[90px] left-2 right-2 h-[70vh] max-h-[520px] md:bottom-8 md:right-8 md:left-auto md:w-80 md:h-[480px]"
+        style={{ zIndex: 99999 }}
+      >
+        {/* Header */}
+        <header className="bg-[#1A1A1A] text-white px-4 py-3.5 border-b-2 border-black flex items-center gap-3 shrink-0">
+          {selectedContact ? (
+            <>
+              <button
+                onClick={() => setSelectedContact(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors border-none bg-transparent cursor-pointer text-white"
+              >
+                <span className="material-symbols-outlined text-lg">arrow_back</span>
+              </button>
+              <div className="overflow-hidden flex-1">
+                <h4 className="font-extrabold text-xs uppercase tracking-wider truncate text-white leading-none mb-1">
+                  {selectedContact.full_name}
+                </h4>
+                <p className="text-[9px] text-[#D32F2F] font-bold uppercase tracking-widest leading-none">
+                  {selectedContact.role}{" "}
+                  {selectedContact.department && `• ${selectedContact.department}`}
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-xl text-[#D32F2F]">forum</span>
+              <div className="overflow-hidden flex-1">
+                <h4 className="font-extrabold text-xs uppercase tracking-wider truncate text-white leading-none">
+                  Communication Portal
+                </h4>
+                <p className="text-[8px] text-gray-400 font-extrabold uppercase tracking-wider leading-none mt-0.5">
+                  Connect Vendor & Supervisor
+                </p>
+              </div>
+            </>
+          )}
+          <button
+            onClick={() => setIsOpen(false)}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors border-none bg-transparent cursor-pointer text-white ml-auto"
+          >
+            <span className="material-symbols-outlined text-lg">close</span>
+          </button>
+        </header>
+
+        {/* Body Content */}
+        <div className="flex-1 flex flex-col min-h-0 bg-gray-50">
+          {selectedContact ? (
+            <>
+              <div className="flex-1 p-4 overflow-y-auto space-y-3 scroll-container flex flex-col min-h-0">
+                {loadingMessages ? (
+                  <div className="flex flex-col items-center justify-center h-full gap-2">
+                    <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">Loading Chat...</span>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">forum</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">No Messages Yet</span>
+                    <p className="text-[9px] text-gray-400 mt-1 max-w-[180px] font-medium leading-relaxed">
+                      Type a message below to start a secure conversation.
+                    </p>
+                  </div>
+                ) : (
+                  messages.map((msg) => {
+                    const isMe = msg.sender_id === currentUser!.id;
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`max-w-[85%] rounded-[16px] p-3 text-xs leading-normal font-semibold shadow-sm ${
+                          isMe
+                            ? "bg-[#1A1A1A] text-white ml-auto rounded-tr-none"
+                            : "bg-white text-black border-2 border-black mr-auto rounded-tl-none"
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap leading-relaxed">{msg.message}</p>
+                        <span className={`block text-[8px] mt-1.5 text-right uppercase tracking-tight ${
+                          isMe ? "text-gray-400" : "text-gray-500"
+                        }`}>
+                          {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+              <form
+                onSubmit={handleSendMessage}
+                className="p-3 border-t-2 border-black bg-white flex gap-2 shrink-0"
+              >
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  className="flex-1 border border-black/20 rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#D32F2F] placeholder-gray-400 bg-white text-black"
+                />
                 <button
-                  onClick={() => setSelectedContact(null)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors border-none bg-transparent cursor-pointer text-white"
+                  type="submit"
+                  disabled={!newMessage.trim()}
+                  className="bg-[#D32F2F] text-white border border-black rounded-lg px-3.5 flex items-center justify-center hover:bg-[#1A1A1A] transition-colors cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span className="material-symbols-outlined text-lg">
-                    arrow_back
-                  </span>
+                  <span className="material-symbols-outlined text-sm text-white">send</span>
                 </button>
-                <div className="overflow-hidden flex-1">
-                  <h4 className="font-extrabold text-xs uppercase tracking-wider truncate text-white leading-none mb-1">
-                    {selectedContact.full_name}
-                  </h4>
-                  <p className="text-[9px] text-[#D32F2F] font-bold uppercase tracking-widest leading-none">
-                    {selectedContact.role}{" "}
-                    {selectedContact.department &&
-                      `• ${selectedContact.department}`}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined text-xl text-[#D32F2F]">
-                  forum
-                </span>
-                <div className="overflow-hidden flex-1">
-                  <h4 className="font-extrabold text-xs uppercase tracking-wider truncate text-white leading-none">
-                    Communication Portal
-                  </h4>
-                  <p className="text-[8px] text-gray-400 font-extrabold uppercase tracking-wider leading-none mt-0.5">
-                    Connect Vendor & Supervisor
-                  </p>
-                </div>
-              </>
-            )}
-          </header>
-
-          {/* Body Content */}
-          <div className="flex-1 flex flex-col min-h-0 bg-gray-50">
-            {selectedContact ? (
-              /* ACTIVE CONVERSATION FLOW */
-              <>
-                <div className="flex-1 p-4 overflow-y-auto space-y-3 scroll-container flex flex-col min-h-0">
-                  {loadingMessages ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-2">
-                      <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">
-                        Loading Chat...
-                      </span>
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                      <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">
-                        forum
-                      </span>
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                        No Messages Yet
-                      </span>
-                      <p className="text-[9px] text-gray-400 mt-1 max-w-[180px] font-medium leading-relaxed">
-                        Type a message below to start a secure conversation.
-                      </p>
-                    </div>
-                  ) : (
-                    messages.map((msg) => {
-                      const isMe = msg.sender_id === currentUser.id;
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`max-w-[85%] rounded-[16px] p-3 text-xs leading-normal font-semibold shadow-sm ${
-                            isMe
-                              ? "bg-[#1A1A1A] text-white ml-auto rounded-tr-none"
-                              : "bg-white text-black border-2 border-black mr-auto rounded-tl-none"
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap leading-relaxed">
-                            {msg.message}
-                          </p>
-                          <span
-                            className={`block text-[8px] mt-1.5 text-right uppercase tracking-tight ${
-                              isMe ? "text-gray-400" : "text-gray-500"
-                            }`}
-                          >
-                            {new Date(msg.created_at).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input Field */}
-                <form
-                  onSubmit={handleSendMessage}
-                  className="p-3 border-t-2 border-black bg-white flex gap-2 shrink-0"
-                >
+              </form>
+            </>
+          ) : (
+            <>
+              <div className="p-3 bg-white border-b border-black/10 shrink-0">
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400 text-base">search</span>
                   <input
                     type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1 border border-black/20 rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#D32F2F] placeholder-gray-400 bg-white text-black"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search contacts..."
+                    className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-black/10 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#D32F2F] focus:bg-white text-black"
                   />
-                  <button
-                    type="submit"
-                    disabled={!newMessage.trim()}
-                    className="bg-[#D32F2F] text-white border border-black rounded-lg px-3.5 flex items-center justify-center hover:bg-[#1A1A1A] transition-colors cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="material-symbols-outlined text-sm text-white">
-                      send
-                    </span>
-                  </button>
-                </form>
-              </>
-            ) : (
-              /* CONTACT SELECTOR VIEW */
-              <>
-                {/* Search Contacts Bar */}
-                <div className="p-3 bg-white border-b border-black/10 shrink-0">
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400 text-base">
-                      search
-                    </span>
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search contacts..."
-                      className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-black/10 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#D32F2F] focus:bg-white text-black"
-                    />
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scroll-container min-h-0">
+                {loadingContacts ? (
+                  <div className="flex flex-col items-center justify-center h-full gap-2">
+                    <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">Loading Contacts...</span>
                   </div>
-                </div>
-
-                {/* Contacts List */}
-                <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scroll-container min-h-0">
-                  {loadingContacts ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-2">
-                      <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">
-                        Loading Contacts...
-                      </span>
-                    </div>
-                  ) : filteredContacts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                      <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">
-                        person_off
-                      </span>
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                        Contact Not Found
-                      </span>
-                    </div>
-                  ) : (
-                    filteredContacts.map((contact) => {
-                      const contactUnread = unreadMessages.filter(
-                        (m) => m.sender_id === contact.id
-                      ).length;
-
-                      return (
-                        <button
-                          key={contact.id}
-                          onClick={() => handleSelectContact(contact)}
-                          className="w-full flex items-center gap-3 bg-white hover:bg-gray-100 border-2 border-black/10 rounded-xl p-3 text-left transition-all hover:border-black cursor-pointer bg-transparent"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-[#1A1A1A]/5 border border-black flex items-center justify-center font-bold text-xs uppercase shrink-0 text-black">
-                            {contact.full_name.substring(0, 2)}
-                          </div>
-                          <div className="overflow-hidden flex-1">
-                            <p className="font-extrabold text-xs text-black uppercase leading-none mb-1 truncate flex items-center gap-2">
-                              {contact.full_name}
-                              {contactUnread > 0 && (
-                                <span
-                                  className="inline-block w-2.5 h-2.5 bg-[#D32F2F] rounded-full animate-pulse"
-                                  title={`${contactUnread} new messages`}
-                                />
-                              )}
-                            </p>
-                            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none">
-                              {contact.role}{" "}
-                              {contact.department &&
-                                `• ${contact.department}`}
-                            </p>
-                          </div>
-                          <span className="material-symbols-outlined text-gray-400 text-sm">
-                            chevron_right
-                          </span>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </aside>
-      )}
-    </div>
+                ) : filteredContacts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">person_off</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Contact Not Found</span>
+                  </div>
+                ) : (
+                  filteredContacts.map((contact) => {
+                    const contactUnread = unreadMessages.filter((m) => m.sender_id === contact.id).length;
+                    return (
+                      <button
+                        key={contact.id}
+                        onClick={() => handleSelectContact(contact)}
+                        className="w-full flex items-center gap-3 bg-white hover:bg-gray-100 border-2 border-black/10 rounded-xl p-3 text-left transition-all hover:border-black cursor-pointer bg-transparent"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-[#1A1A1A]/5 border border-black flex items-center justify-center font-bold text-xs uppercase shrink-0 text-black">
+                          {contact.full_name.substring(0, 2)}
+                        </div>
+                        <div className="overflow-hidden flex-1">
+                          <p className="font-extrabold text-xs text-black uppercase leading-none mb-1 truncate flex items-center gap-2">
+                            {contact.full_name}
+                            {contactUnread > 0 && (
+                              <span className="inline-block w-2.5 h-2.5 bg-[#D32F2F] rounded-full animate-pulse" title={`${contactUnread} new messages`} />
+                            )}
+                          </p>
+                          <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none">
+                            {contact.role}{" "}{contact.department && `• ${contact.department}`}
+                          </p>
+                        </div>
+                        <span className="material-symbols-outlined text-gray-400 text-sm">chevron_right</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 }

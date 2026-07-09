@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -25,24 +25,42 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session if expired
-  const { data: { user } } = await supabase.auth.getUser()
-
   const { pathname } = request.nextUrl
 
   // Protected routes — redirect to login if not authenticated
   const protectedPrefixes = ['/admin', '/supervisor', '/vendor']
   const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p))
 
-  if (isProtected && !user) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/'
-    return NextResponse.redirect(loginUrl)
+  // Refresh session if expired
+  let user = null
+  let fetchFailed = false
+  
+  if (isProtected || pathname === '/') {
+    try {
+      const { data: { user: fetchedUser } } = await supabase.auth.getUser()
+      user = fetchedUser
+    } catch (err: any) {
+      console.error('Proxy: Supabase auth getUser failed:', err?.message || err)
+      fetchFailed = true
+    }
+  }
+
+  if (isProtected) {
+    // If fetch failed, check if there is an active session cookie to avoid false-positive redirects
+    const cookies = request.cookies.getAll()
+    const hasAuthCookie = cookies.some((c) => c.name.includes('-auth-token'))
+
+    if (fetchFailed && hasAuthCookie) {
+      console.log('Proxy: Fetch failed but auth cookie is present. Allowing client-side auth fallback.')
+    } else if (!user) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/'
+      return NextResponse.redirect(loginUrl)
+    }
   }
 
   // If already logged in and visiting login page, redirect to their dashboard
   if (pathname === '/' && user) {
-    const redirectUrl = request.nextUrl.clone()
     // Role-based redirect is handled client-side after login
     // Here we just let through to avoid infinite loop
   }

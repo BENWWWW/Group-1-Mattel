@@ -237,7 +237,7 @@ export default function ReportsPage() {
       `}</style>
 
       {/* SideNavBar */}
-      <aside className="fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] border-r-2 border-[#1A1A1A] flex flex-col py-4 z-50 text-white">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
           <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest font-bold">
@@ -306,12 +306,12 @@ export default function ReportsPage() {
       </aside>
 
       {/* TopNavBar */}
-      <header className="fixed top-0 right-0 w-[calc(100%-220px)] bg-white border-b-2 border-[#1A1A1A] h-20 px-10 flex justify-between items-center z-40">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b-2 border-[#1A1A1A] h-20 px-6 lg:px-10 flex justify-between items-center z-40">
         <div>
-          <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
             Auditing Reports
           </h2>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+          <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-bold">
             Monitor precision statistics and compliance rates
           </p>
         </div>
@@ -324,8 +324,8 @@ export default function ReportsPage() {
       </header>
 
       {/* Main Content */}
-      <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)] scroll-container">
-        <div className="min-h-[calc(100vh-80px)] py-10 px-10 max-w-[1400px] mx-auto space-y-12">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+        <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-12">
           
           {/* Key Metrics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -497,21 +497,21 @@ export default function ReportsPage() {
                 <p className="text-xs text-gray-500 font-medium">History log of all approved / rejected reports</p>
               </div>
               
-              <div className="flex gap-4 items-center">
+              <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto">
                 {/* Search */}
                 <input
                   type="text"
                   placeholder="Search Reports..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold outline-none focus:border-[#D32F2F] bg-white text-[#1A1A1A]"
+                  className="w-full sm:w-auto px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold outline-none focus:border-[#D32F2F] bg-white text-[#1A1A1A]"
                 />
 
                 {/* Filter */}
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold bg-white text-[#1A1A1A] cursor-pointer outline-none font-bold"
+                  className="w-full sm:w-auto px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold bg-white text-[#1A1A1A] cursor-pointer outline-none font-bold"
                 >
                   <option value="All">All Categories</option>
                   <option value="Mechanical">Mechanical</option>
@@ -525,7 +525,7 @@ export default function ReportsPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold bg-white text-[#1A1A1A] cursor-pointer outline-none font-bold"
+                  className="w-full sm:w-auto px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold bg-white text-[#1A1A1A] cursor-pointer outline-none font-bold"
                 >
                   <option value="All">All Statuses</option>
                   <option value="Approved">Approved</option>

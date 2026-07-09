@@ -36,6 +36,7 @@ export default function VendorDashboardPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Statistics state
   const [stats, setStats] = useState({
@@ -109,11 +110,11 @@ export default function VendorDashboardPage() {
         else if (score < 80) confStr = "MEDIUM CONFIDENCE";
 
         let statusStr: "Active" | "Pending" | "Completed" = "Active";
-        if (t.status === "pending" || t.status === "submitted") {
+        if (t.status === "submitted") {
           statusStr = "Pending";
         } else if (t.status === "approved" || t.status === "completed") {
           statusStr = "Completed";
-        } else if (t.status === "in_progress" || t.status === "rejected") {
+        } else if (t.status === "in_progress" || t.status === "rejected" || t.status === "pending") {
           statusStr = "Active";
         }
 
@@ -139,7 +140,7 @@ export default function VendorDashboardPage() {
       setTasks(list);
 
       // Calculate stats
-      const active = (tasksData || []).filter((t: any) => t.status === "in_progress" || t.status === "rejected").length;
+      const active = (tasksData || []).filter((t: any) => t.status === "in_progress" || t.status === "rejected" || t.status === "pending").length;
       const pendingReview = (tasksData || []).filter((t: any) => t.status === "submitted").length;
       const completed = (tasksData || []).filter((t: any) => t.status === "approved" || t.status === "completed").length;
       const awaitingStart = (tasksData || []).filter((t: any) => t.status === "pending").length;
@@ -233,8 +234,8 @@ export default function VendorDashboardPage() {
         }
       `}</style>
 
-      {/* Fixed Sidebar */}
-      <aside className="fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] border-r-2 border-[#1A1A1A] flex flex-col py-4 z-50 text-white">
+      {/* SideNavBar */}
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
           <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
@@ -306,14 +307,16 @@ export default function VendorDashboardPage() {
       </aside>
 
       {/* Top NavBar (aligned with Admin Dashboard style) */}
-      <header className="fixed top-0 right-0 w-[calc(100%-220px)] bg-white border-b-2 border-[#1A1A1A] h-20 px-10 flex justify-between items-center z-40">
-        <div>
-          <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
-            Vendor Dashboard
-          </h2>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
-            Field Operations & Task Execution
-          </p>
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b-2 border-[#1A1A1A] h-20 px-6 lg:px-10 flex justify-between items-center z-40">
+        <div className="flex items-center gap-4">
+          <div>
+            <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+              Vendor Dashboard
+            </h2>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+              Field Operations & Task Execution
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-6">
@@ -329,8 +332,8 @@ export default function VendorDashboardPage() {
       </header>
 
       {/* Main Content Area */}
-      <main className="ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-[calc(100%-220px)] scroll-container">
-        <div className="p-10 max-w-[1400px] mx-auto space-y-10">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+        <div className="p-4 lg:p-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10">
           
           {/* Stats Overview Grid (Adapted from Admin Dashboard style) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
