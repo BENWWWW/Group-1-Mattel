@@ -12,9 +12,13 @@ import type { Signature } from '@/lib/types/database'
 // ============================================================
 export async function getMySignatures(): Promise<Signature[]> {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
   const { data, error } = await supabase
     .from('signatures')
     .select('*')
+    .eq('user_id', user.id)
     .order('is_default', { ascending: false })
     .order('created_at', { ascending: false })
 
@@ -27,9 +31,13 @@ export async function getMySignatures(): Promise<Signature[]> {
 // ============================================================
 export async function getDefaultSignature(): Promise<Signature | null> {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
   const { data, error } = await supabase
     .from('signatures')
     .select('*')
+    .eq('user_id', user.id)
     .eq('is_default', true)
     .maybeSingle()
 
@@ -68,13 +76,19 @@ export async function saveSignature(params: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('User is not authenticated')
 
+  // Security enforcement: delete all pre-existing signatures for this user
+  await supabase
+    .from('signatures')
+    .delete()
+    .eq('user_id', user.id);
+
   const { data, error } = await supabase
     .from('signatures')
     .insert({
       user_id: user.id,
       label: params.label ?? 'Default',
       signature_data: params.signatureData,
-      is_default: params.isDefault ?? false,
+      is_default: true, // It is the only signature, hence always default
     })
     .select()
     .single()
@@ -89,10 +103,14 @@ export async function saveSignature(params: {
 // ============================================================
 export async function setDefaultSignature(signatureId: string): Promise<void> {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('User is not authenticated')
+
   const { error } = await supabase
     .from('signatures')
     .update({ is_default: true })
     .eq('id', signatureId)
+    .eq('user_id', user.id)
 
   if (error) throw new Error(`Failed to set default signature: ${error.message}`)
 }
@@ -105,6 +123,8 @@ export async function updateSignature(
   params: { label?: string; signatureData?: string }
 ): Promise<Signature> {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('User is not authenticated')
 
   const updatePayload: Record<string, string> = {}
   if (params.label) updatePayload.label = params.label
@@ -114,6 +134,7 @@ export async function updateSignature(
     .from('signatures')
     .update(updatePayload)
     .eq('id', signatureId)
+    .eq('user_id', user.id)
     .select()
     .single()
 
@@ -126,10 +147,14 @@ export async function updateSignature(
 // ============================================================
 export async function deleteSignature(signatureId: string): Promise<void> {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('User is not authenticated')
+
   const { error } = await supabase
     .from('signatures')
     .delete()
     .eq('id', signatureId)
+    .eq('user_id', user.id)
 
   if (error) throw new Error(`Failed to delete signature: ${error.message}`)
 }

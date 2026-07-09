@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
+import { getMySignatures, saveSignature, setDefaultSignature, deleteSignature } from "@/lib/signatures";
 
 interface ToastType {
   id: string;
@@ -41,12 +42,27 @@ export default function SupervisorProfilePage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Digital Signature State & Refs
+  const [signaturesList, setSignaturesList] = useState<any[]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const sigFileInputRef = useRef<HTMLInputElement>(null);
+
   const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3500);
+  };
+
+  const loadSignatures = async () => {
+    try {
+      const sigs = await getMySignatures();
+      setSignaturesList(sigs);
+    } catch (e: any) {
+      console.error("Failed to load signatures:", e);
+    }
   };
 
   // Load profile on mount
@@ -77,12 +93,133 @@ export default function SupervisorProfilePage() {
       setEmail(data.email || "");
       setPhone(data.phone || "");
       setProfilePhoto(data.avatar_url || null);
+      await loadSignatures();
       setLoading(false);
     };
 
     loadProfile();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Signature drawing/handling methods
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.strokeStyle = "#1A1A1A";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+
+    const rect = canvas.getBoundingClientRect();
+    const x = ('touches' in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+    const y = ('touches' in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    setIsDrawing(true);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = ('touches' in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+    const y = ('touches' in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const clearCanvas = () => {
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const handleSaveDrawnSignature = async () => {
+    if (!canvasRef.current) return;
+    
+    // Check if canvas is empty before saving
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    
+    const buffer = new Uint32Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+    const isEmpty = !buffer.some(color => color !== 0);
+    if (isEmpty) {
+      triggerToast("Canvas is empty. Draw signature first.", "error");
+      return;
+    }
+
+    const base64Data = canvas.toDataURL("image/png");
+    try {
+      triggerToast("Replacing existing signature...", "info");
+      await saveSignature({
+        label: `Active Signature (${new Date().toLocaleDateString()})`,
+        signatureData: base64Data,
+        isDefault: true
+      });
+      triggerToast("Signature updated successfully.", "success");
+      clearCanvas();
+      await loadSignatures();
+    } catch (err: any) {
+      triggerToast("Failed to update signature: " + err.message, "error");
+    }
+  };
+
+  const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64Data = event.target?.result as string;
+        try {
+          triggerToast("Replacing existing signature...", "info");
+          await saveSignature({
+            label: `Active Signature (${new Date().toLocaleDateString()})`,
+            signatureData: base64Data,
+            isDefault: true
+          });
+          triggerToast("Signature updated successfully.", "success");
+          await loadSignatures();
+        } catch (err: any) {
+          triggerToast("Failed to update signature: " + err.message, "error");
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSetDefaultSignature = async (id: string) => {
+    try {
+      await setDefaultSignature(id);
+      triggerToast("Default signature updated.", "success");
+      await loadSignatures();
+    } catch (err: any) {
+      triggerToast("Failed to set default signature: " + err.message, "error");
+    }
+  };
+
+  const handleDeleteSignature = async (id: string) => {
+    try {
+      await deleteSignature(id);
+      triggerToast("Signature deleted successfully.", "success");
+      await loadSignatures();
+    } catch (err: any) {
+      triggerToast("Failed to delete signature: " + err.message, "error");
+    }
+  };
 
   const handleSaveGeneralInfo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -464,6 +601,112 @@ export default function SupervisorProfilePage() {
                     <span className="material-symbols-outlined text-[16px]">logout</span>
                     Log Out of System
                   </button>
+                </div>
+              </section>
+
+              {/* Digital Signature Card */}
+              <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
+                <div className="pb-4 border-b border-gray-100">
+                  <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Digital Signature</h4>
+                  <p className="text-[10px] text-[#D32F2F] uppercase tracking-wider font-extrabold">Only 1 active signature is saved for security. Adding a new one replaces the old.</p>
+                </div>
+
+                {/* Stored Signature Preview */}
+                {signaturesList.length > 0 ? (
+                  <div className="space-y-4">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Saved Signatures</label>
+                    <div className="grid grid-cols-1 gap-3">
+                      {signaturesList.map((sig) => (
+                        <div key={sig.id} className={`flex items-center justify-between p-4 border-2 rounded-xl transition-all ${sig.is_default ? 'border-[#D32F2F] bg-red-50/10' : 'border-[#1A1A1A]/10'}`}>
+                          <div className="flex items-center gap-3">
+                            <div className="w-16 h-10 bg-white border border-[#1A1A1A]/10 rounded flex items-center justify-center overflow-hidden shrink-0">
+                              <img src={sig.signature_data} alt={sig.label} className="max-h-full max-w-full object-contain" />
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-black">{sig.label}</p>
+                              {sig.is_default && (
+                                <span className="inline-block bg-[#D32F2F] text-white px-2 py-0.5 rounded text-[8px] font-extrabold uppercase mt-0.5">DEFAULT</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            {!sig.is_default && (
+                              <button
+                                onClick={() => handleSetDefaultSignature(sig.id)}
+                                className="px-2 py-1 text-[9px] font-extrabold uppercase border border-[#1A1A1A] rounded hover:bg-gray-100 bg-white cursor-pointer"
+                              >
+                                Set Default
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteSignature(sig.id)}
+                              className="p-1 text-[#D32F2F] hover:bg-red-50 rounded flex items-center justify-center border-none bg-transparent cursor-pointer"
+                            >
+                              <span className="material-symbols-outlined text-base">delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-dashed border-[#1A1A1A]/20 p-4 rounded-xl text-center text-xs text-gray-400 font-bold uppercase">
+                    No saved signatures. Draw or upload below to set up.
+                  </div>
+                )}
+
+                {/* Draw Signature Area */}
+                <div className="space-y-3 pt-4 border-t border-gray-100">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Draw Signature</label>
+                  <div className="relative border-2 border-dashed border-[#1A1A1A]/40 rounded-xl overflow-hidden bg-white aspect-video max-w-full">
+                    <canvas
+                      ref={canvasRef}
+                      onMouseDown={startDrawing}
+                      onMouseMove={draw}
+                      onMouseUp={stopDrawing}
+                      onMouseLeave={stopDrawing}
+                      onTouchStart={startDrawing}
+                      onTouchMove={draw}
+                      onTouchEnd={stopDrawing}
+                      width={400}
+                      height={200}
+                      className="absolute inset-0 w-full h-full cursor-crosshair touch-none bg-white"
+                    />
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <button
+                      onClick={clearCanvas}
+                      className="flex-1 py-2 bg-white text-[#1A1A1A] border-2 border-[#1A1A1A] rounded-full font-bold text-xs uppercase hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                      Clear Canvas
+                    </button>
+                    <button
+                      onClick={handleSaveDrawnSignature}
+                      className="flex-1 py-2 bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full font-bold text-xs uppercase hover:bg-black transition-colors cursor-pointer"
+                    >
+                      Save Drawn
+                    </button>
+                  </div>
+                </div>
+
+                {/* Import Signature Area */}
+                <div className="space-y-3 pt-4 border-t border-gray-100">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Upload Signature Image</label>
+                  <input
+                    type="file"
+                    ref={sigFileInputRef}
+                    onChange={handleSignatureUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => sigFileInputRef.current?.click()}
+                    className="w-full py-3 bg-white text-[#1A1A1A] border-2 border-dashed border-[#1A1A1A] rounded-xl font-bold text-xs uppercase hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-sm">upload_file</span>
+                    Choose Signature Image File
+                  </button>
+                  <p className="text-[9px] text-gray-400 font-semibold mt-1">Recommended: Transparent background PNG</p>
                 </div>
               </section>
             </div>

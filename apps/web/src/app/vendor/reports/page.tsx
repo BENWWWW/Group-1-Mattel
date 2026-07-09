@@ -18,6 +18,7 @@ interface Report {
   recommendations: string;
   avatar_url: string;
   supervisor: string;
+  supervisorId?: string;
   audio_url: string;
   photos: string[];
 }
@@ -136,6 +137,7 @@ export default function VendorReportsPage() {
           recommendations: rep.recommendations || "Routine check schedule standard.",
           avatar_url: supervisorProfile?.avatar_url || "https://ui-avatars.com/api/?name=Supervisor&background=000&color=fff",
           supervisor: supervisorProfile?.full_name || "Lead Supervisor",
+          supervisorId: rep.pm_tasks?.assigned_supervisor_id || undefined,
           audio_url: "",
           photos: rep.photos_urls || []
         };
@@ -650,19 +652,42 @@ export default function VendorReportsPage() {
             </div>
 
             {/* Sticky Actions */}
-            <div className="p-8 pb-24 lg:pb-8 border-t-2 border-[#1A1A1A] bg-white grid grid-cols-2 gap-4 shrink-0">
+            <div className="p-8 pb-24 lg:pb-8 border-t-2 border-[#1A1A1A] bg-white flex flex-col gap-4 shrink-0">
               <button
-                onClick={handleDownloadPDF}
-                className="w-full py-4 border-2 border-black text-black font-black uppercase text-xs rounded-lg hover:bg-black hover:text-white transition-all cursor-pointer bg-white"
+                type="button"
+                onClick={() => {
+                  const event = new CustomEvent("open-task-chat", {
+                    detail: {
+                      taskCode: selectedReport.taskCode || selectedReport.id,
+                      taskTitle: selectedReport.taskTitle,
+                      taskId: selectedReport.taskId || selectedReport.id,
+                      supervisorId: selectedReport.supervisorId,
+                      type: "report"
+                    }
+                  });
+                  window.dispatchEvent(event);
+                  handleCloseDrawer();
+                }}
+                className="w-full py-3.5 bg-white text-[#D32F2F] border-2 border-black hover:bg-gray-50 font-black uppercase text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
               >
-                Download PDF
+                <span className="material-symbols-outlined text-sm">forum</span>
+                <span>Ask Supervisor (Discuss Report)</span>
               </button>
-              <button
-                onClick={handleCloseDrawer}
-                className="w-full py-4 bg-[#D32F2F] text-white border-2 border-[#1A1A1A] font-black uppercase text-xs rounded-lg hover:bg-black transition-all cursor-pointer border-none"
-              >
-                Close Details
-              </button>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={handleDownloadPDF}
+                  className="w-full py-4 border-2 border-black text-black font-black uppercase text-xs rounded-lg hover:bg-black hover:text-white transition-all cursor-pointer bg-white"
+                >
+                  Download PDF
+                </button>
+                <button
+                  onClick={handleCloseDrawer}
+                  className="w-full py-4 bg-[#D32F2F] text-white border-2 border-[#1A1A1A] font-black uppercase text-xs rounded-lg hover:bg-black transition-all cursor-pointer border-none"
+                >
+                  Close Details
+                </button>
+              </div>
             </div>
           </>
         )}

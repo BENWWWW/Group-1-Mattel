@@ -35,13 +35,31 @@ export default function PMTemplatesPage() {
   const [toasts, setToasts] = useState<ToastType[]>([]);
   const [draggedTaskId, setDraggedTaskId] = useState<string|null>(null);
 
-  const CATEGORIES = ["HVAC SYSTEMS","ELECTRICAL","PLUMBING","FIRE & SAFETY","MECHANICAL","ELEVATORS & LIFTS","POWER GENERATION","BUILDING ENVELOPE"];
+  const [categories, setCategories] = useState<string[]>(["HVAC SYSTEMS","ELECTRICAL","PLUMBING","FIRE & SAFETY","MECHANICAL","ELEVATORS & LIFTS","POWER GENERATION","BUILDING ENVELOPE"]);
 
   const triggerToast = useCallback((message: string, type: "success"|"error"|"info" = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
   }, []);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.from("assets").select("category");
+      if (!error && data) {
+        const unique = Array.from(new Set(data.map((item: any) => item.category)))
+          .filter(Boolean)
+          .map((cat: any) => cat.toUpperCase())
+          .sort();
+        if (unique.length > 0) {
+          setCategories(unique);
+          setFormCategory(unique[0]);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load asset categories:", err);
+    }
+  }, [supabase]);
 
   const fetchTemplates = useCallback(async () => {
     setIsLoading(true);
@@ -53,7 +71,10 @@ export default function PMTemplatesPage() {
     finally { setIsLoading(false); }
   }, [supabase, triggerToast]);
 
-  useEffect(()=>{fetchTemplates();},[fetchTemplates]);
+  useEffect(() => {
+    fetchTemplates();
+    fetchCategories();
+  }, [fetchTemplates, fetchCategories]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -64,7 +85,7 @@ export default function PMTemplatesPage() {
 
   const switchToCreateMode = () => {
     setCurrentMode("create"); setSelectedTemplateId(null);
-    setFormName(""); setFormCategory("HVAC SYSTEMS"); setFormDescription(""); setFormTasks([]);
+    setFormName(""); setFormCategory(categories[0] || "HVAC SYSTEMS"); setFormDescription(""); setFormTasks([]);
   };
 
   const handleCardClick = (template: Template) => {
@@ -206,7 +227,7 @@ export default function PMTemplatesPage() {
               <div className="flex gap-2.5">
                 <select value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)} className="flex-1 p-2 border-2 border-gray-200 rounded bg-white text-xs font-bold outline-none cursor-pointer uppercase min-w-0">
                   <option value="ALL">ALL CATEGORIES</option>
-                  {CATEGORIES.map(cat=><option key={cat} value={cat}>{cat}</option>)}
+                  {categories.map(cat=><option key={cat} value={cat}>{cat}</option>)}
                 </select>
                 <div className="relative flex-1 min-w-0">
                   <input type="text" placeholder="SEARCH TEMPLATE..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}
@@ -283,7 +304,7 @@ export default function PMTemplatesPage() {
                   <div className="space-y-3">
                     <label className="text-xs font-bold uppercase tracking-widest block opacity-60">Asset Category</label>
                     <select value={formCategory} onChange={e=>setFormCategory(e.target.value)} className="w-full h-14 px-4 rounded border-2 border-gray-200 bg-white focus:border-[#D32F2F] font-bold uppercase outline-none cursor-pointer">
-                      {CATEGORIES.map(cat=><option key={cat} value={cat}>{cat}</option>)}
+                      {categories.map(cat=><option key={cat} value={cat}>{cat}</option>)}
                     </select>
                   </div>
                   <div className="space-y-3">

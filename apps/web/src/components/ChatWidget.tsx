@@ -23,6 +23,74 @@ interface Message {
   created_at: string;
 }
 
+interface ParsedMessage {
+  taskMention: {
+    id?: string;
+    code: string;
+    title: string;
+    type: "task" | "report";
+  } | null;
+  cleanText: string;
+  isFile: boolean;
+  fileUrl?: string;
+  fileName?: string;
+}
+
+const parseMessageContent = (rawMessage: string): ParsedMessage => {
+  let text = rawMessage;
+  let taskMention: ParsedMessage["taskMention"] = null;
+
+  // 1. Check for the new explicit tag format
+  if (text.startsWith("[TASK_MENTION:")) {
+    const match = text.match(/^\[TASK_MENTION:(.*?)\|code:(.*?)\|title:(.*?)\|type:(.*?)\]([\s\S]*)/);
+    if (match) {
+      taskMention = {
+        id: match[1],
+        code: match[2],
+        title: match[3],
+        type: match[4] as "task" | "report"
+      };
+      text = match[5]; // Remaining body
+    }
+  }
+
+  // 2. Check for the user-facing text prefix (either as fallback for old messages or if prepended)
+  // Example pattern: 📌 Regarding Task [TASK-2026-2112 - TEST]:
+  const textPattern = /^📌 Regarding (Task|Report) \[(.*?) - (.*?)\]:?\s*\n?([\s\S]*)/i;
+  const textMatch = text.match(textPattern);
+  if (textMatch) {
+    if (!taskMention) {
+      taskMention = {
+        code: textMatch[2].trim(),
+        title: textMatch[3].trim(),
+        type: textMatch[1].toLowerCase() === "report" ? "report" : "task"
+      };
+    }
+    text = textMatch[4]; // Extract only the actual chat text body
+  }
+
+  // 3. Check if the remaining text is a file format
+  const isFile = text.startsWith("[FILE:");
+  if (isFile) {
+    const fileMatch = text.match(/^\[FILE:(.*?)\|name:(.*?)\]/);
+    if (fileMatch) {
+      return {
+        taskMention,
+        cleanText: text,
+        isFile: true,
+        fileUrl: fileMatch[1],
+        fileName: fileMatch[2]
+      };
+    }
+  }
+
+  return {
+    taskMention,
+    cleanText: text,
+    isFile: false
+  };
+};
+
 export default function ChatWidget() {
   const pathname = usePathname();
   const supabase = useMemo(() => createClient(), []);
@@ -36,6 +104,172 @@ export default function ChatWidget() {
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Task mention states
+  const [mentionedTask, setMentionedTask] = useState<{ id: string; code: string; title: string; type?: "task" | "report" } | null>(null);
+  const [pendingRecipientId, setPendingRecipientId] = useState<string | null>(null);
+
+  // File Upload states & ref
+  const [isUploading, setIsUploading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);  // Attachment Viewer modal states
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [viewerOriginalUrl, setViewerOriginalUrl] = useState("");
+  const [viewerName, setViewerName] = useState("");
+  const [viewerTextContent, setViewerTextContent] = useState<string | null>(null);
+  const [isViewerLoading, setIsViewerLoading] = useState(false);
+  // Voice-to-Text (Speech-to-Text) states & ref
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  const [speechLang, setSpeechLang] = useState<"id-ID" | "en-US">("id-ID");
+
+  useEffect(() => {
+    if (speechError) {
+      const timer = setTimeout(() => {
+        setSpeechError(null);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [speechError]);
+
+  const startListening = () => {
+    setSpeechError(null);
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechError("Speech recognition is not supported in this browser. Please use Chrome.");
+      return;
+    }
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {}
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = speechLang;
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+        setSpeechError(null);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setNewMessage((prev) => (prev ? prev + " " + transcript : transcript));
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setIsRecording(false);
+        if (event.error === "network") {
+          const isNotSecure = window.location.protocol !== "https:" && 
+                              !["localhost", "127.0.0.1"].includes(window.location.hostname);
+          if (isNotSecure) {
+            setSpeechError("Microphone requires HTTPS or localhost connection.");
+          } else {
+            setSpeechError(
+              speechLang === "id-ID"
+                ? "Indonesian voice servers unreachable. Try toggling to EN or check adblocker."
+                : "Google Speech servers unreachable. Try toggling to ID or check adblocker."
+            );
+          }
+        } else if (event.error === "not-allowed") {
+          setSpeechError("Microphone permission denied. Enable it in settings.");
+        } else {
+          setSpeechError(`Speech recognition error: ${event.error}`);
+        }
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error("Speech recognition initialization failed:", err);
+      setIsRecording(false);
+      setSpeechError("Failed to start speech recognition.");
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
+    }
+    setIsRecording(false);
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPendingFile(file);
+    }
+  };
+
+  // Listen for task chat mentions
+  useEffect(() => {
+    const handleOpenTaskChat = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { taskCode, taskTitle, taskId, supervisorId, type } = customEvent.detail;
+      
+      setIsOpen(true);
+      setMentionedTask({
+        id: taskId,
+        code: taskCode,
+        title: taskTitle,
+        type: type || "task"
+      });
+
+      if (supervisorId) {
+        setPendingRecipientId(supervisorId);
+      } else {
+        // Fallback: If no matched supervisor, select the first supervisor or admin in contacts
+        const firstSubOrAdmin = contacts.find(c => c.role === "supervisor" || c.role === "admin");
+        if (firstSubOrAdmin) {
+          setSelectedContact(firstSubOrAdmin);
+        }
+      }
+    };
+
+    window.addEventListener("open-task-chat", handleOpenTaskChat);
+    return () => {
+      window.removeEventListener("open-task-chat", handleOpenTaskChat);
+    };
+  }, [contacts]);
+
+  // Resolve pending supervisor/recipient when contacts are loaded/updated
+  useEffect(() => {
+    if (pendingRecipientId && contacts.length > 0) {
+      const found = contacts.find(c => c.id === pendingRecipientId);
+      if (found) {
+        setSelectedContact(found);
+      } else {
+        const firstSubOrAdmin = contacts.find(c => c.role === "supervisor" || c.role === "admin");
+        if (firstSubOrAdmin) {
+          setSelectedContact(firstSubOrAdmin);
+        }
+      }
+      setPendingRecipientId(null);
+    }
+  }, [contacts, pendingRecipientId]);
 
   // Draggable states
   const [position, setPosition] = useState({ x: -1, y: -1 });
@@ -310,32 +544,236 @@ export default function ChatWidget() {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentUser || !selectedContact || !newMessage.trim()) return;
+  const handleViewAttachment = async (fileUrl: string, fileName: string) => {
+    setIsViewerLoading(true);
+    setViewerName(fileName);
+    setViewerOriginalUrl(fileUrl);
+    setViewerTextContent(null);
+    setViewerUrl(null);
 
-    const messageText = newMessage.trim();
-    setNewMessage("");
+    const lowerName = fileName.toLowerCase();
+    const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(lowerName);
+    const isPdf = /\.pdf$/i.test(lowerName);
+    const isText = /\.(txt|csv|log|json|sql|md)$/i.test(lowerName);
 
     try {
-      const { data, error } = await supabase
-        .from("chat_messages")
-        .insert({
-          sender_id: currentUser.id,
-          receiver_id: selectedContact.id,
-          message: messageText,
-        })
-        .select()
-        .single();
-
-      if (data && !error) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === data.id)) return prev;
-          return [...prev, data];
-        });
+      if (isImage || isPdf) {
+        const res = await fetch(fileUrl);
+        if (!res.ok) throw new Error("Network response was not ok");
+        const blob = await res.blob();
+        
+        let mimeType = blob.type;
+        if (lowerName.endsWith(".pdf")) {
+          mimeType = "application/pdf";
+        } else if (lowerName.endsWith(".png")) {
+          mimeType = "image/png";
+        } else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) {
+          mimeType = "image/jpeg";
+        } else if (lowerName.endsWith(".gif")) {
+          mimeType = "image/gif";
+        } else if (lowerName.endsWith(".svg")) {
+          mimeType = "image/svg+xml";
+        }
+        
+        const typedBlob = new Blob([blob], { type: mimeType });
+        const localUrl = URL.createObjectURL(typedBlob);
+        setViewerUrl(localUrl);
+      } else if (isText) {
+        const res = await fetch(fileUrl);
+        if (!res.ok) throw new Error("Network response was not ok");
+        const text = await res.text();
+        setViewerTextContent(text);
+        setViewerUrl(fileUrl); // Set truthy to trigger modal
+      } else {
+        // Office documents or unsupported files - skip raw fetch blob to prevent auto-download prompts
+        setViewerUrl(fileUrl);
       }
     } catch (err) {
-      console.error("Failed to send message:", err);
+      console.error("Failed to fetch attachment for preview, falling back to direct url:", err);
+      setViewerUrl(fileUrl);
+    } finally {
+      setIsViewerLoading(false);
+    }
+  };
+
+  const handleDownloadFile = async (url: string, filename: string) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch file for download");
+      const blob = await res.blob();
+      const localUrl = URL.createObjectURL(blob);
+      
+      const a = document.createElement("a");
+      a.href = localUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(localUrl);
+    } catch (err) {
+      console.error("Failed to download file programmatically, opening in new tab:", err);
+      window.open(url, "_blank");
+    }
+  };
+
+  const handleTaskMentionClick = async (mention: { id?: string; code: string; title: string; type: "task" | "report" }) => {
+    let taskId = "";
+
+    try {
+      if (mention.id) {
+        if (mention.type === "report") {
+          // Fetch the task_id from the report
+          const { data, error } = await supabase
+            .from("pm_reports")
+            .select("task_id")
+            .eq("id", mention.id)
+            .maybeSingle();
+          if (data?.task_id) {
+            taskId = data.task_id;
+          } else {
+            // Fallback: search by code
+            const { data: taskData } = await supabase
+              .from("pm_tasks")
+              .select("id")
+              .eq("task_code", mention.code)
+              .maybeSingle();
+            if (taskData?.id) {
+              taskId = taskData.id;
+            }
+          }
+        } else {
+          taskId = mention.id;
+        }
+      } else {
+        // Fallback dynamic database lookup by task_code
+        const { data, error } = await supabase
+          .from("pm_tasks")
+          .select("id")
+          .eq("task_code", mention.code)
+          .maybeSingle();
+
+        if (data?.id) {
+          taskId = data.id;
+        }
+      }
+
+      if (!taskId) {
+        alert(`Could not find task details for code: ${mention.code}`);
+        return;
+      }
+
+      // Route based on user role
+      const role = (currentUser?.role || "vendor").toLowerCase();
+      const targetPath = role === "supervisor" || role === "admin"
+        ? `/supervisor/tasks?taskId=${taskId}`
+        : `/vendor/tasks?taskId=${taskId}`;
+
+      window.location.href = targetPath;
+    } catch (err) {
+      console.error("Failed to route mention:", err);
+    }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser || !selectedContact) return;
+    if (!newMessage.trim() && !pendingFile && !mentionedTask) return;
+
+    let attachedFileSent = false;
+    let fileMessageData: any = null;
+    let currentMention = mentionedTask;
+
+    if (pendingFile) {
+      setIsUploading(true);
+      try {
+        const file = pendingFile;
+        const fileExt = file.name.split(".").pop();
+        const filePath = `chat_attachments/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("pm_evidence")
+          .upload(filePath, file, {
+            contentType: file.type,
+            cacheControl: "3600",
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("pm_evidence")
+          .getPublicUrl(filePath);
+
+        let fileMessageText = `[FILE:${publicUrl}|name:${file.name}]`;
+        if (currentMention) {
+          fileMessageText = `[TASK_MENTION:${currentMention.id}|code:${currentMention.code}|title:${currentMention.title}|type:${currentMention.type || "task"}]` + fileMessageText;
+          currentMention = null;
+          setMentionedTask(null);
+        }
+        
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .insert({
+            sender_id: currentUser.id,
+            receiver_id: selectedContact.id,
+            message: fileMessageText,
+          })
+          .select()
+          .single();
+
+        if (data && !error) {
+          fileMessageData = data;
+          attachedFileSent = true;
+        }
+        setPendingFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } catch (err) {
+        console.error("Failed to upload/send file:", err);
+        alert("Failed to upload file. Please try again.");
+        setIsUploading(false);
+        return;
+      } finally {
+        setIsUploading(false);
+      }
+    }
+
+    // Now send the text message if any, or if a mention was selected but no file was uploaded
+    let messageText = newMessage.trim();
+    if (messageText || currentMention) {
+      if (currentMention) {
+        const typeLabel = currentMention.type === "report" ? "Report" : "Task";
+        messageText = `[TASK_MENTION:${currentMention.id}|code:${currentMention.code}|title:${currentMention.title}|type:${currentMention.type || "task"}]📌 Regarding ${typeLabel} [${currentMention.code} - ${currentMention.title}]:\n${messageText}`;
+        setMentionedTask(null);
+      }
+      setNewMessage("");
+
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .insert({
+            sender_id: currentUser.id,
+            receiver_id: selectedContact.id,
+            message: messageText,
+          })
+          .select()
+          .single();
+
+        if (data && !error) {
+          setMessages((prev) => {
+            const list = attachedFileSent 
+              ? (prev.some((m) => m.id === fileMessageData.id) ? prev : [...prev, fileMessageData])
+              : prev;
+            if (list.some((m) => m.id === data.id)) return list;
+            return [...list, data];
+          });
+        } else if (attachedFileSent) {
+          setMessages((prev) => prev.some((m) => m.id === fileMessageData.id) ? prev : [...prev, fileMessageData]);
+        }
+      } catch (err) {
+        console.error("Failed to send message:", err);
+      }
+    } else if (attachedFileSent) {
+      setMessages((prev) => prev.some((m) => m.id === fileMessageData.id) ? prev : [...prev, fileMessageData]);
     }
   };
 
@@ -582,6 +1020,12 @@ export default function ChatWidget() {
                 ) : (
                   messages.map((msg) => {
                     const isMe = msg.sender_id === currentUser!.id;
+                    const parsed = parseMessageContent(msg.message);
+                    const isFile = parsed.isFile;
+                    const fileUrl = parsed.fileUrl || "";
+                    const fileName = parsed.fileName || "";
+                    const isImage = isFile && /\.(png|jpe?g|gif|webp|svg)/i.test(fileName);
+
                     return (
                       <div
                         key={msg.id}
@@ -591,7 +1035,75 @@ export default function ChatWidget() {
                             : "bg-white text-black border-2 border-black mr-auto rounded-tl-none"
                         }`}
                       >
-                        <p className="whitespace-pre-wrap leading-relaxed">{msg.message}</p>
+                        {parsed.taskMention && (
+                          <button
+                            type="button"
+                            onClick={() => handleTaskMentionClick(parsed.taskMention!)}
+                            className={`mb-2 w-full flex items-center gap-1.5 px-2 py-1.5 rounded-[8px] text-[10px] font-black uppercase text-left transition-all cursor-pointer border ${
+                              isMe
+                                ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                                : "bg-[#D32F2F] hover:bg-[#b71c1c] text-white border-black"
+                            }`}
+                            title={`Click to open report preview for ${parsed.taskMention.code}`}
+                          >
+                            <span className="material-symbols-outlined text-[11px] font-bold shrink-0">open_in_new</span>
+                            <span className="truncate flex-1">
+                              Regarding {parsed.taskMention.type === "report" ? "Report" : "Task"} [{parsed.taskMention.code}]
+                            </span>
+                          </button>
+                        )}
+
+                        {isFile ? (
+                          isImage ? (
+                            <div className="space-y-1">
+                              <p className={`text-[9px] font-bold uppercase truncate max-w-[150px] mb-1 ${isMe ? "text-gray-400" : "text-gray-500"}`}>
+                                {fileName}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => handleViewAttachment(fileUrl, fileName)}
+                                className="block rounded-lg overflow-hidden border border-black/10 hover:opacity-90 transition-opacity cursor-pointer border-none bg-transparent p-0 text-left w-full animate-in fade-in duration-200"
+                                title="Click to preview image inline"
+                              >
+                                <img
+                                  src={fileUrl}
+                                  alt={fileName}
+                                  className="w-full max-h-48 object-cover rounded"
+                                />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className={`flex items-center gap-2 p-2 rounded-[12px] ${
+                              isMe
+                                ? "bg-white/10 text-white"
+                                : "bg-gray-100 text-black border border-black/10"
+                            }`}>
+                              <button
+                                type="button"
+                                onClick={() => handleViewAttachment(fileUrl, fileName)}
+                                className={`flex items-center gap-2 flex-grow min-w-0 no-underline hover:underline cursor-pointer text-left border-none bg-transparent p-0 ${
+                                  isMe ? "text-white font-semibold" : "text-black font-semibold"
+                                }`}
+                                title="Click to preview file inline"
+                              >
+                                <span className="material-symbols-outlined text-base shrink-0">description</span>
+                                <span className="text-[10px] font-black truncate max-w-[130px]">{fileName}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadFile(fileUrl, fileName)}
+                                className={`p-1 rounded flex items-center justify-center shrink-0 cursor-pointer transition-colors border-none bg-transparent ${
+                                  isMe ? "text-white/70 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-black hover:bg-black/5"
+                                }`}
+                                title="Download file"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">download</span>
+                              </button>
+                            </div>
+                          )
+                        ) : (
+                          <p className="whitespace-pre-wrap leading-relaxed">{parsed.cleanText}</p>
+                        )}
                         <span className={`block text-[8px] mt-1.5 text-right uppercase tracking-tight ${
                           isMe ? "text-gray-400" : "text-gray-500"
                         }`}>
@@ -603,21 +1115,150 @@ export default function ChatWidget() {
                 )}
                 <div ref={messagesEndRef} />
               </div>
+              {mentionedTask && (
+                <div className="mx-3 my-1.5 p-2 bg-red-50 border-2 border-black rounded-[12px] flex items-center justify-between gap-2 shrink-0">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <span className="material-symbols-outlined text-sm text-[#D32F2F]">
+                      {mentionedTask.type === "report" ? "assessment" : "assignment"}
+                    </span>
+                    <div className="overflow-hidden">
+                      <p className="text-[9px] font-black text-[#D32F2F] uppercase leading-none tracking-wider">
+                        Mentioned {mentionedTask.type === "report" ? "Report" : "Task"}
+                      </p>
+                      <p className="text-[10px] text-black font-extrabold uppercase truncate mt-0.5 leading-none">
+                        {mentionedTask.code} - {mentionedTask.title}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMentionedTask(null)}
+                    className="p-0.5 text-gray-400 hover:text-black border-none bg-transparent cursor-pointer flex items-center justify-center"
+                  >
+                    <span className="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </div>
+              )}
+
+              {pendingFile && (
+                <div className="mx-3 my-1.5 p-2 bg-gray-100 border-2 border-black rounded-[12px] flex items-center justify-between gap-2 shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  <div className="flex items-center gap-2 overflow-hidden flex-1">
+                    <span className="material-symbols-outlined text-sm text-gray-500 shrink-0">attach_file</span>
+                    <div className="overflow-hidden flex-1">
+                      <p className="text-[9px] font-black text-gray-400 uppercase leading-none tracking-wider">Ready to Send Attachment</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fileUrl = URL.createObjectURL(pendingFile);
+                          window.open(fileUrl, "_blank");
+                        }}
+                        className="text-[10px] text-[#D32F2F] hover:underline font-extrabold truncate mt-0.5 leading-none block border-none bg-transparent p-0 cursor-pointer text-left w-full"
+                        title="Click to view file in a new tab"
+                      >
+                        {pendingFile.name} ({Math.round(pendingFile.size / 1024)} KB)
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="p-0.5 text-gray-400 hover:text-black border-none bg-transparent cursor-pointer flex items-center justify-center shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </div>
+              )}
+
+              {speechError && (
+                <div className="mx-3 my-1.5 p-2 bg-red-50 border border-red-500/30 text-[10px] text-red-600 font-extrabold rounded-[12px] flex items-center justify-between gap-2 shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  <div className="flex items-center gap-1.5 overflow-hidden flex-1">
+                    <span className="material-symbols-outlined text-sm text-red-500 shrink-0">error</span>
+                    <span className="truncate">{speechError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSpeechError(null)}
+                    className="p-0.5 text-red-400 hover:text-red-800 border-none bg-transparent cursor-pointer flex items-center justify-center shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-xs">close</span>
+                  </button>
+                </div>
+              )}
+
               <form
                 onSubmit={handleSendMessage}
-                className="p-3 border-t-2 border-black bg-white flex gap-2 shrink-0"
+                className="p-3 border-t-2 border-black bg-white flex gap-2 items-center shrink-0 w-full"
               >
                 <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 border border-black/20 rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#D32F2F] placeholder-gray-400 bg-white text-black"
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
                 />
+
+                <div className="flex-1 flex items-center gap-1 bg-gray-50 border border-black/20 rounded-lg px-2 py-1 min-w-0">
+                  {/* File Pick button */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="p-1 hover:bg-gray-200 rounded flex items-center justify-center shrink-0 cursor-pointer text-gray-500 hover:text-black transition-colors disabled:opacity-50 border-none bg-transparent"
+                    title="Choose image or file"
+                  >
+                    {isUploading ? (
+                      <div className="w-3.5 h-3.5 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <span className="material-symbols-outlined text-[18px]">attach_file</span>
+                    )}
+                  </button>
+
+                  {/* Speech Recording Button */}
+                  <button
+                    type="button"
+                    onClick={toggleRecording}
+                    className={`p-1 rounded flex items-center justify-center shrink-0 cursor-pointer transition-all border-none ${
+                      isRecording 
+                        ? "bg-red-600 text-white animate-pulse" 
+                        : "hover:bg-gray-200 text-gray-500 hover:text-black bg-transparent"
+                    }`}
+                    title={isRecording ? "Stop voice-to-text" : "Start voice-to-text"}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      {isRecording ? "mic_off" : "mic"}
+                    </span>
+                  </button>
+
+                  {/* Language switch badge (ID/EN) */}
+                  <button
+                    type="button"
+                    onClick={() => setSpeechLang((prev) => (prev === "id-ID" ? "en-US" : "id-ID"))}
+                    className="text-[8px] font-black border border-black/20 rounded px-1 py-0.5 bg-white text-gray-500 hover:text-black shrink-0 hover:border-black transition-colors cursor-pointer"
+                    title={`Voice recognition language: ${speechLang === "id-ID" ? "Indonesian" : "English"}. Click to toggle.`}
+                  >
+                    {speechLang === "id-ID" ? "ID" : "EN"}
+                  </button>
+
+                  {/* Divider line inside input pill */}
+                  <div className="w-[1px] h-4 bg-black/10 mx-1 shrink-0" />
+
+                  {/* Message Input text field */}
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder={isRecording ? "🎙️ Listening... speak clearly" : "Type a message..."}
+                    className="flex-grow bg-transparent border-none outline-none focus:ring-0 p-1 text-xs font-semibold min-w-0 text-black placeholder-gray-400 focus:outline-none"
+                  />
+                </div>
+
+                {/* Submit button */}
                 <button
                   type="submit"
-                  disabled={!newMessage.trim()}
-                  className="bg-[#D32F2F] text-white border border-black rounded-lg px-3.5 flex items-center justify-center hover:bg-[#1A1A1A] transition-colors cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!newMessage.trim() && !pendingFile}
+                  className="bg-[#D32F2F] text-white border-none rounded-lg p-2.5 flex items-center justify-center hover:bg-[#1A1A1A] transition-colors cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span className="material-symbols-outlined text-sm text-white">send</span>
                 </button>
@@ -680,6 +1321,124 @@ export default function ChatWidget() {
             </>
           )}
         </div>
+
+        {isViewerLoading && (
+          <div className="fixed inset-0 z-[210] flex flex-col items-center justify-center bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white border-4 border-black p-6 rounded-2xl flex flex-col items-center gap-3 max-w-xs shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="w-8 h-8 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+              <p className="text-[10px] font-black text-black uppercase tracking-wider">Preparing document preview...</p>
+            </div>
+          </div>
+        )}
+
+        {viewerUrl && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="relative bg-white border-4 border-black p-4 rounded-xl max-w-3xl w-full flex flex-col shadow-2xl animate-in zoom-in-95 duration-200">
+              {/* Modal Header */}
+              <div className="flex justify-between items-center pb-2 border-b-2 border-black mb-4">
+                <div className="overflow-hidden">
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider leading-none">File Viewer</p>
+                  <h4 className="text-xs font-black text-black truncate uppercase mt-1 leading-none">{viewerName}</h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (viewerUrl.startsWith("blob:")) {
+                      URL.revokeObjectURL(viewerUrl);
+                    }
+                    setViewerUrl(null);
+                    setViewerOriginalUrl("");
+                    setViewerTextContent(null);
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black cursor-pointer border-none bg-transparent flex items-center justify-center shrink-0"
+                >
+                  <span className="material-symbols-outlined text-lg">close</span>
+                </button>
+              </div>
+
+              {/* Modal Body / Viewer */}
+              <div className="flex-grow flex items-center justify-center bg-gray-100 rounded-lg border border-black/10 overflow-hidden min-h-[350px] max-h-[65vh] p-2 relative w-full">
+                {/\.(png|jpe?g|gif|webp|svg)/i.test(viewerName) ? (
+                  <img
+                    src={viewerUrl}
+                    alt={viewerName}
+                    className="max-w-full max-h-[60vh] object-contain rounded animate-in fade-in duration-300"
+                  />
+                ) : /\.pdf/i.test(viewerName) ? (
+                  <iframe
+                    src={viewerUrl}
+                    title="PDF Preview"
+                    className="w-full h-[60vh] border-none rounded bg-white animate-in fade-in duration-300"
+                    allow="unload"
+                  />
+                ) : viewerTextContent !== null ? (
+                  <div className="w-full h-[60vh] bg-white border border-black/10 rounded-lg p-4 overflow-y-auto text-left font-mono text-[11px] whitespace-pre-wrap leading-relaxed text-black select-text animate-in fade-in duration-300">
+                    {viewerTextContent}
+                  </div>
+                ) : /\.(docx?|xlsx?|pptx?)/i.test(viewerName) ? (
+                  viewerOriginalUrl.includes("localhost") || viewerOriginalUrl.includes("127.0.0.1") ? (
+                    <div className="text-center p-8 space-y-4 animate-in fade-in duration-300">
+                      <span className="material-symbols-outlined text-5xl text-[#D32F2F] animate-bounce">warning</span>
+                      <h4 className="text-xs font-black text-black uppercase">Office Preview Disabled (Local Host)</h4>
+                      <p className="text-[10px] text-gray-500 max-w-sm mx-auto leading-relaxed font-bold">
+                        In local development, Google Docs Viewer cannot access local files.
+                        <br />
+                        In production, this file renders here automatically. Please click "Download" below to view it locally.
+                      </p>
+                    </div>
+                  ) : (
+                    <iframe
+                      src={`https://docs.google.com/viewer?url=${encodeURIComponent(viewerOriginalUrl)}&embedded=true`}
+                      title="Office Document Preview"
+                      className="w-full h-[60vh] border-none rounded bg-white animate-in fade-in duration-300"
+                      allow="unload"
+                    />
+                  )
+                ) : (
+                  <div className="text-center p-8 space-y-4 animate-in fade-in duration-300">
+                    <span className="material-symbols-outlined text-5xl text-gray-400">insert_drive_file</span>
+                    <h4 className="text-xs font-black text-black uppercase">No Preview Available</h4>
+                    <p className="text-[10px] text-gray-500 max-w-sm mx-auto leading-relaxed font-bold">
+                      Preview is not supported for this file type ({viewerName.split('.').pop()?.toUpperCase()}).
+                      Please click the "Download" button below to view the file locally.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="mt-4 pt-3 border-t border-black/10 flex justify-between items-center">
+                <span className="text-[10px] text-gray-500 font-bold uppercase">
+                  Preview Mode
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (viewerUrl.startsWith("blob:")) {
+                        URL.revokeObjectURL(viewerUrl);
+                      }
+                      setViewerUrl(null);
+                      setViewerOriginalUrl("");
+                      setViewerTextContent(null);
+                    }}
+                    className="px-4 py-2 border-2 border-black bg-white text-black hover:bg-gray-50 text-xs cursor-pointer font-bold rounded-lg"
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadFile(viewerOriginalUrl, viewerName)}
+                    className="bg-[#D32F2F] text-white border-2 border-black hover:bg-[#1A1A1A] px-4 py-2 text-xs cursor-pointer font-bold rounded-lg flex items-center gap-1 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-xs">download</span>
+                    Download
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>,
       document.body
     )}

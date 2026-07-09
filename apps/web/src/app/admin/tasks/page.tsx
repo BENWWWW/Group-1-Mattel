@@ -8,10 +8,10 @@ interface TaskRow { id: string; task_code: string; status: string; priority: str
 
 export default function CreatePMAssignmentPage() {
   const supabase = createClient();
-  const [assets, setAssets] = useState<{ id: string; name: string; asset_code: string; status: string }[]>([]);
+  const [assets, setAssets] = useState<{ id: string; name: string; asset_code: string; status: string; category?: string }[]>([]);
   const [vendors, setVendors] = useState<{ id: string; full_name: string }[]>([]);
   const [supervisors, setSupervisors] = useState<{ id: string; full_name: string }[]>([]);
-  const [templates, setTemplates] = useState<{ id: string; title: string }[]>([]);
+  const [templates, setTemplates] = useState<{ id: string; title: string; category?: string }[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [selectedAsset, setSelectedAsset] = useState("");
   const [selectedVendor, setSelectedVendor] = useState("");
@@ -38,10 +38,10 @@ export default function CreatePMAssignmentPage() {
     setIsLoading(true);
     try {
       const [aRes, vRes, sRes, tRes, taskRes] = await Promise.all([
-        supabase.from("assets").select("id,name,asset_code,status,is_deleted").or("status.eq.under maintenance,status.eq.decommissioned").order("name"),
+        supabase.from("assets").select("id,name,asset_code,status,is_deleted,category").or("status.eq.under maintenance,status.eq.decommissioned").order("name"),
         supabase.from("profiles").select("id,full_name").eq("role","vendor").eq("is_active",true).order("full_name"),
         supabase.from("profiles").select("id,full_name").eq("role","supervisor").eq("is_active",true).order("full_name"),
-        supabase.from("pm_templates").select("id,title").eq("is_active",true).order("title"),
+        supabase.from("pm_templates").select("id,title,category").eq("is_active",true).order("title"),
         supabase.from("pm_tasks").select(`id,task_code,status,priority,due_date,assets(name),vendor:profiles!pm_tasks_assigned_vendor_id_fkey(full_name),supervisor:profiles!pm_tasks_assigned_supervisor_id_fkey(full_name)`).order("created_at",{ascending:false}).limit(10),
       ]);
       const activeAssets = (aRes.data||[]).filter((a: any) => !a.is_deleted);
@@ -62,6 +62,31 @@ export default function CreatePMAssignmentPage() {
   }, [supabase, triggerToast]);
 
   useEffect(()=>{fetchData();},[fetchData]);
+
+  // Get active asset and its category
+  const activeAsset = assets.find((a) => a.id === selectedAsset);
+  const activeAssetCategory = activeAsset?.category;
+
+  // Filter templates based on selected asset's category
+  const filteredTemplates = templates.filter((t) => {
+    if (!activeAssetCategory) return true;
+    if (!t.category) return true; // Show templates without category as fallback
+    return t.category.toLowerCase() === activeAssetCategory.toLowerCase();
+  });
+
+  // Reset template selection if the selected template's category mismatches with active asset
+  useEffect(() => {
+    if (selectedTemplate && activeAssetCategory) {
+      const currentTemplate = templates.find((t) => t.id === selectedTemplate);
+      if (
+        currentTemplate &&
+        currentTemplate.category &&
+        currentTemplate.category.toLowerCase() !== activeAssetCategory.toLowerCase()
+      ) {
+        setSelectedTemplate("");
+      }
+    }
+  }, [selectedAsset, activeAssetCategory, selectedTemplate, templates]);
 
   const handleAssignPM = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,7 +170,7 @@ export default function CreatePMAssignmentPage() {
                         <label className="text-xs font-bold uppercase block">Template</label>
                         <select value={selectedTemplate} onChange={e=>setSelectedTemplate(e.target.value)} className="w-full h-14 pl-4 bg-white border-2 border-[#1A1A1A] rounded-[20px] focus:outline-none focus:border-[#D32F2F] font-bold text-sm cursor-pointer">
                           <option value="">— None —</option>
-                          {templates.map(t=><option key={t.id} value={t.id}>{t.title}</option>)}
+                          {filteredTemplates.map(t=><option key={t.id} value={t.id}>{t.title} {t.category ? `(${t.category})` : ""}</option>)}
                         </select>
                       </div>
                     </div>

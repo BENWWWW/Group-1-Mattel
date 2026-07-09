@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getMySignatures, saveSignature } from "@/lib/signatures";
 
 interface FlaggedItem {
   id: string; // checklist item ID
@@ -39,6 +40,7 @@ function AIVerificationScoreContent() {
   const [flaggedItems, setFlaggedItems] = useState<FlaggedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [savedSignatures, setSavedSignatures] = useState<any[]>([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -148,6 +150,35 @@ function AIVerificationScoreContent() {
     setSigned(false);
   };
 
+  const handleLoadSavedSignature = (base64Data: string) => {
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Clear first
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      setSigned(true);
+    };
+    img.src = base64Data;
+    triggerToast("Loaded saved signature onto canvas.", "success");
+  };
+
+  useEffect(() => {
+    if (savedSignatures.length > 0 && sigCanvasRef.current) {
+      const defaultSig = savedSignatures.find((s) => s.is_default) || savedSignatures[0];
+      if (defaultSig) {
+        setTimeout(() => {
+          handleLoadSavedSignature(defaultSig.signature_data);
+        }, 150);
+      }
+    }
+  }, [savedSignatures]);
+
   // Toast Helper
   const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -173,6 +204,13 @@ function AIVerificationScoreContent() {
         .eq("id", user.id)
         .single();
       setCurrentUser(profile);
+
+      try {
+        const sigs = await getMySignatures();
+        setSavedSignatures(sigs);
+      } catch (err) {
+        console.error("Error loading signatures in verification page:", err);
+      }
 
       // Fetch tasks where status is active/pending for verification counts (scoped to current taskId if provided)
       let tasksQuery = supabase
@@ -336,9 +374,21 @@ function AIVerificationScoreContent() {
       let signatureUrl = "";
       if (sigCanvasRef.current) {
         const base64Data = sigCanvasRef.current.toDataURL("image/png");
-        // For simplicity, we can store base64 directly, or save it to database profile.
-        // Let's store base64 string on user session or just simulate success.
         signatureUrl = base64Data;
+
+        // Auto-save signature if none exists
+        if (savedSignatures.length === 0) {
+          try {
+            await saveSignature({
+              label: `Active Signature (${new Date().toLocaleDateString()})`,
+              signatureData: base64Data,
+              isDefault: true
+            });
+            console.log("Automatically saved vendor signature.");
+          } catch (sigErr) {
+            console.error("Failed to auto-save vendor signature:", sigErr);
+          }
+        }
       }
 
       // For all tasks that have been resolved, make sure status is 'submitted'
@@ -640,6 +690,23 @@ function AIVerificationScoreContent() {
                     Clear Signature
                   </button>
                 </div>
+
+                {savedSignatures.length > 0 && (
+                  <div className="flex flex-wrap gap-2 items-center bg-gray-50 p-3 rounded-[15px] border border-[#1A1A1A]/10">
+                    <span className="text-[9px] font-extrabold text-gray-500 uppercase tracking-wider">Use Saved Signature:</span>
+                    {savedSignatures.map((sig) => (
+                      <button
+                        key={sig.id}
+                        type="button"
+                        onClick={() => handleLoadSavedSignature(sig.signature_data)}
+                        className="px-2.5 py-1 text-[9px] font-extrabold uppercase border border-[#1A1A1A] bg-white rounded-lg hover:bg-gray-50 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                      >
+                        <img src={sig.signature_data} className="w-6 h-4 object-contain" alt="" />
+                        <span>{sig.label} {sig.is_default && "★"}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <div className="w-full h-32 bg-black/5 border-2 border-[#1A1A1A] rounded-[20px] flex items-center justify-center relative overflow-hidden">
                   {!signed && (

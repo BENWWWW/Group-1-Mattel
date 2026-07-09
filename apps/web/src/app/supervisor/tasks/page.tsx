@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
+import { getMySignatures, saveSignature } from "@/lib/signatures";
 
 interface ChecklistItem {
   item_id: string;
@@ -99,6 +100,9 @@ export default function ReviewDetailPage() {
   const [isRejectDrawing, setIsRejectDrawing] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
+  // Stored digital signatures
+  const [savedSignatures, setSavedSignatures] = useState<any[]>([]);
+
   // Trigger Toast Notification
   const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -123,6 +127,14 @@ export default function ReviewDetailPage() {
         .eq("id", user.id)
         .single();
       setCurrentUser(profile);
+
+      // Load signatures
+      try {
+        const sigs = await getMySignatures();
+        setSavedSignatures(sigs);
+      } catch (sigErr) {
+        console.error("Failed to load supervisor signatures:", sigErr);
+      }
 
       // Fetch PM Tasks with reports, assets and user names
       const { data: tasksData, error: tasksError } = await supabase
@@ -269,6 +281,62 @@ export default function ReviewDetailPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlTaskId = params.get("taskId");
+      if (urlTaskId && tasks.length > 0) {
+        const match = tasks.some((t) => t.id === urlTaskId);
+        if (match) {
+          setSelectedTaskId(urlTaskId);
+        }
+      }
+    }
+  }, [tasks]);
+
+  const handleLoadSavedSignature = (base64Data: string, type: "approve" | "reject") => {
+    const canvas = type === "approve" ? approveCanvasRef.current : rejectCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Clear first
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      if (type === "approve") {
+        setApproveSigned(true);
+      } else {
+        setRejectSigned(true);
+      }
+    };
+    img.src = base64Data;
+  };
+
+  useEffect(() => {
+    if (isApproveModalOpen && savedSignatures.length > 0) {
+      const defaultSig = savedSignatures.find(s => s.is_default) || savedSignatures[0];
+      if (defaultSig) {
+        setTimeout(() => {
+          handleLoadSavedSignature(defaultSig.signature_data, "approve");
+        }, 100);
+      }
+    }
+  }, [isApproveModalOpen, savedSignatures]);
+
+  useEffect(() => {
+    if (isRejectModalOpen && savedSignatures.length > 0) {
+      const defaultSig = savedSignatures.find(s => s.is_default) || savedSignatures[0];
+      if (defaultSig) {
+        setTimeout(() => {
+          handleLoadSavedSignature(defaultSig.signature_data, "reject");
+        }, 100);
+      }
+    }
+  }, [isRejectModalOpen, savedSignatures]);
+
   // Signature Draw Helper
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>, canvas: HTMLCanvasElement | null, setIsDrawing: React.Dispatch<React.SetStateAction<boolean>>) => {
     if (!canvas) return;
@@ -341,6 +409,20 @@ export default function ReviewDetailPage() {
         let supervisorSig = "";
         if (approveCanvasRef.current && approveSigned) {
           supervisorSig = approveCanvasRef.current.toDataURL("image/png");
+
+          // Auto-save signature if none exists
+          if (savedSignatures.length === 0) {
+            try {
+              await saveSignature({
+                label: `Active Signature (${new Date().toLocaleDateString()})`,
+                signatureData: supervisorSig,
+                isDefault: true
+              });
+              console.log("Automatically saved supervisor signature.");
+            } catch (sigErr) {
+              console.error("Failed to auto-save supervisor signature:", sigErr);
+            }
+          }
         }
 
         const { data: currentReport } = await supabase
@@ -417,6 +499,20 @@ export default function ReviewDetailPage() {
         let supervisorSig = "";
         if (rejectCanvasRef.current && rejectSigned) {
           supervisorSig = rejectCanvasRef.current.toDataURL("image/png");
+
+          // Auto-save signature if none exists
+          if (savedSignatures.length === 0) {
+            try {
+              await saveSignature({
+                label: `Active Signature (${new Date().toLocaleDateString()})`,
+                signatureData: supervisorSig,
+                isDefault: true
+              });
+              console.log("Automatically saved supervisor signature.");
+            } catch (sigErr) {
+              console.error("Failed to auto-save supervisor signature:", sigErr);
+            }
+          }
         }
 
         const { data: currentReport } = await supabase

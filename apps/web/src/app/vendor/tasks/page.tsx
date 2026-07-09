@@ -36,6 +36,7 @@ interface Task {
   techs: string[];
   checklist: ChecklistItem[];
   supervisor?: string;
+  assigned_supervisor_id?: string;
   serialNumber?: string;
   techNotes?: string;
   adminNotes?: string;
@@ -129,6 +130,7 @@ export default function PMChecklistPage() {
             checklist_items
           ),
           profiles:assigned_supervisor_id (
+            id,
             full_name
           )
         `)
@@ -200,6 +202,7 @@ export default function PMChecklistPage() {
           time: new Date(t.created_at).toLocaleDateString(),
           techs: [profile?.full_name || "Vendor Tech"],
           supervisor: supervisorName,
+          assigned_supervisor_id: t.profiles?.id || undefined,
           serialNumber: t.assets?.asset_code || "SN-NOMINAL-1002",
           checklist: checklistMapped,
           techNotes: t.description || "",
@@ -806,6 +809,24 @@ export default function PMChecklistPage() {
                   <span className="material-symbols-outlined text-sm">info</span>
                   Asset: {selectedTask.asset} | Due: {selectedTask.due}
                 </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const event = new CustomEvent("open-task-chat", {
+                      detail: {
+                        taskCode: selectedTask.task_code,
+                        taskTitle: selectedTask.title,
+                        taskId: selectedTask.id,
+                        supervisorId: selectedTask.assigned_supervisor_id
+                      }
+                    });
+                    window.dispatchEvent(event);
+                  }}
+                  className="mt-3 px-4 py-2 border-2 border-black bg-white hover:bg-gray-50 text-[#D32F2F] rounded-xl font-extrabold text-[11px] uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">forum</span>
+                  <span>Ask Supervisor ({selectedTask.supervisor})</span>
+                </button>
               </div>
 
               {/* Progress Component */}
