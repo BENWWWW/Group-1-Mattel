@@ -1,59 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Maintain.AI - PM Verification System
 
-## Getting Started
+Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification System designed to streamline maintenance workflows across administrative, supervisory, and field (vendor) roles.
 
-First, run the development server:
+## 🚀 Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+*   **Role-Based Access Control (RBAC):** Tailored dashboards and strict data permissions for Admins, Supervisors, and Vendors.
+*   **AI Computer Vision Integration:** Embedded AI via Roboflow API to assist vendors with automated image classification and anomaly detection directly on the field.
+*   **Real-time Collaboration:** Embedded Live Chat widget and Notification Bell for instant, cross-role communication (Powered by Supabase Realtime).
+*   **Digital Signatures Integration:** Secure, dynamically loaded e-signature implementation for report submission (Vendor) and final approval workflows (Supervisor).
+*   **Advanced Data Management:** Soft-delete mechanisms for assets (ensuring historical PM integrity), dynamic filtering, and robust user management.
+*   **Enterprise-Ready UI:** Fully localized English interface, modernized styling, and strict server-client hydration handling.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠 Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+*   **Frontend:** Next.js (App Router), React, Tailwind CSS, TypeScript
+*   **Backend / Database:** Supabase (PostgreSQL, Storage, Authentication)
+*   **Real-time engine:** Supabase Realtime
+*   **AI Service:** Roboflow
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📂 Project Structure
 
-## Roboflow AI Object Detection
+*   `apps/web/` - The core Next.js web application.
+    *   `src/app/admin/` - Administrator operations and master data management.
+    *   `src/app/supervisor/` - Supervisor task tracking, live chat, and report approvals.
+    *   `src/app/vendor/` - Field execution, AI-assisted checklist reports, and digital signatures.
+    *   `src/components/` - Global components including `ChatWidget` and `NotificationBell`.
+    *   `src/lib/` - Shared utilities, Database schema types, Roboflow API module, and Signature handling.
+    *   `src/app/api/` - Next.js Serverless API routes.
+*   `supabase/` - Database schema definitions, edge migrations, and RLS policies.
 
-This project integrates the **Mattel Object Detection** model via Roboflow's serverless inference API to verify vendor-uploaded evidence photos with AI confidence scoring.
+## ⚙️ Getting Started
 
-### How It Works
+### Prerequisites
+*   Node.js (v18+)
+*   npm or yarn
+*   Supabase Account & Project configuration
+*   Roboflow API Key (for AI features)
 
-1. Vendor uploads an evidence photo on the **Tasks** checklist page
-2. Photo is stored in Supabase Storage and the checklist item status becomes **"AI Processing"**
-3. The frontend calls `POST /api/classify` with the image URL
-4. The API route fetches the image, converts to base64, and sends it to Roboflow
-5. Roboflow returns object detection predictions with confidence scores
-6. Based on the result:
-   - **≥80% confidence + correct class** → Pass
-   - **50-79% confidence** → Pass with warning (flagged for supervisor review)
-   - **<50% confidence** → Error (vendor asked to re-upload)
-   - **Wrong class detected** → Error
+### Installation
+1. Clone the repository and install dependencies:
+   ```bash
+   cd apps/web
+   npm install
+   ```
+2. Configure Environment Variables:
+   Create a `.env.local` file inside `apps/web/` using your Supabase and Roboflow credentials:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ROBOFLOW_API_KEY=your_roboflow_key
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-### Architecture
-
-- **`src/lib/roboflow.ts`** — Reusable Roboflow client with retries, timeouts, and typed errors
-- **`src/app/api/classify/route.ts`** — Next.js API route that wraps the client
-- **`src/app/vendor/tasks/page.tsx`** — Frontend that triggers classification on photo upload
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🛡 License
+Confidential. Internal Enterprise Use Only.
