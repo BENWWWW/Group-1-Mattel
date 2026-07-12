@@ -245,14 +245,14 @@ export default function LoginPage() {
               <>
                 <header className="text-center space-y-stack-sm mb-4">
                   <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight uppercase">
-                    AUTHORIZED ACCESS
+                    Login Page
                   </h1>
                   <p className="font-body-md text-on-surface opacity-60 uppercase tracking-widest text-xs">
-                    Maintain AI Terminal 04-A
+                    Maintain AI
                   </p>
                 </header>
 
-                 <form className="space-y-stack-md" onSubmit={handleLoginSubmit}>
+                <form className="space-y-stack-md" onSubmit={handleLoginSubmit}>
                   {/* ID Field */}
                   <div>
                     <label className="block font-label-md text-label-md text-on-surface mb-2 uppercase">
@@ -278,9 +278,8 @@ export default function LoginPage() {
                         type={showPassword ? "text" : "password"}
                         value={passwordValue}
                         onChange={(e) => setPasswordValue(e.target.value)}
-                        className={`w-full bg-white industrial-border rounded-[20px] py-4 px-6 font-body-md focus:ring-0 focus:outline-none text-on-surface pr-16 ${
-                          passwordError ? "border-primary" : ""
-                        }`}
+                        className={`w-full bg-white industrial-border rounded-[20px] py-4 px-6 font-body-md focus:ring-0 focus:outline-none text-on-surface pr-16 ${passwordError ? "border-primary" : ""
+                          }`}
                       />
                       <button
                         type="button"
@@ -342,9 +341,8 @@ export default function LoginPage() {
                       value={inlineId}
                       onChange={(e) => setInlineId(e.target.value)}
                       placeholder="e.g. ADM-001-Z, VND-772-K, ENT-992-X"
-                      className={`w-full bg-white industrial-border rounded-[20px] py-4 px-6 font-body-md focus:ring-0 focus:outline-none placeholder:text-on-surface placeholder:opacity-30 text-on-surface ${
-                        inlineIdError ? "border-primary" : ""
-                      }`}
+                      className={`w-full bg-white industrial-border rounded-[20px] py-4 px-6 font-body-md focus:ring-0 focus:outline-none placeholder:text-on-surface placeholder:opacity-30 text-on-surface ${inlineIdError ? "border-primary" : ""
+                        }`}
                     />
                     {inlineIdError && (
                       <p className="text-primary text-xs mt-1 font-label-sm">{inlineIdError}</p>
@@ -360,9 +358,8 @@ export default function LoginPage() {
                       value={inlineEmail}
                       onChange={(e) => setInlineEmail(e.target.value)}
                       placeholder="email@example.com"
-                      className={`w-full bg-white industrial-border rounded-[20px] py-4 px-6 font-body-md focus:ring-0 focus:outline-none placeholder:text-on-surface placeholder:opacity-30 text-on-surface ${
-                        inlineEmailError ? "border-primary" : ""
-                      }`}
+                      className={`w-full bg-white industrial-border rounded-[20px] py-4 px-6 font-body-md focus:ring-0 focus:outline-none placeholder:text-on-surface placeholder:opacity-30 text-on-surface ${inlineEmailError ? "border-primary" : ""
+                        }`}
                     />
                     {inlineEmailError && (
                       <p className="text-primary text-xs mt-1 font-label-sm">{inlineEmailError}</p>
@@ -425,26 +422,10 @@ export default function LoginPage() {
               MAINTAIN.AI
             </h2>
             <p className="font-headline-md text-headline-md text-primary uppercase tracking-[0.2em] mt-2">
-              Industrial Precision
+              PM Helper
             </p>
           </div>
 
-          <div className="bg-black/50 industrial-border border-white/20 p-stack-lg rounded-[20px]">
-            <h3 className="font-body-lg text-body-lg text-white mb-2">
-              Preventive Maintenance Verification System
-            </h3>
-            <p className="text-white/70 font-body-md">
-              Deploying neural-enhanced diagnostics across 14 manufacturing nodes. <br />
-              Stability Index: <span className="text-primary font-bold">99.98%</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="absolute top-10 right-10 flex gap-4">
-          <div className="flex flex-col items-end opacity-40 text-white">
-            <span className="text-[10px] font-bold tracking-widest">NETWORK_STATUS</span>
-            <span className="text-[10px] text-primary">ENCRYPTED_AES_256</span>
-          </div>
         </div>
       </section>
 
@@ -461,19 +442,18 @@ export default function LoginPage() {
             className={`pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-[20px] industrial-border bg-white text-on-surface animate-in fade-in slide-in-from-top-4 duration-300`}
           >
             <span
-              className={`material-symbols-outlined ${
-                toast.type === "success"
-                  ? "text-green-600"
-                  : toast.type === "error"
+              className={`material-symbols-outlined ${toast.type === "success"
+                ? "text-green-600"
+                : toast.type === "error"
                   ? "text-primary"
                   : "text-blue-500"
-              }`}
+                }`}
             >
               {toast.type === "success"
                 ? "check_circle"
                 : toast.type === "error"
-                ? "error"
-                : "info"}
+                  ? "error"
+                  : "info"}
             </span>
             <span className="font-label-md uppercase">{toast.message}</span>
           </div>
