@@ -2,7 +2,7 @@
 
 Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification System designed to streamline maintenance workflows across administrative, supervisory, and field (vendor) roles.
 
-## 🚀 Key Features
+## Key Features
 
 *   **Role-Based Access Control (RBAC):** Tailored dashboards and strict data permissions for Admins, Supervisors, and Vendors.
 *   **AI Computer Vision Integration:** Embedded AI via Roboflow API to assist vendors with automated image classification and anomaly detection directly on the field.
@@ -11,14 +11,14 @@ Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification Syst
 *   **Advanced Data Management:** Soft-delete mechanisms for assets (ensuring historical PM integrity), dynamic filtering, and robust user management.
 *   **Enterprise-Ready UI:** Fully localized English interface, modernized styling, and strict server-client hydration handling.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 *   **Frontend:** Next.js (App Router), React, Tailwind CSS, TypeScript
 *   **Backend / Database:** Supabase (PostgreSQL, Storage, Authentication)
 *   **Real-time engine:** Supabase Realtime
 *   **AI Service:** Roboflow
 
-## 📂 Project Structure
+## Project Structure
 
 *   `apps/web/` - The core Next.js web application.
     *   `src/app/admin/` - Administrator operations and master data management.
@@ -29,7 +29,7 @@ Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification Syst
     *   `src/app/api/` - Next.js Serverless API routes.
 *   `supabase/` - Database schema definitions, edge migrations, and RLS policies.
 
-## ⚙️ Getting Started
+## Getting Started
 
 ### Prerequisites
 *   Node.js (v18+)
@@ -55,5 +55,5 @@ Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification Syst
    npm run dev
    ```
 
-## 🛡 License
+## License
 Confidential. Internal Enterprise Use Only.
