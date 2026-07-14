@@ -383,108 +383,66 @@ export default function ReportsPage() {
           </div>
 
           {/* Details & Statistics Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Category Breakdown Progress */}
-            <div className="lg:col-span-1 bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 space-y-6">
-              <div>
-                <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Distribution Category</h3>
-                <p className="text-xs text-gray-500 font-medium">Audit distribution based on machine category</p>
-              </div>
-              
-              <div className="space-y-4">
-                {/* Mechanical */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span>Mechanical</span>
-                    <span>{categoryDist.Mechanical || 0}%</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
-                    <div className="bg-[#D32F2F] h-full" style={{ width: `${categoryDist.Mechanical || 0}%` }}></div>
-                  </div>
-                </div>
-
-                {/* Electrical */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span>Electrical</span>
-                    <span>{categoryDist.Electrical || 0}%</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
-                    <div className="bg-[#1A1A1A] h-full" style={{ width: `${categoryDist.Electrical || 0}%` }}></div>
-                  </div>
-                </div>
-
-                {/* HVAC */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span>HVAC</span>
-                    <span>{categoryDist.HVAC || 0}%</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
-                    <div className="bg-orange-500 h-full" style={{ width: `${categoryDist.HVAC || 0}%` }}></div>
-                  </div>
-                </div>
-
-                {/* Safety */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span>Safety</span>
-                    <span>{categoryDist.Safety || 0}%</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
-                    <div className="bg-green-600 h-full" style={{ width: `${categoryDist.Safety || 0}%` }}></div>
-                  </div>
-                </div>
-
-                {/* Facilities */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span>Facilities</span>
-                    <span>{categoryDist.Facilities || 0}%</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
-                    <div className="bg-blue-600 h-full" style={{ width: `${categoryDist.Facilities || 0}%` }}></div>
-                  </div>
-                </div>
-              </div>
+          <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 space-y-6">
+            <div>
+              <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Distribution Category</h3>
+              <p className="text-xs text-gray-500 font-medium">Audit distribution based on machine category</p>
             </div>
-
-            {/* Auditor Quality Insights */}
-            <div className="lg:col-span-2 bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 space-y-6 flex flex-col justify-between">
-              <div>
-                <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Report Quality Analysis</h3>
-                <p className="text-xs text-gray-500 font-medium">System analysis on maintenance audit performance</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-gray-50 rounded-xl border border-dashed border-[#1A1A1A]/20">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
-                    <h4 className="font-bold text-xs uppercase text-gray-700">Vendor Validation Accuracy</h4>
-                  </div>
-                  <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                    Digital file synchronization with field log data runs smoothly 100% without corrupt data.
-                  </p>
+            
+            <div className="space-y-4">
+              {/* Mechanical */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-bold">
+                  <span>Mechanical</span>
+                  <span>{categoryDist.Mechanical || 0}%</span>
                 </div>
-
-                <div className="p-4 bg-gray-50 rounded-xl border border-dashed border-[#1A1A1A]/20">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="material-symbols-outlined text-[#D32F2F] text-sm">trending_up</span>
-                    <h4 className="font-bold text-xs uppercase text-gray-700">Audit Ledger Efficiency</h4>
-                  </div>
-                  <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                    Visual automation system optimally detects workflow compliance on each assignment item.
-                  </p>
+                <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                  <div className="bg-[#D32F2F] h-full" style={{ width: `${categoryDist.Mechanical || 0}%` }}></div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs">
-                <span className="font-bold text-gray-500 uppercase">Database Sync</span>
-                <span className="font-black text-green-600 uppercase flex items-center gap-1 font-bold">
-                  <span className="w-2 h-2 rounded-full bg-green-600 inline-block animate-pulse"></span>
-                  Active & Synced
-                </span>
+              {/* Electrical */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-bold">
+                  <span>Electrical</span>
+                  <span>{categoryDist.Electrical || 0}%</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                  <div className="bg-[#1A1A1A] h-full" style={{ width: `${categoryDist.Electrical || 0}%` }}></div>
+                </div>
+              </div>
+
+              {/* HVAC */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-bold">
+                  <span>HVAC</span>
+                  <span>{categoryDist.HVAC || 0}%</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                  <div className="bg-orange-500 h-full" style={{ width: `${categoryDist.HVAC || 0}%` }}></div>
+                </div>
+              </div>
+
+              {/* Safety */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-bold">
+                  <span>Safety</span>
+                  <span>{categoryDist.Safety || 0}%</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                  <div className="bg-green-600 h-full" style={{ width: `${categoryDist.Safety || 0}%` }}></div>
+                </div>
+              </div>
+
+              {/* Facilities */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-bold">
+                  <span>Facilities</span>
+                  <span>{categoryDist.Facilities || 0}%</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                  <div className="bg-blue-600 h-full" style={{ width: `${categoryDist.Facilities || 0}%` }}></div>
+                </div>
               </div>
             </div>
           </div>
