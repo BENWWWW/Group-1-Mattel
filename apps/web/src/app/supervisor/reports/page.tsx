@@ -240,9 +240,7 @@ export default function ReportsPage() {
       <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest font-bold">
-            Industrial Precision
-          </p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           <button
@@ -514,8 +512,8 @@ export default function ReportsPage() {
                       <td className="py-4 px-4 font-bold text-gray-500">{report.date}</td>
                       <td className="py-4 px-4">
                         <span className={`px-2.5 py-1 rounded-full font-bold text-[9px] uppercase tracking-wider ${report.status === "Approved"
-                            ? "bg-green-100 text-green-700 border border-green-600/20"
-                            : "bg-red-100 text-red-700 border border-red-600/20"
+                          ? "bg-green-100 text-green-700 border border-green-600/20"
+                          : "bg-red-100 text-red-700 border border-red-600/20"
                           }`}>
                           {report.status}
                         </span>
