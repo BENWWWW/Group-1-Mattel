@@ -40,7 +40,7 @@ function ConfirmationContent() {
           .select("*")
           .eq("id", user.id)
           .single();
-        
+
         setCurrentUser(profile);
       }
 
@@ -143,7 +143,7 @@ function ConfirmationContent() {
     for (let i = 0; i < 60; i++) {
       setTimeout(createParticle, i * 12);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const avatarSrc = currentUser?.avatar_url ||
@@ -173,9 +173,7 @@ function ConfirmationContent() {
       <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] border-r-2 border-[#1A1A1A] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="text-[10px] font-bold tracking-widest text-white opacity-70 uppercase">
-            Industrial Precision
-          </p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           <button
@@ -369,14 +367,12 @@ function ConfirmationContent() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${
-              t.type === "success" ? "border-green-700" : "border-primary"
-            }`}
+            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${t.type === "success" ? "border-green-700" : "border-primary"
+              }`}
           >
             <span
-              className={`material-symbols-outlined ${
-                t.type === "success" ? "text-green-600" : "text-primary"
-              }`}
+              className={`material-symbols-outlined ${t.type === "success" ? "text-green-600" : "text-primary"
+                }`}
             >
               check_circle
             </span>

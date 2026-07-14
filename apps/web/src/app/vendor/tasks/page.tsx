@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import AssetLookupModal from "@/components/AssetLookupModal";
 
 interface ChecklistItem {
   id: string;
@@ -59,6 +60,7 @@ export default function PMChecklistPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAssetLookupOpen, setIsAssetLookupOpen] = useState(false);
 
   // Search & Filter state variables
   const [searchQuery, setSearchQuery] = useState("");
@@ -677,9 +679,7 @@ export default function PMChecklistPage() {
       <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
-            Industrial Precision
-          </p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
 
         <nav className="flex-1 space-y-2 px-2">
@@ -786,13 +786,24 @@ export default function PMChecklistPage() {
             </div>
           )}
         </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsAssetLookupOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 border-2 border-[#1A1A1A] rounded-[20px] bg-white text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-all cursor-pointer text-[10px] font-black uppercase tracking-wider"
+            title="Browse Asset Catalog"
+          >
+            <span className="material-symbols-outlined text-[18px]">precision_manufacturing</span>
+            <span className="hidden sm:inline">Assets</span>
+          </button>
+        </div>
       </header>
 
       {/* Main Content Layout */}
       {selectedTask ? (
         <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
           <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-8 animate-in fade-in duration-300">
-            
+
             {/* Sub-header & Asset Info */}
             <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-gray-100">
               <div>
@@ -1055,7 +1066,7 @@ export default function PMChecklistPage() {
       ) : (
         <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
           <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10 animate-in fade-in duration-300">
-            
+
             {/* Stats Overview Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-[#D32F2F]">
@@ -1228,14 +1239,14 @@ export default function PMChecklistPage() {
 
                         {/* Status badge */}
                         <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${task.dbStatus === "approved" || task.dbStatus === "completed"
-                            ? "bg-green-600"
-                            : task.dbStatus === "submitted"
-                              ? "bg-[#D32F2F]"
-                              : task.dbStatus === "rejected"
-                                ? "bg-orange-600"
-                                : task.dbStatus === "in_progress"
-                                  ? "bg-[#2F80ED]"
-                                  : "bg-[#1A1A1A]"
+                          ? "bg-green-600"
+                          : task.dbStatus === "submitted"
+                            ? "bg-[#D32F2F]"
+                            : task.dbStatus === "rejected"
+                              ? "bg-orange-600"
+                              : task.dbStatus === "in_progress"
+                                ? "bg-[#2F80ED]"
+                                : "bg-[#1A1A1A]"
                           }`}>
                           {task.dbStatus === "pending"
                             ? "Awaiting Start"
@@ -1293,8 +1304,8 @@ export default function PMChecklistPage() {
                               }
                             }}
                             className={`px-5 py-2 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer ${task.dbStatus === "in_progress" || task.dbStatus === "rejected"
-                                ? "bg-[#D32F2F] text-white hover:bg-black hover:border-black"
-                                : "bg-white text-black hover:bg-black/5"
+                              ? "bg-[#D32F2F] text-white hover:bg-black hover:border-black"
+                              : "bg-white text-black hover:bg-black/5"
                               }`}
                           >
                             {task.dbStatus === "submitted"
@@ -1332,8 +1343,8 @@ export default function PMChecklistPage() {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`w-10 h-10 rounded-lg font-bold text-xs uppercase transition-all cursor-pointer ${currentPage === page
-                            ? "bg-[#D32F2F] text-white border-2 border-[#D32F2F]"
-                            : "border-2 border-[#1A1A1A] hover:bg-gray-100 text-black bg-transparent"
+                          ? "bg-[#D32F2F] text-white border-2 border-[#D32F2F]"
+                          : "border-2 border-[#1A1A1A] hover:bg-gray-100 text-black bg-transparent"
                           }`}
                       >
                         {page}
@@ -1440,10 +1451,10 @@ export default function PMChecklistPage() {
           >
             <span
               className={`material-symbols-outlined ${toast.type === "success"
-                  ? "text-green-600"
-                  : toast.type === "error"
-                    ? "text-[#D32F2F]"
-                    : "text-blue-500"
+                ? "text-green-600"
+                : toast.type === "error"
+                  ? "text-[#D32F2F]"
+                  : "text-blue-500"
                 }`}
             >
               {toast.type === "success"
@@ -1456,6 +1467,9 @@ export default function PMChecklistPage() {
           </div>
         ))}
       </div>
+
+      {/* Asset Lookup Modal */}
+      <AssetLookupModal isOpen={isAssetLookupOpen} onClose={() => setIsAssetLookupOpen(false)} />
     </div>
   );
 }

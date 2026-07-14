@@ -389,22 +389,6 @@ export default function LoginPage() {
             )}
           </div>
         </div>
-
-        {/* Security Badge Footer */}
-        <footer className="absolute bottom-10 flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white industrial-border rounded-[20px]">
-            <span
-              className="material-symbols-outlined text-primary text-[18px]"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              verified_user
-            </span>
-            <span className="font-label-md text-label-md text-on-surface tracking-widest uppercase">
-              System Security Active
-            </span>
-          </div>
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-        </footer>
       </section>
 
       {/* Right Section: Branding & Identity (Black Panel) */}

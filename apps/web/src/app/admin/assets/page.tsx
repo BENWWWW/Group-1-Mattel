@@ -13,6 +13,8 @@ interface Asset {
   status: string;
   updated_at: string;
   is_deleted?: boolean;
+  description?: string;
+  image_url?: string;
 }
 
 interface ToastType { id: string; message: string; type: "success" | "error" | "info"; }
@@ -47,6 +49,10 @@ export default function AssetManagementPage() {
   const [formStatus, setFormStatus] = useState("operational");
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [customCategoryName, setCustomCategoryName] = useState("");
+  const [formDescription, setFormDescription] = useState("");
+  const [formImageUrl, setFormImageUrl] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Modals
   const [deleteTargetAsset, setDeleteTargetAsset] = useState<Asset | null>(null);
@@ -59,10 +65,45 @@ export default function AssetManagementPage() {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
   }, []);
 
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      triggerToast("Please select an image file.", "error");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      triggerToast("Image must be under 5MB.", "error");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `assets/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("pm_evidence")
+        .upload(fileName, file, { cacheControl: "3600", upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("pm_evidence")
+        .getPublicUrl(fileName);
+
+      setFormImageUrl(urlData.publicUrl);
+      setImagePreview(urlData.publicUrl);
+      triggerToast("Image uploaded successfully.", "success");
+    } catch (err: any) {
+      triggerToast(err.message || "Image upload failed.", "error");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   const fetchAssets = useCallback(async () => {
     setIsLoading(true);
     try {
-      let query = supabase.from("assets").select("id,asset_code,name,type,category,location,status,updated_at,is_deleted");
+      let query = supabase.from("assets").select("*");
       if (sortBy === "NAME") query = query.order("name");
       else if (sortBy === "ID") query = query.order("asset_code");
       else query = query.order("updated_at", { ascending: false });
@@ -126,6 +167,7 @@ export default function AssetManagementPage() {
     setFormName(""); setFormType(""); setFormCategory("MECHANICAL");
     setFormLocation(""); setFormStatus("operational");
     setIsCustomCategory(false); setCustomCategoryName("");
+    setFormDescription(""); setFormImageUrl(""); setImagePreview(null);
     
     // Auto generate code for default category "MECHANICAL"
     const nextCode = generateNextAssetCode("MECHANICAL");
@@ -138,6 +180,9 @@ export default function AssetManagementPage() {
     setDrawerMode("edit"); setEditingAssetId(asset.id);
     setFormName(asset.name); setFormType(asset.type || ""); setFormCode(asset.asset_code);
     setFormLocation(asset.location); setFormStatus(asset.status);
+    setFormDescription(asset.description || "");
+    setFormImageUrl(asset.image_url || "");
+    setImagePreview(asset.image_url || null);
     const predefined = ["MECHANICAL", "ELECTRICAL", "FACILITIES", "HYDRAULIC"];
     if (predefined.includes(asset.category.toUpperCase())) {
       setFormCategory(asset.category.toUpperCase()); setIsCustomCategory(false); setCustomCategoryName("");
@@ -165,6 +210,8 @@ export default function AssetManagementPage() {
           category: categoryToSave,
           location: formLocation.trim(),
           status: formStatus,
+          description: formDescription.trim() || null,
+          image_url: formImageUrl || null,
         });
         if (error) throw error;
         triggerToast(`Asset "${formName}" created successfully.`, "success");
@@ -175,6 +222,8 @@ export default function AssetManagementPage() {
           category: categoryToSave,
           location: formLocation.trim(),
           status: formStatus,
+          description: formDescription.trim() || null,
+          image_url: formImageUrl || null,
         }).eq("id", editingAssetId!);
         if (error) throw error;
         triggerToast("Asset details updated.", "success");
@@ -313,6 +362,12 @@ export default function AssetManagementPage() {
                   isDecommissioned   ? "bg-gray-800 text-white border-black" :
                   "bg-white text-[#1A1A1A] border-black"
                 }`}>
+                  {/* Asset Thumbnail */}
+                  {asset.image_url && (
+                    <div className="-mx-[30px] -mt-[30px] mb-5 h-40 overflow-hidden rounded-t-[18px] border-b-2 border-[#1A1A1A]">
+                      <img src={asset.image_url} alt={asset.name} className="w-full h-full object-cover" />
+                    </div>
+                  )}
                   <div className="flex justify-between items-center mb-6">
                     <span className={`inline-block text-[10px] font-black px-3 py-1 rounded-[12px] border shrink-0 ${
                       isUnderMaintenance ? "bg-white text-[#D32F2F] border-white" :
@@ -341,6 +396,9 @@ export default function AssetManagementPage() {
                     <p className={`text-sm font-bold flex items-center gap-2 mt-1 ${(isUnderMaintenance||isDecommissioned)?"text-white/80":"text-gray-500"}`}>
                       <span className="material-symbols-outlined text-lg">category</span>{asset.category} <span className="opacity-40">|</span> {asset.type}
                     </p>
+                    {asset.description && (
+                      <p className={`text-xs mt-3 leading-relaxed line-clamp-2 ${(isUnderMaintenance||isDecommissioned)?"text-white/70":"text-gray-400"}`}>{asset.description}</p>
+                    )}
                   </div>
                   <div className={`flex items-center justify-between mt-auto pt-6 border-t-2 ${(isUnderMaintenance||isDecommissioned)?"border-white/40":"border-[#1A1A1A]"}`}>
                     <div>
@@ -481,8 +539,66 @@ export default function AssetManagementPage() {
                     <option value="decommissioned">Decommissioned</option>
                   </select>
                 </div>
+
+                {/* Asset Image Upload */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-black uppercase opacity-40">Asset Image</label>
+                  {imagePreview ? (
+                    <div className="relative">
+                      <div className="w-full h-40 rounded-[12px] border-2 border-gray-200 overflow-hidden bg-gray-50">
+                        <img src={imagePreview} alt="Asset preview" className="w-full h-full object-cover" />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setImagePreview(null); setFormImageUrl(""); }}
+                        className="absolute top-2 right-2 w-8 h-8 bg-[#D32F2F] text-white rounded-full flex items-center justify-center border-2 border-white cursor-pointer hover:bg-black transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">close</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-[12px] cursor-pointer hover:border-[#D32F2F] transition-colors bg-gray-50">
+                      {isUploadingImage ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin text-2xl text-gray-400">progress_activity</span>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase mt-2">Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-3xl text-gray-300">add_photo_alternate</span>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase mt-2">Click to upload image</span>
+                          <span className="text-[9px] text-gray-300 mt-0.5">PNG, JPG up to 5MB</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={isUploadingImage}
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(file);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Asset Description */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-black uppercase opacity-40">Description</label>
+                  <textarea
+                    value={formDescription}
+                    onChange={e => setFormDescription(e.target.value)}
+                    placeholder="Describe this asset, its purpose, specifications, maintenance notes..."
+                    rows={4}
+                    className="w-full border-2 border-gray-200 p-3 rounded-[12px] font-bold focus:border-[#D32F2F] bg-white text-[#1A1A1A] outline-none resize-none text-sm"
+                  />
+                </div>
+
                 <div className="pt-4">
-                  <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-[#D32F2F] text-white font-black uppercase tracking-widest rounded-[20px] border-2 border-[#1A1A1A] hover:bg-black transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+                  <button type="submit" disabled={isSubmitting || isUploadingImage} className="w-full py-4 bg-[#D32F2F] text-white font-black uppercase tracking-widest rounded-[20px] border-2 border-[#1A1A1A] hover:bg-black transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
                     {isSubmitting?<><span className="material-symbols-outlined animate-spin text-base">progress_activity</span>SAVING...</>:(drawerMode==="edit"?"Save Changes":"Create Asset")}
                   </button>
                 </div>

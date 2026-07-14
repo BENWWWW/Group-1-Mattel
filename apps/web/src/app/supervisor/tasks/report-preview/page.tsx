@@ -204,10 +204,10 @@ function ReportPreviewContent() {
           }
 
           // Format Date
-          const auditDate = reportData?.reviewed_at 
-            ? new Date(reportData.reviewed_at) 
-            : reportData?.submitted_at 
-              ? new Date(reportData.submitted_at) 
+          const auditDate = reportData?.reviewed_at
+            ? new Date(reportData.reviewed_at)
+            : reportData?.submitted_at
+              ? new Date(reportData.submitted_at)
               : new Date();
 
           const formattedDate = auditDate.toLocaleDateString("en-US", {
@@ -218,7 +218,7 @@ function ReportPreviewContent() {
 
           // Generate dynamic deterministic hash based on report/task ID
           const hashSeed = reportData?.id || taskData.id;
-          const reportHash = "SHA-256: " + Array.from({ length: 64 }, (_, i) => 
+          const reportHash = "SHA-256: " + Array.from({ length: 64 }, (_, i) =>
             ((hashSeed.charCodeAt(i % hashSeed.length) * (i + 1)) % 16).toString(16)
           ).join("");
 
@@ -335,7 +335,7 @@ function ReportPreviewContent() {
           <span className="material-symbols-outlined text-[#D32F2F] text-2xl font-bold">picture_as_pdf</span>
           <div className="text-left">
             <h1 className="font-headline-md text-sm font-extrabold tracking-widest leading-none">MAINTAIN.AI</h1>
-            <p className="text-[9px] opacity-60 uppercase font-black tracking-wider mt-1">PM REPORT TELEMETRY VERIFICATION</p>
+            <p className="text-[9px] opacity-60 uppercase font-black tracking-wider mt-1">PM VERIFICATION</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -358,10 +358,10 @@ function ReportPreviewContent() {
 
       {/* Main Content Area */}
       <main className="content-area-main w-full max-w-[850px] px-4 md:px-0 py-8 flex flex-col items-center relative">
-        
+
         {/* The PDF Page Simulation Card */}
         <div className="paper-card bg-white border-2 border-[#1A1A1A] max-w-[850px] w-full min-h-[1100px] relative overflow-hidden flex flex-col mb-10 rounded-xl shadow-none shrink-0">
-          
+
           {/* Top Band */}
           <div className="bg-[#D32F2F] text-white flex justify-between items-center px-8 py-6 border-b-2 border-[#1A1A1A]">
             <span className="font-headline-md text-xl font-extrabold uppercase tracking-widest">
@@ -374,7 +374,7 @@ function ReportPreviewContent() {
           </div>
 
           <div className="p-12 space-y-10">
-            
+
             {/* PM Information Section */}
             <section className="space-y-4">
               <h3 className="border-b-2 border-[#1A1A1A] pb-2 font-label-md text-xs font-black text-[#1A1A1A] uppercase mb-6 flex items-center gap-2">
@@ -439,13 +439,12 @@ function ReportPreviewContent() {
                         <td className="px-4 py-4 border-r border-[#1A1A1A] max-w-[280px]">
                           <p>{item.label}</p>
                           <div className="flex flex-wrap items-center gap-2 mt-1.5 normal-case font-bold">
-                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${
-                              item.type === "urgent" 
-                                ? "bg-red-50 text-red-700 border-red-200" 
-                                : item.type === "required" 
-                                  ? "bg-black text-white border-black" 
-                                  : "bg-gray-100 text-gray-500 border-gray-200"
-                            }`}>
+                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${item.type === "urgent"
+                              ? "bg-red-50 text-red-700 border-red-200"
+                              : item.type === "required"
+                                ? "bg-black text-white border-black"
+                                : "bg-gray-100 text-gray-500 border-gray-200"
+                              }`}>
                               {item.type || "optional"}
                             </span>
                             <span className="text-[8px] font-black rounded uppercase tracking-wider bg-gray-50 text-gray-400 border border-gray-200 px-2 py-0.5">
@@ -557,22 +556,21 @@ function ReportPreviewContent() {
 
             {/* Approval / Rejection Section */}
             <section className="relative pt-8 pb-12 border-t-2 border-[#1A1A1A] flex flex-col gap-8">
-              
+
               {/* Approved/Rejected/Pending Stamp Watermark */}
               <div
-                className={`absolute right-20 top-2 p-4 text-center border-8 select-none tracking-widest font-black uppercase rounded-lg ${
-                  reportInfo.status === "rejected"
-                    ? "border-red-600 text-red-600 rotate-[15deg] opacity-15"
-                    : reportInfo.status === "approved"
-                      ? "border-green-600 text-green-600 -rotate-[15deg] opacity-15"
-                      : "border-amber-500 text-amber-500 rotate-[5deg] opacity-15"
-                }`}
+                className={`absolute right-20 top-2 p-4 text-center border-8 select-none tracking-widest font-black uppercase rounded-lg ${reportInfo.status === "rejected"
+                  ? "border-red-600 text-red-600 rotate-[15deg] opacity-15"
+                  : reportInfo.status === "approved"
+                    ? "border-green-600 text-green-600 -rotate-[15deg] opacity-15"
+                    : "border-amber-500 text-amber-500 rotate-[5deg] opacity-15"
+                  }`}
                 style={{ fontSize: "3.5rem" }}
               >
-                {reportInfo.status === "rejected" 
-                  ? "REJECTED" 
-                  : reportInfo.status === "approved" 
-                    ? "APPROVED" 
+                {reportInfo.status === "rejected"
+                  ? "REJECTED"
+                  : reportInfo.status === "approved"
+                    ? "APPROVED"
                     : "PENDING"}
               </div>
 
@@ -600,10 +598,10 @@ function ReportPreviewContent() {
                   <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold mb-4">Vendor Signature</p>
                   <div className="h-20 flex items-center justify-center mb-2">
                     {reportInfo.vendorSignature?.startsWith("data:image") ? (
-                      <img 
-                        src={reportInfo.vendorSignature} 
-                        alt="Vendor Signature" 
-                        className="max-h-16 max-w-[180px] object-contain" 
+                      <img
+                        src={reportInfo.vendorSignature}
+                        alt="Vendor Signature"
+                        className="max-h-16 max-w-[180px] object-contain"
                       />
                     ) : reportInfo.vendorSignature ? (
                       <span className="font-serif italic text-lg text-[#1D4ED8] tracking-widest border-b-2 border-double border-[#1D4ED8] px-4 py-1">
@@ -624,10 +622,10 @@ function ReportPreviewContent() {
                   <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold mb-4">Supervisor Signature</p>
                   <div className="h-20 flex items-center justify-center mb-2">
                     {reportInfo.supervisorSignature?.startsWith("data:image") ? (
-                      <img 
-                        src={reportInfo.supervisorSignature} 
-                        alt="Supervisor Signature" 
-                        className="max-h-16 max-w-[180px] object-contain" 
+                      <img
+                        src={reportInfo.supervisorSignature}
+                        alt="Supervisor Signature"
+                        className="max-h-16 max-w-[180px] object-contain"
                       />
                     ) : reportInfo.supervisorSignature ? (
                       <span className="font-serif italic text-lg text-[#1D4ED8] tracking-widest border-b-2 border-double border-[#1D4ED8] px-4 py-1">
@@ -648,7 +646,7 @@ function ReportPreviewContent() {
 
           <footer className="bg-gray-100 py-3 text-center border-t border-[#1A1A1A] mt-auto">
             <p className="text-[9px] font-label-sm uppercase tracking-widest text-[#1A1A1A] opacity-60 italic font-black">
-              Generated by Maintain.AI Neural Diagnostic Engine v2.4.11
+              Generated by Maintain.AI
             </p>
           </footer>
         </div>
@@ -663,7 +661,7 @@ function ReportPreviewContent() {
             ↓ Download PDF Report ↓
           </button>
           <p className="text-center mt-6 text-[#1A1A1A] text-[10px] uppercase font-bold tracking-wider opacity-70">
-            Document verified with industrial grade blockchain timestamping.
+            Document verified by supervisor.
           </p>
         </div>
       </main>
@@ -673,14 +671,12 @@ function ReportPreviewContent() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${
-              t.type === "success" ? "border-green-700" : t.type === "error" ? "border-primary" : "border-blue-700"
-            }`}
+            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${t.type === "success" ? "border-green-700" : t.type === "error" ? "border-primary" : "border-blue-700"
+              }`}
           >
             <span
-              className={`material-symbols-outlined ${
-                t.type === "success" ? "text-green-600" : t.type === "error" ? "text-primary" : "text-blue-500"
-              }`}
+              className={`material-symbols-outlined ${t.type === "success" ? "text-green-600" : t.type === "error" ? "text-primary" : "text-blue-500"
+                }`}
             >
               {t.type === "success" ? "check_circle" : t.type === "error" ? "cancel" : "info"}
             </span>

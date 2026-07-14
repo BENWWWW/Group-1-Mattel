@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
+import AssetLookupModal from "@/components/AssetLookupModal";
 import { getMySignatures, saveSignature } from "@/lib/signatures";
 
 interface ChecklistItem {
@@ -69,10 +70,11 @@ export default function ReviewDetailPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [isAssetLookupOpen, setIsAssetLookupOpen] = useState(false);
+
   // Navigation & Review selection state
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  
+
   // Search and Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
@@ -185,7 +187,7 @@ export default function ReviewDetailPage() {
           ? [...t.pm_reports].sort((a: any, b: any) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())
           : [];
         const report = sortedReports.length > 0 ? sortedReports[0] : null;
-        
+
         // Checklist results format check
         let checklistItems: ChecklistItem[] = [];
         if (report && report.checklist_results) {
@@ -235,9 +237,9 @@ export default function ReviewDetailPage() {
           auditLog.push({ time: t.scheduled_date, message: "Task scheduled date confirmed." });
         }
         if (report) {
-          auditLog.push({ 
-            time: new Date(report.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
-            message: `Report uploaded by ${t.vendor?.full_name || "vendor"}.` 
+          auditLog.push({
+            time: new Date(report.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            message: `Report uploaded by ${t.vendor?.full_name || "vendor"}.`
           });
         }
 
@@ -278,7 +280,7 @@ export default function ReviewDetailPage() {
 
   useEffect(() => {
     fetchTasks();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -391,7 +393,7 @@ export default function ReviewDetailPage() {
   // Approval Submission to Supabase
   const handleConfirmApproval = async () => {
     if (!approveSigned || !selectedTask) return;
-    
+
     const finalSupervisorNotes = approveNotes || notes || "Approved under standard operating guidelines.";
     setLoading(true);
 
@@ -569,25 +571,25 @@ export default function ReviewDetailPage() {
 
   // Filter tasks based on Search, Category, Status, and Date Range
   const filteredTasks = tasks.filter((t) => {
-    const matchesSearch = 
+    const matchesSearch =
       t.task_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.tech.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.asset.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
     const matchesCategory =
       categoryFilter === "All Categories" || t.category === categoryFilter;
-      
+
     const matchesStatus =
       statusFilter === "All Statuses" || t.status === statusFilter.toLowerCase();
-      
+
     const matchesDate = (() => {
       if (startDate && t.date < startDate) return false;
       if (endDate && t.date > endDate) return false;
       return true;
     })();
-      
+
     return matchesSearch && matchesCategory && matchesStatus && matchesDate;
   });
 
@@ -634,7 +636,7 @@ export default function ReviewDetailPage() {
       <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest font-bold">Industrial Precision</p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           <button
@@ -702,14 +704,13 @@ export default function ReviewDetailPage() {
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
           )}
-          
+
           {selectedTask ? (
             <div>
               <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
                 <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight whitespace-nowrap">{selectedTask.task_code}</h2>
-                <span className={`px-2 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[8px] sm:text-[10px] font-bold text-white uppercase tracking-wider ${
-                  selectedTask.status === "approved" ? "bg-green-600" : selectedTask.status === "rejected" ? "bg-black" : "bg-[#D32F2F]"
-                }`}>
+                <span className={`px-2 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[8px] sm:text-[10px] font-bold text-white uppercase tracking-wider ${selectedTask.status === "approved" ? "bg-green-600" : selectedTask.status === "rejected" ? "bg-black" : "bg-[#D32F2F]"
+                  }`}>
                   {selectedTask.status.replace("_", " ")}
                 </span>
               </div>
@@ -723,6 +724,14 @@ export default function ReviewDetailPage() {
           )}
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsAssetLookupOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 border-2 border-[#1A1A1A] rounded-[20px] bg-white text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-all cursor-pointer text-[10px] font-black uppercase tracking-wider"
+            title="Browse Asset Catalog"
+          >
+            <span className="material-symbols-outlined text-[18px]">precision_manufacturing</span>
+            <span className="hidden sm:inline">Assets</span>
+          </button>
           <NotificationBell />
           <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
             <img className="w-full h-full object-cover" src={avatarSrc} alt="User Profile" />
@@ -736,7 +745,7 @@ export default function ReviewDetailPage() {
         <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
           <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto animate-in fade-in duration-300">
             <div className="grid grid-cols-12 gap-8">
-              
+
               {/* Column 1: Checklist Results */}
               <section className="col-span-12 lg:col-span-6 flex flex-col gap-6">
                 <div className="flex items-center justify-between mb-2">
@@ -760,13 +769,12 @@ export default function ReviewDetailPage() {
                           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ITEM {idx + 1}</span>
                           <h4 className="font-headline-md text-base font-extrabold text-black leading-tight">{item.label}</h4>
                           <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${
-                              item.type === "urgent" 
-                                ? "bg-red-50 text-red-700 border-red-200" 
-                                : item.type === "required" 
-                                  ? "bg-black text-white border-black" 
+                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${item.type === "urgent"
+                                ? "bg-red-50 text-red-700 border-red-200"
+                                : item.type === "required"
+                                  ? "bg-black text-white border-black"
                                   : "bg-gray-100 text-gray-500 border-gray-200"
-                            }`}>
+                              }`}>
                               {item.type || "optional"}
                             </span>
                             <span className="text-[8px] font-black rounded uppercase tracking-wider bg-gray-50 text-gray-400 border border-gray-200 px-2 py-0.5">
@@ -803,7 +811,7 @@ export default function ReviewDetailPage() {
                           );
                         })()}
                       </div>
-                      
+
                       {item.notes && (
                         <div className="bg-black/5 p-4 rounded-lg border-2 border-black italic text-xs text-gray-700">
                           "{item.notes}"
@@ -927,7 +935,7 @@ export default function ReviewDetailPage() {
         /* ================== TASKS LIST VIEW ================== */
         <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
           <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10 animate-in fade-in duration-300">
-            
+
             {/* Stats Overview Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-[#D32F2F]">
@@ -956,7 +964,7 @@ export default function ReviewDetailPage() {
             {/* Filter and Control Panel */}
             <div className="flex flex-wrap justify-between items-end gap-6 bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A]">
               <div className="flex flex-wrap gap-4 flex-grow lg:flex-nowrap">
-                
+
                 {/* Search */}
                 <div className="flex-1 min-w-[240px]">
                   <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Search Tasks</label>
@@ -1049,10 +1057,9 @@ export default function ReviewDetailPage() {
                           </span>
                         )}
                       </div>
-                      
-                      <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${
-                        task.status === "approved" ? "bg-green-600" : task.status === "rejected" ? "bg-black" : "bg-[#D32F2F]"
-                      }`}>
+
+                      <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${task.status === "approved" ? "bg-green-600" : task.status === "rejected" ? "bg-black" : "bg-[#D32F2F]"
+                        }`}>
                         {task.status.replace("_", " ")}
                       </span>
                     </div>
@@ -1075,11 +1082,10 @@ export default function ReviewDetailPage() {
                       </span>
                       <button
                         onClick={() => setSelectedTaskId(task.id)}
-                        className={`px-5 py-2 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer ${
-                          task.status === "submitted"
+                        className={`px-5 py-2 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer ${task.status === "submitted"
                             ? "bg-[#D32F2F] text-white hover:bg-black hover:border-black"
                             : "bg-white text-black hover:bg-black/5"
-                        }`}
+                          }`}
                       >
                         {task.status === "submitted" ? "Audit Report" : "Task Details"}
                       </button>
@@ -1109,9 +1115,8 @@ export default function ReviewDetailPage() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-10 h-10 rounded-lg font-bold text-xs uppercase transition-all cursor-pointer ${
-                          currentPage === page ? "bg-[#D32F2F] text-white border-2 border-[#D32F2F]" : "border-2 border-[#1A1A1A] hover:bg-gray-100 text-black"
-                        }`}
+                        className={`w-10 h-10 rounded-lg font-bold text-xs uppercase transition-all cursor-pointer ${currentPage === page ? "bg-[#D32F2F] text-white border-2 border-[#D32F2F]" : "border-2 border-[#1A1A1A] hover:bg-gray-100 text-black"
+                          }`}
                       >
                         {page}
                       </button>
@@ -1211,9 +1216,8 @@ export default function ReviewDetailPage() {
               <button
                 onClick={handleConfirmApproval}
                 disabled={!approveSigned}
-                className={`py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all cursor-pointer ${
-                  approveSigned ? "bg-[#D32F2F] hover:bg-black" : "bg-gray-300 opacity-50 cursor-not-allowed"
-                }`}
+                className={`py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all cursor-pointer ${approveSigned ? "bg-[#D32F2F] hover:bg-black" : "bg-gray-300 opacity-50 cursor-not-allowed"
+                  }`}
               >
                 Confirm Approval
               </button>
@@ -1288,9 +1292,8 @@ export default function ReviewDetailPage() {
               <button
                 onClick={handleConfirmRejection}
                 disabled={!rejectSigned || !rejectReason.trim()}
-                className={`py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all cursor-pointer ${
-                  rejectSigned && rejectReason.trim() ? "bg-black hover:bg-[#D32F2F]" : "bg-gray-300 opacity-50 cursor-not-allowed"
-                }`}
+                className={`py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all cursor-pointer ${rejectSigned && rejectReason.trim() ? "bg-black hover:bg-[#D32F2F]" : "bg-gray-300 opacity-50 cursor-not-allowed"
+                  }`}
               >
                 Confirm Rejection
               </button>
@@ -1304,9 +1307,8 @@ export default function ReviewDetailPage() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${
-              t.type === "success" ? "border-green-700" : t.type === "error" ? "border-[#D32F2F]" : "border-blue-700"
-            }`}
+            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${t.type === "success" ? "border-green-700" : t.type === "error" ? "border-[#D32F2F]" : "border-blue-700"
+              }`}
           >
             <span className={`material-symbols-outlined ${t.type === "success" ? "text-green-600" : t.type === "error" ? "text-[#D32F2F]" : "text-blue-500"}`}>
               {t.type === "success" ? "check_circle" : t.type === "error" ? "cancel" : "info"}
@@ -1315,6 +1317,9 @@ export default function ReviewDetailPage() {
           </div>
         ))}
       </div>
+
+      {/* Asset Lookup Modal */}
+      <AssetLookupModal isOpen={isAssetLookupOpen} onClose={() => setIsAssetLookupOpen(false)} />
 
     </div>
   );

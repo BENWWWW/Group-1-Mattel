@@ -98,7 +98,7 @@ export default function SupervisorProfilePage() {
     };
 
     loadProfile();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Signature drawing/handling methods
@@ -149,12 +149,12 @@ export default function SupervisorProfilePage() {
 
   const handleSaveDrawnSignature = async () => {
     if (!canvasRef.current) return;
-    
+
     // Check if canvas is empty before saving
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    
+
     const buffer = new Uint32Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
     const isEmpty = !buffer.some(color => color !== 0);
     if (isEmpty) {
@@ -325,9 +325,7 @@ export default function SupervisorProfilePage() {
       <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
-            Industrial Precision
-          </p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
 
         <nav className="flex-1 space-y-2 px-2">

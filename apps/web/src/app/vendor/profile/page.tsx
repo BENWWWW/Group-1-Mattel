@@ -94,7 +94,7 @@ export default function VendorProfilePage() {
 
   useEffect(() => {
     loadProfile();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Signature drawing/handling methods
@@ -145,12 +145,12 @@ export default function VendorProfilePage() {
 
   const handleSaveDrawnSignature = async () => {
     if (!canvasRef.current) return;
-    
+
     // Check if canvas is empty before saving
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    
+
     const buffer = new Uint32Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
     const isEmpty = !buffer.some(color => color !== 0);
     if (isEmpty) {
@@ -365,9 +365,7 @@ export default function VendorProfilePage() {
       <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
-            Industrial Precision
-          </p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
 
         <nav className="flex-1 space-y-2 px-2">
@@ -415,7 +413,7 @@ export default function VendorProfilePage() {
           </button>
 
           <button
-            onClick={() => {}}
+            onClick={() => { }}
             className="flex items-center gap-3 text-left w-full bg-white/10 p-2 rounded-lg transition-colors cursor-pointer border-none"
           >
             <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
@@ -451,7 +449,7 @@ export default function VendorProfilePage() {
       {/* Main Content Area */}
       <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
         <div className="p-4 lg:p-10 max-w-[1200px] mx-auto space-y-6 lg:space-y-10">
-          
+
           {/* Profile Header Card */}
           <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
             <div className="relative group cursor-pointer" onClick={handlePhotoClick}>
@@ -494,7 +492,7 @@ export default function VendorProfilePage() {
 
           {/* Form Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            
+
             {/* General Info Card */}
             <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
               <div className="pb-4 border-b border-gray-100">

@@ -291,7 +291,7 @@ function AIVerificationScoreContent() {
 
   useEffect(() => {
     loadVerificationData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Open review drawer helper
@@ -505,9 +505,7 @@ function AIVerificationScoreContent() {
       <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="font-label-sm text-[10px] text-white/60 tracking-wider uppercase font-bold">
-            Industrial Precision
-          </p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           <button
@@ -517,7 +515,7 @@ function AIVerificationScoreContent() {
             <span className="material-symbols-outlined">dashboard</span>
             <span>Dashboard</span>
           </button>
-          
+
           <button
             onClick={() => router.push("/vendor/tasks")}
             className="bg-[#D32F2F] text-white w-full px-4 py-3 flex items-center gap-4 text-left font-label-md text-sm uppercase tracking-wider rounded-full transition-colors cursor-pointer border-none"
@@ -527,7 +525,7 @@ function AIVerificationScoreContent() {
             </span>
             <span>Tasks</span>
           </button>
-          
+
           <button
             onClick={() => router.push("/vendor/pm")}
             className="w-full px-4 py-3 flex items-center gap-4 text-white/70 hover:bg-white/10 text-left font-label-md text-sm uppercase tracking-wider rounded-full transition-colors cursor-pointer border-none bg-transparent"
@@ -535,7 +533,7 @@ function AIVerificationScoreContent() {
             <span className="material-symbols-outlined">settings_applications</span>
             <span>PM</span>
           </button>
-          
+
           <button
             onClick={() => router.push("/vendor/reports")}
             className="w-full px-4 py-3 flex items-center gap-4 text-white/70 hover:bg-white/10 text-left font-label-md text-sm uppercase tracking-wider rounded-full transition-colors cursor-pointer border-none bg-transparent"
@@ -623,18 +621,16 @@ function AIVerificationScoreContent() {
                     >
                       <div className="flex items-center gap-5">
                         <div
-                          className={`w-14 h-14 rounded-xl flex items-center justify-center border-2 border-[#1A1A1A] shrink-0 ${
-                            item.icon === "image_not_supported"
-                              ? "bg-primary"
-                              : "bg-[#1A1A1A]"
-                          }`}
+                          className={`w-14 h-14 rounded-xl flex items-center justify-center border-2 border-[#1A1A1A] shrink-0 ${item.icon === "image_not_supported"
+                            ? "bg-primary"
+                            : "bg-[#1A1A1A]"
+                            }`}
                         >
                           <span
-                            className={`material-symbols-outlined text-2xl ${
-                              item.icon === "image_not_supported"
-                                ? "text-white"
-                                : "text-primary"
-                            }`}
+                            className={`material-symbols-outlined text-2xl ${item.icon === "image_not_supported"
+                              ? "text-white"
+                              : "text-primary"
+                              }`}
                           >
                             {item.icon}
                           </span>
@@ -741,13 +737,12 @@ function AIVerificationScoreContent() {
           <button
             onClick={handleSubmitReport}
             disabled={isSubmitting || isSubmitted}
-            className={`w-full max-w-4xl h-16 text-white font-bold rounded-lg border-2 border-[#1A1A1A] flex items-center justify-center gap-4 transition-all duration-300 uppercase tracking-[0.2em] active:scale-[0.98] cursor-pointer ${
-              isSubmitted
-                ? "bg-green-700 border-green-700 pointer-events-none"
-                : isSubmitting
+            className={`w-full max-w-4xl h-16 text-white font-bold rounded-lg border-2 border-[#1A1A1A] flex items-center justify-center gap-4 transition-all duration-300 uppercase tracking-[0.2em] active:scale-[0.98] cursor-pointer ${isSubmitted
+              ? "bg-green-700 border-green-700 pointer-events-none"
+              : isSubmitting
                 ? "bg-primary opacity-80 cursor-wait pointer-events-none"
                 : "bg-primary hover:bg-[#1A1A1A]"
-            }`}
+              }`}
           >
             <span
               className={`material-symbols-outlined ${isSubmitting ? "animate-spin" : ""}`}
@@ -769,9 +764,8 @@ function AIVerificationScoreContent() {
 
       {/* Review Panel Slide-out Drawer */}
       <aside
-        className={`fixed top-0 right-0 h-screen w-full max-w-lg bg-white border-l-2 border-[#1A1A1A] z-[70] transition-transform duration-300 flex flex-col ${
-          isPanelOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-screen w-full max-w-lg bg-white border-l-2 border-[#1A1A1A] z-[70] transition-transform duration-300 flex flex-col ${isPanelOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         {selectedItem && (
           <>
@@ -932,14 +926,12 @@ function AIVerificationScoreContent() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${
-              t.type === "success" ? "border-green-700" : "border-primary"
-            }`}
+            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${t.type === "success" ? "border-green-700" : "border-primary"
+              }`}
           >
             <span
-              className={`material-symbols-outlined ${
-                t.type === "success" ? "text-green-600" : "text-primary"
-              }`}
+              className={`material-symbols-outlined ${t.type === "success" ? "text-green-600" : "text-primary"
+                }`}
             >
               check_circle
             </span>

@@ -74,7 +74,7 @@ export default function VendorDashboardPage() {
         .select("*")
         .eq("id", user.id)
         .single();
-      
+
       setCurrentUser(profile);
 
       // Fetch Tasks assigned to this Vendor
@@ -152,9 +152,9 @@ export default function VendorDashboardPage() {
       });
       const avgCompliance = scoredReports.length > 0
         ? Math.round(scoredReports.reduce((acc: number, curr: any) => {
-            const rep = curr.pm_reports[0];
-            return acc + (rep.ai_confidence_score || 0);
-          }, 0) / scoredReports.length)
+          const rep = curr.pm_reports[0];
+          return acc + (rep.ai_confidence_score || 0);
+        }, 0) / scoredReports.length)
         : 100;
 
       setStats({
@@ -184,7 +184,7 @@ export default function VendorDashboardPage() {
     return () => {
       window.removeEventListener("profileUpdated", handleProfileUpdate);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogout = async () => {
@@ -197,7 +197,7 @@ export default function VendorDashboardPage() {
 
   const awaitingStartTasks = tasks.filter(t => t.dbStatus === "pending");
 
-  const avatarSrc = currentUser?.avatar_url || 
+  const avatarSrc = currentUser?.avatar_url ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || "Apex Services")}&background=D32F2F&color=fff&size=200`;
 
   if (loading && tasks.length === 0) {
@@ -238,9 +238,7 @@ export default function VendorDashboardPage() {
       <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
-            Industrial Precision
-          </p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
 
         <nav className="flex-1 space-y-2 px-2">
@@ -334,7 +332,7 @@ export default function VendorDashboardPage() {
       {/* Main Content Area */}
       <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
         <div className="p-4 lg:p-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10">
-          
+
           {/* Stats Overview Grid (Adapted from Admin Dashboard style) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
@@ -399,7 +397,7 @@ export default function VendorDashboardPage() {
                           </span>
                         </div>
                       </div>
-                      
+
                       {task.priority === "High" && (
                         <span className="text-[9px] font-extrabold uppercase px-2.5 py-0.5 bg-[#D32F2F] text-white rounded-[12px] border-none animate-pulse">
                           HIGH PRIORITY
@@ -460,19 +458,18 @@ export default function VendorDashboardPage() {
             className="pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-[20px] border-2 border-on-surface bg-white text-on-surface animate-in fade-in slide-in-from-top-4 duration-300"
           >
             <span
-              className={`material-symbols-outlined ${
-                toast.type === "success"
-                  ? "text-green-600"
-                  : toast.type === "error"
+              className={`material-symbols-outlined ${toast.type === "success"
+                ? "text-green-600"
+                : toast.type === "error"
                   ? "text-[#D32F2F]"
                   : "text-blue-500"
-              }`}
+                }`}
             >
               {toast.type === "success"
                 ? "check_circle"
                 : toast.type === "error"
-                ? "error"
-                : "info"}
+                  ? "error"
+                  : "info"}
             </span>
             <span className="font-label-md text-xs uppercase font-bold">{toast.message}</span>
           </div>

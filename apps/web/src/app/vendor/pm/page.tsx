@@ -71,7 +71,7 @@ export default function VPMHistoryPage() {
         .select("*")
         .eq("id", user.id)
         .single();
-      
+
       setCurrentUser(profile);
 
       // Query pm_reports where its pm_tasks' assigned_vendor_id is this user.id
@@ -145,7 +145,7 @@ export default function VPMHistoryPage() {
 
   useEffect(() => {
     loadPMRecords();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Filtered PM records
@@ -233,9 +233,7 @@ export default function VPMHistoryPage() {
       <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">
-            Industrial Precision
-          </p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
 
         <nav className="flex-1 space-y-2 px-2">
@@ -256,7 +254,7 @@ export default function VPMHistoryPage() {
           </button>
 
           <button
-            onClick={() => {}}
+            onClick={() => { }}
             className="bg-[#D32F2F] text-white w-full px-4 py-3 flex items-center gap-4 text-left font-label-md text-sm uppercase tracking-wider rounded-full transition-colors cursor-pointer border-none"
           >
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -397,9 +395,8 @@ export default function VPMHistoryPage() {
                     <span className="border-2 border-[#D32F2F] text-[#D32F2F] px-3 py-0.5 rounded-full text-[9px] font-black tracking-widest uppercase">
                       {rec.category}
                     </span>
-                    <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${
-                      rec.status === "Nominal" ? "bg-green-600" : rec.status === "Warning" ? "bg-black" : "bg-[#D32F2F]"
-                    }`}>
+                    <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${rec.status === "Nominal" ? "bg-green-600" : rec.status === "Warning" ? "bg-black" : "bg-[#D32F2F]"
+                      }`}>
                       {rec.status}
                     </span>
                   </div>
@@ -440,9 +437,8 @@ export default function VPMHistoryPage() {
       )}
 
       <aside
-        className={`fixed top-0 right-0 h-screen w-full max-w-lg bg-white border-l-2 border-[#1A1A1A] z-[70] transition-transform duration-300 flex flex-col ${
-          isDrawerOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-screen w-full max-w-lg bg-white border-l-2 border-[#1A1A1A] z-[70] transition-transform duration-300 flex flex-col ${isDrawerOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         {selectedRecord && (
           <>
@@ -468,9 +464,8 @@ export default function VPMHistoryPage() {
               <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 border border-black/10 rounded-xl">
                 <div>
                   <p className="text-[9px] uppercase font-bold text-gray-400">Telemetry Status</p>
-                  <span className={`mt-1 inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase text-white ${
-                    selectedRecord.status === "Nominal" ? "bg-green-600" : "bg-[#D32F2F]"
-                  }`}>
+                  <span className={`mt-1 inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase text-white ${selectedRecord.status === "Nominal" ? "bg-green-600" : "bg-[#D32F2F]"
+                    }`}>
                     {selectedRecord.status}
                   </span>
                 </div>
@@ -520,7 +515,7 @@ export default function VPMHistoryPage() {
                   <div className="grid grid-cols-2 gap-4">
                     {selectedRecord.photos.map((photo, i) => (
                       <div key={i} className="aspect-video border-2 border-black rounded-xl overflow-hidden bg-gray-100">
-                        <img src={photo} alt={`Inspection Photo ${i+1}`} className="w-full h-full object-cover" />
+                        <img src={photo} alt={`Inspection Photo ${i + 1}`} className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>
@@ -563,9 +558,8 @@ export default function VPMHistoryPage() {
       <div className="fixed top-10 right-10 z-[100] flex flex-col gap-3 pointer-events-none">
         {toasts.map((t) => (
           <div key={t.id} className="pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-[20px] border-2 border-black bg-white text-black animate-in fade-in slide-in-from-top-4 duration-300">
-            <span className={`material-symbols-outlined ${
-              t.type === "success" ? "text-green-600" : t.type === "error" ? "text-[#D32F2F]" : "text-blue-500"
-            }`}>
+            <span className={`material-symbols-outlined ${t.type === "success" ? "text-green-600" : t.type === "error" ? "text-[#D32F2F]" : "text-blue-500"
+              }`}>
               {t.type === "success" ? "check_circle" : t.type === "error" ? "error" : "info"}
             </span>
             <span className="font-label-md text-xs uppercase font-bold">{t.message}</span>

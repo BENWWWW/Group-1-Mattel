@@ -112,7 +112,7 @@ export default function ReportsPage() {
 
       // Transform reports
       const list: AuditReportItem[] = (reportsData || []).map((r: any) => ({
-        id: r.pm_tasks?.task_code || `TK-${r.id.substring(0,4).toUpperCase()}`,
+        id: r.pm_tasks?.task_code || `TK-${r.id.substring(0, 4).toUpperCase()}`,
         title: r.findings ? (r.findings.substring(0, 40) + "...") : "PM Maintenance Report",
         asset: r.pm_tasks?.assets?.name || "Equipment Asset",
         tech: r.pm_tasks?.vendor?.full_name || "Technician Partner",
@@ -130,7 +130,7 @@ export default function ReportsPage() {
       const total = list.length;
       const approved = list.filter(r => r.status === "Approved").length;
       const rejected = list.filter(r => r.status === "Rejected").length;
-      
+
       const completionRate = total > 0 ? ((approved / total) * 100).toFixed(1) + "%" : "100%";
       const rejectionRate = total > 0 ? ((rejected / total) * 100).toFixed(1) + "%" : "0%";
 
@@ -172,7 +172,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDownload = (report: AuditReportItem) => {
@@ -199,16 +199,16 @@ export default function ReportsPage() {
   };
 
   const filteredReports = reports.filter((rep) => {
-    const matchesSearch = 
+    const matchesSearch =
       rep.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       rep.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       rep.tech.toLowerCase().includes(searchQuery.toLowerCase()) ||
       rep.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       rep.asset.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
     const matchesCategory = categoryFilter === "All" || rep.category.toUpperCase() === categoryFilter.toUpperCase();
     const matchesStatus = statusFilter === "All" || rep.status === statusFilter;
-    
+
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -262,7 +262,7 @@ export default function ReportsPage() {
           </button>
 
           <button
-            onClick={() => {}}
+            onClick={() => { }}
             className="bg-[#D32F2F] text-white w-full px-4 py-3 flex items-center gap-4 text-left font-label-md text-sm uppercase tracking-wider rounded-lg transition-colors cursor-pointer border-none"
           >
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -326,7 +326,7 @@ export default function ReportsPage() {
       {/* Main Content */}
       <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
         <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-12">
-          
+
           {/* Key Metrics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col justify-between">
@@ -388,7 +388,7 @@ export default function ReportsPage() {
               <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Distribution Category</h3>
               <p className="text-xs text-gray-500 font-medium">Audit distribution based on machine category</p>
             </div>
-            
+
             <div className="space-y-4">
               {/* Mechanical */}
               <div className="space-y-1">
@@ -396,52 +396,49 @@ export default function ReportsPage() {
                   <span>Mechanical</span>
                   <span>{categoryDist.Mechanical || 0}%</span>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
-                  <div className="bg-[#D32F2F] h-full" style={{ width: `${categoryDist.Mechanical || 0}%` }}></div>
-                </div>
-              </div>
 
-              {/* Electrical */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-bold">
-                  <span>Electrical</span>
-                  <span>{categoryDist.Electrical || 0}%</span>
+                {/* Electrical */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span>Electrical</span>
+                    <span>{categoryDist.Electrical || 0}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                    <div className="bg-[#1A1A1A] h-full" style={{ width: `${categoryDist.Electrical || 0}%` }}></div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
-                  <div className="bg-[#1A1A1A] h-full" style={{ width: `${categoryDist.Electrical || 0}%` }}></div>
-                </div>
-              </div>
 
-              {/* HVAC */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-bold">
-                  <span>HVAC</span>
-                  <span>{categoryDist.HVAC || 0}%</span>
+                {/* HVAC */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span>HVAC</span>
+                    <span>{categoryDist.HVAC || 0}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                    <div className="bg-orange-500 h-full" style={{ width: `${categoryDist.HVAC || 0}%` }}></div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
-                  <div className="bg-orange-500 h-full" style={{ width: `${categoryDist.HVAC || 0}%` }}></div>
-                </div>
-              </div>
 
-              {/* Safety */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-bold">
-                  <span>Safety</span>
-                  <span>{categoryDist.Safety || 0}%</span>
+                {/* Safety */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span>Safety</span>
+                    <span>{categoryDist.Safety || 0}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                    <div className="bg-green-600 h-full" style={{ width: `${categoryDist.Safety || 0}%` }}></div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
-                  <div className="bg-green-600 h-full" style={{ width: `${categoryDist.Safety || 0}%` }}></div>
-                </div>
-              </div>
 
-              {/* Facilities */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-bold">
-                  <span>Facilities</span>
-                  <span>{categoryDist.Facilities || 0}%</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
-                  <div className="bg-blue-600 h-full" style={{ width: `${categoryDist.Facilities || 0}%` }}></div>
+                {/* Facilities */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span>Facilities</span>
+                    <span>{categoryDist.Facilities || 0}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                    <div className="bg-blue-600 h-full" style={{ width: `${categoryDist.Facilities || 0}%` }}></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -454,7 +451,7 @@ export default function ReportsPage() {
                 <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Audit History Ledger</h3>
                 <p className="text-xs text-gray-500 font-medium">History log of all approved / rejected reports</p>
               </div>
-              
+
               <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto">
                 {/* Search */}
                 <input
@@ -516,11 +513,10 @@ export default function ReportsPage() {
                       <td className="py-4 px-4 font-extrabold text-[#1A1A1A]">{report.vendorName}</td>
                       <td className="py-4 px-4 font-bold text-gray-500">{report.date}</td>
                       <td className="py-4 px-4">
-                        <span className={`px-2.5 py-1 rounded-full font-bold text-[9px] uppercase tracking-wider ${
-                          report.status === "Approved" 
-                            ? "bg-green-100 text-green-700 border border-green-600/20" 
+                        <span className={`px-2.5 py-1 rounded-full font-bold text-[9px] uppercase tracking-wider ${report.status === "Approved"
+                            ? "bg-green-100 text-green-700 border border-green-600/20"
                             : "bg-red-100 text-red-700 border border-red-600/20"
-                        }`}>
+                          }`}>
                           {report.status}
                         </span>
                       </td>
@@ -572,9 +568,8 @@ export default function ReportsPage() {
           <div className="relative bg-white border-2 border-[#1A1A1A] w-full max-w-lg p-8 rounded-[20px] space-y-6 z-10 animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-start">
               <div>
-                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border-2 border-[#1A1A1A] uppercase ${
-                  viewTargetReport.status === "Approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                }`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border-2 border-[#1A1A1A] uppercase ${viewTargetReport.status === "Approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                  }`}>
                   {viewTargetReport.status}
                 </span>
                 <h3 className="font-headline-lg text-xl font-extrabold mt-2 text-[#1A1A1A]">

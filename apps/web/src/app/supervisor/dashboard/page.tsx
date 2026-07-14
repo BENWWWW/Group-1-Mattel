@@ -247,7 +247,7 @@ export default function ReviewQueuePage() {
       <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN.AI</h1>
-          <p className="text-[10px] text-white opacity-60 uppercase font-bold tracking-widest">Industrial Precision</p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           <button
@@ -485,8 +485,8 @@ export default function ReviewQueuePage() {
       {/* Vendor Detail Modal Popup */}
       {selectedVendorDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setSelectedVendorDetail(null)}
           ></div>
           <div className="relative bg-white border-4 border-[#1A1A1A] p-8 rounded-[24px] max-w-sm w-full z-10 flex flex-col gap-6 text-left shadow-[8px_8px_0px_0px_rgba(0,0,0,0.15)] animate-in zoom-in-95 duration-200">
@@ -495,8 +495,8 @@ export default function ReviewQueuePage() {
                 <span className="material-symbols-outlined text-[#D32F2F] text-2xl">badge</span>
                 <h3 className="font-headline-md text-base uppercase font-black tracking-tight">Vendor Profile</h3>
               </div>
-              <button 
-                onClick={() => setSelectedVendorDetail(null)} 
+              <button
+                onClick={() => setSelectedVendorDetail(null)}
                 className="w-8 h-8 flex items-center justify-center border-2 border-[#1A1A1A] rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer bg-white"
               >
                 <span className="material-symbols-outlined text-sm">close</span>

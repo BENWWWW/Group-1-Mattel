@@ -72,7 +72,7 @@ export default function AdminLayout({
       <aside className="admin-sidebar hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white shrink-0 border-r-2 border-[#1A1A1A]">
         <div className="px-6 mb-10">
           <h1 className="font-headline-md text-2xl font-extrabold text-white tracking-tighter">MAINTAIN.AI</h1>
-          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">Industrial Precision</p>
+          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           {navItems.map((item) => {
@@ -81,11 +81,10 @@ export default function AdminLayout({
               <button
                 key={item.path}
                 onClick={() => router.push(item.path)}
-                className={`w-full px-4 py-3 flex items-center gap-4 text-left font-label-md text-sm uppercase tracking-wider rounded-lg border-none cursor-pointer transition-all duration-300 ease-in-out ${
-                  isActive
+                className={`w-full px-4 py-3 flex items-center gap-4 text-left font-label-md text-sm uppercase tracking-wider rounded-lg border-none cursor-pointer transition-all duration-300 ease-in-out ${isActive
                     ? "bg-[#D32F2F] text-white shadow-md font-bold"
                     : "text-white/70 hover:bg-white/10 bg-transparent hover:text-white"
-                }`}
+                  }`}
               >
                 <span
                   className="material-symbols-outlined transition-all duration-300"
@@ -141,8 +140,8 @@ export default function AdminLayout({
         {/* Each item gets equal width via flex-1 so active state never shifts siblings */}
         {[
           { name: "Dashboard", path: "/admin/dashboard", icon: "dashboard" },
-          { name: "Tasks",     path: "/admin/tasks",     icon: "assignment" },
-          { name: "Assets",    path: "/admin/assets",    icon: "inventory_2" },
+          { name: "Tasks", path: "/admin/tasks", icon: "assignment" },
+          { name: "Assets", path: "/admin/assets", icon: "inventory_2" },
         ].map((item) => {
           const isActive = pathname === item.path || (item.path !== "/admin/dashboard" && pathname.startsWith(item.path + "/"));
           return (
@@ -152,11 +151,10 @@ export default function AdminLayout({
                 className="w-full h-full flex flex-col items-center justify-center border-none bg-transparent cursor-pointer text-[#1A1A1A]"
               >
                 <div
-                  className={`flex flex-col items-center justify-center gap-0.5 w-16 py-2 rounded-2xl transition-all duration-200 ${
-                    isActive
+                  className={`flex flex-col items-center justify-center gap-0.5 w-16 py-2 rounded-2xl transition-all duration-200 ${isActive
                       ? "bg-[#D32F2F] text-white shadow-md"
                       : "opacity-50 hover:opacity-80"
-                  }`}
+                    }`}
                 >
                   <span
                     className="material-symbols-outlined text-[22px] leading-none"
@@ -178,11 +176,10 @@ export default function AdminLayout({
             className="w-full h-full flex flex-col items-center justify-center border-none bg-transparent cursor-pointer text-[#1A1A1A]"
           >
             <div
-              className={`flex flex-col items-center justify-center gap-0.5 w-16 py-2 rounded-2xl transition-all duration-200 ${
-                isMoreOpen
+              className={`flex flex-col items-center justify-center gap-0.5 w-16 py-2 rounded-2xl transition-all duration-200 ${isMoreOpen
                   ? "bg-[#D32F2F] text-white shadow-md"
                   : "opacity-50 hover:opacity-80"
-              }`}
+                }`}
             >
               <span
                 className="material-symbols-outlined text-[22px] leading-none"
@@ -206,9 +203,8 @@ export default function AdminLayout({
 
       {/* More Options — bottom sheet drawer */}
       <div
-        className={`fixed bottom-20 left-0 right-0 bg-[#1A1A1A] border-t-4 border-[#D32F2F] rounded-t-[24px] z-[70] lg:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.4)] transition-all duration-300 ease-out ${
-          isMoreOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed bottom-20 left-0 right-0 bg-[#1A1A1A] border-t-4 border-[#D32F2F] rounded-t-[24px] z-[70] lg:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.4)] transition-all duration-300 ease-out ${isMoreOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
         style={{ transform: isMoreOpen ? "translateY(0)" : "translateY(calc(100% + 80px))" }}
       >
         {/* Handle bar */}
@@ -234,21 +230,20 @@ export default function AdminLayout({
           {/* Nav grid */}
           <div className="grid grid-cols-3 gap-3 mb-4">
             {[
-              { label: "Users",    path: "/admin/users",    icon: "group" },
-              { label: "PM Setup", path: "/admin/pm",       icon: "settings_suggest" },
-              { label: "Reports",  path: "/admin/reports",  icon: "assessment" },
-              { label: "Profile",  path: "/admin/profile",  icon: "account_circle" },
+              { label: "Users", path: "/admin/users", icon: "group" },
+              { label: "PM Setup", path: "/admin/pm", icon: "settings_suggest" },
+              { label: "Reports", path: "/admin/reports", icon: "assessment" },
+              { label: "Profile", path: "/admin/profile", icon: "account_circle" },
             ].map(({ label, path, icon }) => {
               const isActive = pathname === path || pathname.startsWith(path + "/");
               return (
                 <button
                   key={path}
                   onClick={() => { router.push(path); setIsMoreOpen(false); }}
-                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 font-bold text-[10px] uppercase tracking-wide cursor-pointer transition-all ${
-                    isActive
+                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 font-bold text-[10px] uppercase tracking-wide cursor-pointer transition-all ${isActive
                       ? "bg-[#D32F2F] border-[#D32F2F] text-white"
                       : "bg-white/5 border-white/10 text-white hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   <span className="material-symbols-outlined text-[24px]"
                     style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0", color: isActive ? "white" : "#D32F2F" }}
