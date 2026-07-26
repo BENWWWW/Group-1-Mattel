@@ -5,6 +5,15 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import AssetLookupModal from "@/components/AssetLookupModal";
 
+interface Subtask {
+  id: string;
+  text: string;
+  completed?: boolean;
+  image?: string;
+  video?: string;
+  mediaType?: "photo" | "video" | "both";
+}
+
 interface ChecklistItem {
   id: string;
   title: string;
@@ -16,6 +25,8 @@ interface ChecklistItem {
   notes?: string;
   type?: "optional" | "required" | "urgent";
   requireImage?: boolean;
+  mediaType?: "photo" | "video" | "both";
+  subtasks?: Subtask[];
   aiConfidence?: number;
   aiPredictedClass?: string;
 }
@@ -89,6 +100,119 @@ export default function PMChecklistPage() {
 
   // Evidence Upload Modal State
   const [uploadTargetId, setUploadTargetId] = useState<string | null>(null);
+
+  // Custom Professional Modal States (Replacing native browser prompts)
+  const [addSubtaskModal, setAddSubtaskModal] = useState<{ isOpen: boolean; itemId: string | null }>({ isOpen: false, itemId: null });
+  const [subtaskInputText, setSubtaskInputText] = useState("");
+  const [subtaskMediaType, setSubtaskMediaType] = useState<"photo" | "video" | "both">("photo");
+
+  const [addExtraItemModalOpen, setAddExtraItemModalOpen] = useState(false);
+  const [extraItemTitleInput, setExtraItemTitleInput] = useState("");
+  const [extraItemDescInput, setExtraItemDescInput] = useState("");
+  const [extraItemMediaTypeInput, setExtraItemMediaTypeInput] = useState<"photo" | "video" | "both">("photo");
+
+  const handleToggleSubtask = async (itemId: string, subtaskId: string) => {
+    if (!selectedTask || isLocked) return;
+    const updatedChecklist = selectedTask.checklist.map((c) => {
+      if (c.id !== itemId) return c;
+      const updatedSubtasks = (c.subtasks || []).map((sub) =>
+        sub.id === subtaskId ? { ...sub, completed: !sub.completed } : sub
+      );
+      return { ...c, subtasks: updatedSubtasks };
+    });
+
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t))
+    );
+    await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
+  };
+
+  const handleAddSubtaskToItem = async (itemId: string, text: string, mediaType: "photo" | "video" | "both" = "photo") => {
+    if (!selectedTask || isLocked || !text.trim()) return;
+    const updatedChecklist = selectedTask.checklist.map((c) => {
+      if (c.id !== itemId) return c;
+      const currentSubs = c.subtasks || [];
+      const newSub: Subtask = {
+        id: `sub-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        text: text.trim().toUpperCase(),
+        completed: false,
+        mediaType: mediaType,
+      };
+      return { ...c, subtasks: [...currentSubs, newSub] };
+    });
+
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t))
+    );
+    await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
+  };
+
+  const handleAddMainTaskItem = async () => {
+    if (!selectedTask || isLocked) return;
+    setAddExtraItemModalOpen(true);
+    setExtraItemTitleInput("");
+    setExtraItemDescInput("");
+  };
+
+  const handleRemoveSubtaskEvidence = async (itemId: string, subtaskId: string, mediaKind: "photo" | "video" = "photo") => {
+    if (!selectedTask || isLocked) return;
+    const updatedChecklist = selectedTask.checklist.map((item) => {
+      if (item.id !== itemId) return item;
+      const updatedSubtasks = (item.subtasks || []).map((sub) => {
+        if (sub.id !== subtaskId) return sub;
+        const newSub = { ...sub };
+        if (mediaKind === "photo") {
+          newSub.image = undefined;
+        } else {
+          newSub.video = undefined;
+        }
+        newSub.completed = false;
+        return newSub;
+      });
+      return { ...item, subtasks: updatedSubtasks };
+    });
+
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t))
+    );
+    await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
+    triggerToast("Subtask evidence removed.", "info");
+  };
+
+  const handleConfirmAddSubtask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (addSubtaskModal.itemId && subtaskInputText.trim()) {
+      handleAddSubtaskToItem(addSubtaskModal.itemId, subtaskInputText, subtaskMediaType);
+      setAddSubtaskModal({ isOpen: false, itemId: null });
+      setSubtaskInputText("");
+    }
+  };
+
+  const handleConfirmAddMainTaskItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTask || isLocked || !extraItemTitleInput.trim()) return;
+
+    const newItem: ChecklistItem = {
+      id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      title: extraItemTitleInput.trim().toUpperCase(),
+      description: extraItemDescInput.trim() || "Vendor added custom task item.",
+      status: "Awaiting",
+      type: "optional",
+      requireImage: true,
+      mediaType: extraItemMediaTypeInput,
+      subtasks: []
+    };
+
+    const updatedChecklist = [...selectedTask.checklist, newItem];
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t))
+    );
+    saveChecklistToDatabase(selectedTask.id, updatedChecklist);
+    triggerToast("New task item added to checklist!", "success");
+    setAddExtraItemModalOpen(false);
+    setExtraItemTitleInput("");
+    setExtraItemDescInput("");
+  };
 
   // Toast Helper
   const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
@@ -165,7 +289,9 @@ export default function PMChecklistPage() {
             errorMessage: c.errorMessage || undefined,
             notes: c.notes || undefined,
             type: c.type || "optional",
-            requireImage: c.requireImage !== undefined ? c.requireImage : false
+            requireImage: c.requireImage !== undefined ? c.requireImage : false,
+            mediaType: c.mediaType || "photo",
+            subtasks: Array.isArray(c.subtasks) ? c.subtasks : []
           }));
         } else if (t.pm_templates && Array.isArray(t.pm_templates.checklist_items) && t.pm_templates.checklist_items.length > 0) {
           checklistMapped = t.pm_templates.checklist_items.map((c: any, index: number) => ({
@@ -178,7 +304,9 @@ export default function PMChecklistPage() {
             errorMessage: c.errorMessage || undefined,
             notes: c.notes || undefined,
             type: c.type || "optional",
-            requireImage: c.requireImage !== undefined ? c.requireImage : false
+            requireImage: c.requireImage !== undefined ? c.requireImage : false,
+            mediaType: c.mediaType || "photo",
+            subtasks: Array.isArray(c.subtasks) ? c.subtasks : []
           }));
         } else {
           // Fallback checklist default items if database is empty
@@ -549,7 +677,49 @@ export default function PMChecklistPage() {
 
         const { data: { publicUrl } } = supabase.storage.from("pm_evidence").getPublicUrl(filePath);
 
-        const itemId = uploadTargetId;
+        const itemIdStr = uploadTargetId;
+
+        // Subtask evidence upload check
+        if (itemIdStr.includes(":::")) {
+          const parts = itemIdStr.split(":::");
+          const parentItemId = parts[0];
+          const subtaskId = parts[1];
+          const mediaKind = parts[2] || "photo";
+
+          const updatedChecklist = selectedTask.checklist.map((item) => {
+            if (item.id !== parentItemId) return item;
+            const updatedSubtasks = (item.subtasks || []).map((sub) => {
+              if (sub.id !== subtaskId) return sub;
+              const req = sub.mediaType || item.mediaType || "photo";
+              const newSub = { ...sub };
+              if (mediaKind === "video" || (req === "video" && !mediaKind)) {
+                newSub.video = publicUrl;
+                if (!newSub.image) newSub.image = publicUrl;
+              } else {
+                newSub.image = publicUrl;
+              }
+
+              if (req === "both") {
+                newSub.completed = !!(newSub.image && newSub.video);
+              } else {
+                newSub.completed = true;
+              }
+              return newSub;
+            });
+            return { ...item, subtasks: updatedSubtasks };
+          });
+
+          setTasks((prevTasks) =>
+            prevTasks.map((t) => (t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t))
+          );
+
+          await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
+          triggerToast(`Subtask ${mediaKind.toUpperCase()} evidence uploaded successfully!`, "success");
+          setUploadTargetId(null);
+          return;
+        }
+
+        const itemId = itemIdStr;
         const updatedChecklist = selectedTask.checklist.map((item) =>
           item.id === itemId
             ? {
@@ -920,13 +1090,13 @@ export default function PMChecklistPage() {
                           <button
                             onClick={() => !isLocked && handleOpenUpload(item.id)}
                             disabled={isLocked}
-                            className={`w-28 h-28 rounded-[16px] border-2 border-dashed border-gray-400 bg-gray-50 flex flex-col items-center justify-center gap-2 transition-colors ${isLocked ? "cursor-not-allowed opacity-50" : "hover:bg-gray-100 hover:border-[#1A1A1A] cursor-pointer group"
+                            className={`w-28 h-28 rounded-[16px] border-2 border-dashed border-gray-400 bg-gray-50 flex flex-col items-center justify-center gap-1.5 transition-colors p-2 text-center ${isLocked ? "cursor-not-allowed opacity-50" : "hover:bg-gray-100 hover:border-[#1A1A1A] cursor-pointer group"
                               }`}
                           >
                             <span className="material-symbols-outlined text-3xl text-gray-400 transition-transform group-hover:scale-110">
-                              add_a_photo
+                              photo_camera
                             </span>
-                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-tight">Add Photo</span>
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-tight leading-tight">FULL MACHINE PHOTO</span>
                           </button>
                         )}
                       </div>
@@ -950,12 +1120,161 @@ export default function PMChecklistPage() {
                         {isAwaiting && !isLocked && (
                           <button
                             onClick={() => handleOpenUpload(item.id)}
-                            className="w-fit border-2 border-black rounded-full px-4 py-1 font-bold text-[9px] uppercase hover:bg-black hover:text-white transition-all flex items-center gap-1.5 cursor-pointer bg-transparent mt-1"
+                            className="w-fit border-2 border-black rounded-full px-4 py-1.5 font-black text-[9px] uppercase hover:bg-black hover:text-white transition-all flex items-center gap-1.5 cursor-pointer bg-white text-black shadow-sm mt-1"
+                            title="Capture overall photo of the machine / component being inspected"
                           >
-                            Capture Evidence
-                            <span className="material-symbols-outlined text-[12px]">photo_camera</span>
+                            <span>CAPTURE FULL MACHINE</span>
+                            <span className="material-symbols-outlined text-[13px]">photo_camera</span>
                           </button>
                         )}
+                        {/* Subtasks Checklist Section */}
+                        <div className="mt-3 p-3 bg-gray-50 border-2 border-gray-200 rounded-xl space-y-3">
+                          <div className="flex justify-between items-center pb-2 border-b border-gray-200">
+                            <span className="text-[10px] font-black uppercase text-gray-600 tracking-wider flex items-center gap-1">
+                              <span className="material-symbols-outlined text-xs">account_tree</span>
+                              Subtasks ({item.subtasks?.filter((s) => s.completed || s.image || s.video).length || 0}/{item.subtasks?.length || 0})
+                            </span>
+                            {!isLocked && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAddSubtaskModal({ isOpen: true, itemId: item.id });
+                                  setSubtaskInputText("");
+                                  setSubtaskMediaType(item.mediaType || "photo");
+                                }}
+                                className="text-[10px] font-black uppercase text-[#D32F2F] hover:bg-[#D32F2F]/10 px-2 py-1 rounded transition-colors flex items-center gap-1 cursor-pointer"
+                              >
+                                <span className="material-symbols-outlined text-sm">add</span>
+                                <span>ADD SUBTASK</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {(!item.subtasks || item.subtasks.length === 0) ? (
+                            <p className="text-[10px] text-gray-400 font-bold italic py-1">No subtasks. Click "+ ADD SUBTASK" to add specific sub-steps.</p>
+                          ) : (
+                            <div className="space-y-3">
+                              {item.subtasks.map((sub) => {
+                                const reqType = sub.mediaType || item.mediaType || "photo";
+
+                                return (
+                                  <div key={sub.id} className="p-3 bg-white border border-gray-200 rounded-lg flex flex-col gap-2 shadow-sm">
+                                    {/* Subtask Header & Requirement Badge */}
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <label className="flex items-center gap-2 cursor-pointer group select-none flex-1 min-w-[140px]">
+                                        <input
+                                          type="checkbox"
+                                          disabled={isLocked}
+                                          checked={!!sub.completed}
+                                          onChange={() => handleToggleSubtask(item.id, sub.id)}
+                                          className="w-4 h-4 accent-[#D32F2F] rounded cursor-pointer shrink-0"
+                                        />
+                                        <span className={`text-xs font-black uppercase truncate transition-all ${sub.completed ? "line-through text-gray-400" : "text-black"}`}>
+                                          {sub.text}
+                                        </span>
+                                      </label>
+
+                                      {/* Clear Requirement Badge */}
+                                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded tracking-wide border shrink-0 ${
+                                        reqType === "photo"
+                                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                                          : reqType === "video"
+                                          ? "bg-purple-50 text-purple-700 border-purple-200"
+                                          : "bg-red-50 text-red-700 border-red-200"
+                                      }`}>
+                                        {reqType === "photo" && "📷 PHOTO ONLY"}
+                                        {reqType === "video" && "🎥 VIDEO ONLY"}
+                                        {reqType === "both" && "📷+🎥 PHOTO & VIDEO REQUIRED"}
+                                      </span>
+                                    </div>
+
+                                    {/* Action Buttons based on requirement */}
+                                    {!isLocked && (
+                                      <div className="flex flex-wrap gap-2 pt-1">
+                                        {(reqType === "photo" || reqType === "both") && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleOpenUpload(`${item.id}:::${sub.id}:::photo`)}
+                                            className={`text-[9px] font-extrabold uppercase border rounded-lg px-2.5 py-1.5 transition-all flex items-center gap-1.5 cursor-pointer ${
+                                              sub.image
+                                                ? "bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
+                                                : "bg-white text-black border-black hover:bg-black hover:text-white"
+                                            }`}
+                                            title="Upload photo evidence"
+                                          >
+                                            <span className="material-symbols-outlined text-[13px]">photo_camera</span>
+                                            <span>{sub.image ? "CHANGE PHOTO" : "UPLOAD PHOTO"}</span>
+                                          </button>
+                                        )}
+
+                                        {(reqType === "video" || reqType === "both") && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleOpenUpload(`${item.id}:::${sub.id}:::video`)}
+                                            className={`text-[9px] font-extrabold uppercase border rounded-lg px-2.5 py-1.5 transition-all flex items-center gap-1.5 cursor-pointer ${
+                                              sub.video
+                                                ? "bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100"
+                                                : "bg-white text-black border-black hover:bg-black hover:text-white"
+                                            }`}
+                                            title="Upload video evidence"
+                                          >
+                                            <span className="material-symbols-outlined text-[13px]">videocam</span>
+                                            <span>{sub.video ? "CHANGE VIDEO" : "UPLOAD VIDEO"}</span>
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {/* Evidence Previews */}
+                                    {(sub.image || sub.video) && (
+                                      <div className="flex flex-wrap gap-3 mt-1 pt-2 border-t border-gray-100">
+                                        {/* Photo Evidence Preview */}
+                                        {sub.image && (
+                                          <div className="flex flex-col gap-1">
+                                            <span className="text-[8px] font-black text-gray-500 uppercase">📷 Photo Evidence</span>
+                                            <div className="relative w-24 h-24 rounded-lg border-2 border-black overflow-hidden group shrink-0">
+                                              <img src={sub.image} alt={sub.text} className="w-full h-full object-cover" />
+                                              {!isLocked && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleRemoveSubtaskEvidence(item.id, sub.id, "photo")}
+                                                  className="absolute top-1 right-1 bg-[#D32F2F] text-white p-1 rounded-full hover:bg-black transition-all cursor-pointer opacity-90 group-hover:opacity-100 flex items-center justify-center shadow-md"
+                                                  title="Remove photo evidence"
+                                                >
+                                                  <span className="material-symbols-outlined text-xs">close</span>
+                                                </button>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Video Evidence Preview */}
+                                        {sub.video && (
+                                          <div className="flex flex-col gap-1">
+                                            <span className="text-[8px] font-black text-purple-700 uppercase">🎥 Video Evidence</span>
+                                            <div className="relative w-28 h-24 rounded-lg border-2 border-purple-900 overflow-hidden group shrink-0 bg-black">
+                                              <video src={sub.video} controls className="w-full h-full object-cover" />
+                                              {!isLocked && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleRemoveSubtaskEvidence(item.id, sub.id, "video")}
+                                                  className="absolute top-1 right-1 bg-[#D32F2F] text-white p-1 rounded-full hover:bg-black transition-all cursor-pointer opacity-90 group-hover:opacity-100 flex items-center justify-center z-10 shadow-md"
+                                                  title="Remove video evidence"
+                                                >
+                                                  <span className="material-symbols-outlined text-xs">close</span>
+                                                </button>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -991,6 +1310,18 @@ export default function PMChecklistPage() {
                 );
               })}
             </div>
+
+            {/* Add Custom Task Item Button */}
+            {!isLocked && (
+              <button
+                type="button"
+                onClick={handleAddMainTaskItem}
+                className="w-full py-4 border-2 border-dashed border-black hover:bg-gray-100 rounded-[20px] bg-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all text-black my-2 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-lg text-[#D32F2F]">add_circle</span>
+                <span>+ Add Extra Task Item To Checklist</span>
+              </button>
+            )}
             {/* Bottom Notes & Submission Panel */}
             <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 flex flex-col gap-6">
               {selectedTask.dbStatus === "submitted" ? (
@@ -1467,6 +1798,147 @@ export default function PMChecklistPage() {
           </div>
         ))}
       </div>
+
+      {/* Custom Professional Add Subtask Modal Dialog */}
+      {addSubtaskModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAddSubtaskModal({ isOpen: false, itemId: null })}></div>
+          <div className="relative bg-white border-4 border-black p-8 rounded-[24px] max-w-md w-full z-10 flex flex-col gap-6 text-left shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <header className="flex justify-between items-center pb-4 border-b-2 border-black">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#D32F2F] text-xl font-bold">add_circle</span>
+                <h3 className="font-headline-md text-base uppercase font-black tracking-tight">Add New Subtask</h3>
+              </div>
+              <button
+                onClick={() => setAddSubtaskModal({ isOpen: false, itemId: null })}
+                className="w-8 h-8 flex items-center justify-center border-2 border-black rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer bg-white"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </header>
+
+            <form onSubmit={handleConfirmAddSubtask} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider block mb-2 opacity-70">Subtask Detail / Requirement *</label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={subtaskInputText}
+                  onChange={(e) => setSubtaskInputText(e.target.value)}
+                  placeholder="E.G. CHECK PRESSURE GAUGE CALIBRATION"
+                  className="w-full h-12 px-4 rounded-xl border-2 border-black font-bold uppercase text-xs outline-none focus:border-[#D32F2F]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider block mb-2 opacity-70">Media Requirement *</label>
+                <select
+                  value={subtaskMediaType}
+                  onChange={(e) => setSubtaskMediaType(e.target.value as any)}
+                  className="w-full h-12 px-3 rounded-xl border-2 border-black font-bold uppercase text-xs outline-none bg-white cursor-pointer"
+                >
+                  <option value="photo">📷 PHOTO ONLY</option>
+                  <option value="video">🎥 VIDEO ONLY</option>
+                  <option value="both">📷+🎥 PHOTO & VIDEO REQUIRED</option>
+                </select>
+              </div>
+
+              <div className="pt-4 border-t-2 border-black flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAddSubtaskModal({ isOpen: false, itemId: null })}
+                  className="px-5 py-2.5 rounded-xl border-2 border-black bg-white font-black text-xs uppercase tracking-wider hover:bg-gray-100 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl border-2 border-black bg-[#D32F2F] text-white font-black text-xs uppercase tracking-wider hover:bg-black transition-all cursor-pointer"
+                >
+                  Add Subtask
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Professional Add Extra Task Item Modal Dialog */}
+      {addExtraItemModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAddExtraItemModalOpen(false)}></div>
+          <div className="relative bg-white border-4 border-black p-8 rounded-[24px] max-w-lg w-full z-10 flex flex-col gap-6 text-left shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <header className="flex justify-between items-center pb-4 border-b-2 border-black">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#D32F2F] text-xl font-bold">post_add</span>
+                <h3 className="font-headline-md text-base uppercase font-black tracking-tight">Add Extra Task Item</h3>
+              </div>
+              <button
+                onClick={() => setAddExtraItemModalOpen(false)}
+                className="w-8 h-8 flex items-center justify-center border-2 border-black rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer bg-white"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </header>
+
+            <form onSubmit={handleConfirmAddMainTaskItem} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">Task Title / Inspection Area *</label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={extraItemTitleInput}
+                  onChange={(e) => setExtraItemTitleInput(e.target.value)}
+                  placeholder="E.G. AUXILIARY VALVE CHECK"
+                  className="w-full h-12 px-4 rounded-xl border-2 border-black font-bold uppercase text-xs outline-none focus:border-[#D32F2F]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">Description / Instructions</label>
+                <textarea
+                  value={extraItemDescInput}
+                  onChange={(e) => setExtraItemDescInput(e.target.value)}
+                  placeholder="Additional inspection instructions..."
+                  rows={2}
+                  className="w-full p-3 rounded-xl border-2 border-black font-bold text-xs outline-none focus:border-[#D32F2F] resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">Media Requirement</label>
+                <select
+                  value={extraItemMediaTypeInput}
+                  onChange={(e) => setExtraItemMediaTypeInput(e.target.value as any)}
+                  className="w-full h-12 px-3 rounded-xl border-2 border-black font-bold uppercase text-xs outline-none bg-white cursor-pointer"
+                >
+                  <option value="photo">PHOTO REQUIRED</option>
+                  <option value="video">VIDEO REQUIRED</option>
+                  <option value="both">PHOTO & VIDEO REQUIRED</option>
+                </select>
+              </div>
+
+              <div className="pt-4 border-t-2 border-black flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAddExtraItemModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border-2 border-black bg-white font-black text-xs uppercase tracking-wider hover:bg-gray-100 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl border-2 border-black bg-[#D32F2F] text-white font-black text-xs uppercase tracking-wider hover:bg-black transition-all cursor-pointer"
+                >
+                  Add Task Item
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Asset Lookup Modal */}
       <AssetLookupModal isOpen={isAssetLookupOpen} onClose={() => setIsAssetLookupOpen(false)} />

@@ -12,7 +12,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "MAINTAIN.AI | Secure Login",
+  title: "MAINTAIN | Smart Maintenance Portal",
   description: "Preventive Maintenance Verification System",
 };
 

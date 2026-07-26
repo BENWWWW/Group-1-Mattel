@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-interface TaskItem { id: string; text: string; type: "optional"|"required"|"urgent"; requireImage?: boolean; }
+interface SubtaskItem { id: string; text: string; }
+interface TaskItem { id: string; text: string; type: "optional"|"required"|"urgent"; requireImage?: boolean; mediaType?: "photo"|"video"|"both"; subtasks?: SubtaskItem[]; }
 interface Template {
   id: string;
   title: string;
@@ -94,20 +95,47 @@ export default function PMTemplatesPage() {
     setFormDescription(template.description || "");
     const sanitizedTasks = (template.checklist_items || []).map((t: any) => ({
       ...t,
-      requireImage: t.type === "optional" ? false : true
+      requireImage: t.type === "optional" ? false : true,
+      mediaType: t.mediaType || "photo",
+      subtasks: t.subtasks || []
     }));
     setFormTasks(sanitizedTasks);
   };
 
   const handleAddTask = () => {
-    const newTask: TaskItem = { id: `task-${Date.now()}-${Math.random().toString(36).substr(2,4)}`, text: "", type: "optional", requireImage: false };
+    const newTask: TaskItem = { id: `task-${Date.now()}-${Math.random().toString(36).substr(2,4)}`, text: "", type: "optional", requireImage: false, mediaType: "photo", subtasks: [] };
     setFormTasks([...formTasks, newTask]);
   };
 
   const handleTaskTextChange = (id: string, text: string) => setFormTasks(formTasks.map(t=>t.id===id?{...t,text:text.toUpperCase()}:t));
   const handleTaskTypeChange = (id: string, type: "optional"|"required"|"urgent") => setFormTasks(formTasks.map(t=>t.id===id?{...t,type,requireImage:type==="optional"?false:true}:t));
+  const handleMediaTypeChange = (id: string, mediaType: "photo"|"video"|"both") => setFormTasks(formTasks.map(t=>t.id===id?{...t,mediaType}:t));
   const handleToggleRequireImage = (id: string) => {}; // no-op since it is locked by task type
   const handleRemoveTask = (id: string) => setFormTasks(formTasks.filter(t=>t.id!==id));
+
+  const handleAddSubtask = (taskId: string) => {
+    setFormTasks(formTasks.map(t => {
+      if (t.id !== taskId) return t;
+      const currentSubs = t.subtasks || [];
+      const newSub: SubtaskItem = { id: `sub-${Date.now()}-${Math.random().toString(36).substr(2,4)}`, text: "" };
+      return { ...t, subtasks: [...currentSubs, newSub] };
+    }));
+  };
+
+  const handleSubtaskTextChange = (taskId: string, subtaskId: string, text: string) => {
+    setFormTasks(formTasks.map(t => {
+      if (t.id !== taskId) return t;
+      const updatedSubs = (t.subtasks || []).map(s => s.id === subtaskId ? { ...s, text: text.toUpperCase() } : s);
+      return { ...t, subtasks: updatedSubs };
+    }));
+  };
+
+  const handleRemoveSubtask = (taskId: string, subtaskId: string) => {
+    setFormTasks(formTasks.map(t => {
+      if (t.id !== taskId) return t;
+      return { ...t, subtasks: (t.subtasks || []).filter(s => s.id !== subtaskId) };
+    }));
+  };
 
   const handleActionSubmit = async () => {
     if (!formName.trim() || !formCategory) { triggerToast("Fill in template name & category.","error"); return; }
@@ -328,37 +356,94 @@ export default function PMTemplatesPage() {
                     Add tasks using the button above
                   </div>
                 )}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {formTasks.map(task=>(
                     <div key={task.id} draggable onDragStart={()=>handleDragStart(task.id)} onDragOver={handleDragOver} onDrop={()=>handleDrop(task.id)}
-                      className={`task-row flex flex-col gap-4 p-5 border-2 border-gray-200 rounded bg-white group cursor-move ${draggedTaskId===task.id?"opacity-50":""}`}>
+                      className={`task-row flex flex-col gap-4 p-5 border-2 border-gray-200 rounded-xl bg-white group cursor-move ${draggedTaskId===task.id?"opacity-50":""}`}>
                       <div className="flex items-start gap-4 w-full">
-                        <span className="material-symbols-outlined text-gray-200 shrink-0 select-none pt-1">drag_indicator</span>
-                        <textarea value={task.text} onChange={e=>handleTaskTextChange(task.id,e.target.value)} placeholder="ENTER TASK DESCRIPTION" rows={2}
-                          className="w-full uppercase font-bold text-sm border-none p-0 focus:ring-0 bg-transparent outline-none border-b border-dashed border-gray-200 resize-none" />
+                        <span className="material-symbols-outlined text-gray-300 shrink-0 select-none pt-1">drag_indicator</span>
+                        <div className="flex-1">
+                          <textarea value={task.text} onChange={e=>handleTaskTextChange(task.id,e.target.value)} placeholder="ENTER MAIN TASK DESCRIPTION" rows={2}
+                            className="w-full uppercase font-bold text-sm border-none p-0 focus:ring-0 bg-transparent outline-none border-b border-dashed border-gray-200 resize-none" />
+                        </div>
                       </div>
+
+                      {/* Subtasks Section */}
+                      <div className="ml-8 p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-black uppercase text-gray-500 tracking-wider flex items-center gap-1">
+                            <span className="material-symbols-outlined text-xs">account_tree</span>
+                            Subtasks ({task.subtasks?.length || 0})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleAddSubtask(task.id)}
+                            className="text-[10px] font-extrabold uppercase text-[#D32F2F] hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-xs">add</span>
+                            Add Subtask
+                          </button>
+                        </div>
+                        {(!task.subtasks || task.subtasks.length === 0) ? (
+                          <p className="text-[10px] text-gray-400 font-medium italic">No subtasks added yet.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {task.subtasks.map((sub, idx) => (
+                              <div key={sub.id} className="flex items-center gap-2 bg-white p-2 border border-gray-200 rounded">
+                                <span className="text-[10px] font-bold text-gray-400">{idx + 1}.</span>
+                                <input
+                                  type="text"
+                                  value={sub.text}
+                                  onChange={(e) => handleSubtaskTextChange(task.id, sub.id, e.target.value)}
+                                  placeholder="ENTER SUBTASK DETAIL"
+                                  className="w-full text-xs font-bold uppercase border-none outline-none bg-transparent"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveSubtask(task.id, sub.id)}
+                                  className="text-gray-400 hover:text-red-500 cursor-pointer"
+                                >
+                                  <span className="material-symbols-outlined text-sm">close</span>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                       <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-gray-100">
+                        {/* Task Priority / Requirement */}
                         <div className="flex items-center gap-1 border-2 border-gray-200 rounded p-0.5 bg-gray-50">
                           {(["optional","required","urgent"] as const).map(type=>(
                             <button key={type} type="button" onClick={()=>handleTaskTypeChange(task.id,type)} className={`px-3 py-1.5 rounded font-black text-[9px] uppercase tracking-wider transition-all cursor-pointer ${task.type===type?(type==="urgent"?"bg-[#D32F2F] text-white":type==="required"?"bg-[#1A1A1A] text-white":"bg-white border border-gray-200 text-gray-700"):"text-gray-300 hover:text-gray-600"}`}>{type}</button>
                           ))}
                         </div>
-                        <div className="flex items-center gap-4">
-                          <button
-                            type="button"
-                            disabled={true}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 border-2 rounded font-black text-[9px] uppercase tracking-wider transition-all cursor-not-allowed ${
-                              task.type === "optional"
-                                ? "bg-gray-100 text-gray-400 border-gray-200"
-                                : "bg-[#D32F2F] text-white border-[#D32F2F]"
-                            }`}
-                            title={task.type === "optional" ? "Optional tasks do not require a photo" : "Required/Urgent tasks require a photo"}
-                          >
-                            <span className="material-symbols-outlined text-[14px]">photo_camera</span>
-                            <span>{task.type === "optional" ? "No Photo" : "Photo Req."}</span>
-                          </button>
-                          <button type="button" className="p-1 opacity-50 group-hover:opacity-100 hover:text-red-500 transition-all cursor-pointer" onClick={()=>handleRemoveTask(task.id)}>
-                            <span className="material-symbols-outlined">close</span>
+
+                        {/* Media Requirement Toggle: Photo vs Video vs Both */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black uppercase text-gray-400">Upload Media:</span>
+                          <div className="flex items-center gap-1 border-2 border-gray-200 rounded p-0.5 bg-gray-50">
+                            {(["photo", "video", "both"] as const).map((mType) => (
+                              <button
+                                key={mType}
+                                type="button"
+                                onClick={() => handleMediaTypeChange(task.id, mType)}
+                                className={`px-2.5 py-1 rounded font-black text-[9px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
+                                  (task.mediaType || "photo") === mType
+                                    ? "bg-[#D32F2F] text-white"
+                                    : "text-gray-400 hover:text-gray-700"
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-xs">
+                                  {mType === "photo" ? "photo_camera" : mType === "video" ? "videocam" : "perm_media"}
+                                </span>
+                                <span>{mType === "photo" ? "Photo" : mType === "video" ? "Video" : "Photo+Video"}</span>
+                              </button>
+                            ))}
+                          </div>
+
+                          <button type="button" className="p-1 text-gray-400 hover:text-red-500 transition-all cursor-pointer ml-2" onClick={()=>handleRemoveTask(task.id)} title="Remove task">
+                            <span className="material-symbols-outlined">delete</span>
                           </button>
                         </div>
                       </div>

@@ -235,7 +235,7 @@ export default function LoginPage() {
               className="h-24 w-auto object-contain select-none pointer-events-none mb-1"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtLhmKKaxMWpfyIdxAxXT2PW77wSmdzuzitBMr0-qusXCw1bZvkr6MSvPAUclFOEfu8-3-E6_kMnbI0hd_tY7eE9RcTMU1_QxhGSNmLseWDGnkZSVDNctyE5eqi8yOT50NZfXcy3iU-9o9KVfajuilIs2PPixdr2NHKfKIHUQ-cgvzS3NHF215rAqCj7bbyyEOJ9qe7NCYSCUpYO_JlSSxrILPRlyAuehXMl8r4w1PCh7xD2K8cdjT4k5HPSiindss_p_NSQSNJRsJ"
             />
-            <h2 className="font-headline-md text-lg text-black font-extrabold tracking-tight uppercase leading-none">MAINTAIN.AI</h2>
+            <h2 className="font-headline-md text-lg text-black font-extrabold tracking-tight uppercase leading-none">MAINTAIN</h2>
             <p className="text-[8px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1 leading-none">Industrial Precision</p>
           </div>
 
@@ -248,7 +248,7 @@ export default function LoginPage() {
                     Login Page
                   </h1>
                   <p className="font-body-md text-on-surface opacity-60 uppercase tracking-widest text-xs">
-                    Maintain AI
+                    Maintain
                   </p>
                 </header>
 
@@ -403,7 +403,7 @@ export default function LoginPage() {
               />
             </div>
             <h2 className="font-headline-xl text-headline-xl text-white leading-none tracking-tighter">
-              MAINTAIN.AI
+              MAINTAIN
             </h2>
             <p className="font-headline-md text-headline-md text-primary uppercase tracking-[0.2em] mt-2">
               PM Helper

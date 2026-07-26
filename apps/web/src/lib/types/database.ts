@@ -1,5 +1,5 @@
 // ============================================================
-// Database Types for MAINTAIN.AI - PM Verification System
+// Database Types for MAINTAIN - PM Verification System
 // ============================================================
 
 export type RoleType = 'admin' | 'supervisor' | 'vendor'
