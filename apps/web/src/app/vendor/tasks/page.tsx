@@ -20,6 +20,7 @@ interface ChecklistItem {
   description: string;
   status: "Pass" | "AI Processing" | "Awaiting" | "Error";
   image?: string;
+  video?: string;
   evidenceTime?: string;
   errorMessage?: string;
   notes?: string;
@@ -110,6 +111,7 @@ export default function PMChecklistPage() {
   const [extraItemTitleInput, setExtraItemTitleInput] = useState("");
   const [extraItemDescInput, setExtraItemDescInput] = useState("");
   const [extraItemMediaTypeInput, setExtraItemMediaTypeInput] = useState<"photo" | "video" | "both">("photo");
+  const [extraItemTypeInput, setExtraItemTypeInput] = useState<"optional" | "required" | "urgent">("optional");
 
   const handleToggleSubtask = async (itemId: string, subtaskId: string) => {
     if (!selectedTask || isLocked) return;
@@ -152,6 +154,23 @@ export default function PMChecklistPage() {
     setAddExtraItemModalOpen(true);
     setExtraItemTitleInput("");
     setExtraItemDescInput("");
+    setExtraItemMediaTypeInput("photo");
+    setExtraItemTypeInput("optional");
+  };
+
+  const handleRemoveMainTaskItem = async (itemId: string) => {
+    if (!selectedTask || isLocked) return;
+    const updatedChecklist = selectedTask.checklist.filter((item) => item.id !== itemId);
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t))
+    );
+    try {
+      await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
+      triggerToast("Task item removed from checklist.", "info");
+    } catch (err: any) {
+      console.error(err);
+      triggerToast("Failed to remove task item: " + err.message, "error");
+    }
   };
 
   const handleRemoveSubtaskEvidence = async (itemId: string, subtaskId: string, mediaKind: "photo" | "video" = "photo") => {
@@ -188,7 +207,7 @@ export default function PMChecklistPage() {
     }
   };
 
-  const handleConfirmAddMainTaskItem = (e: React.FormEvent) => {
+  const handleConfirmAddMainTaskItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTask || isLocked || !extraItemTitleInput.trim()) return;
 
@@ -197,7 +216,7 @@ export default function PMChecklistPage() {
       title: extraItemTitleInput.trim().toUpperCase(),
       description: extraItemDescInput.trim() || "Vendor added custom task item.",
       status: "Awaiting",
-      type: "optional",
+      type: extraItemTypeInput,
       requireImage: true,
       mediaType: extraItemMediaTypeInput,
       subtasks: []
@@ -207,11 +226,17 @@ export default function PMChecklistPage() {
     setTasks((prevTasks) =>
       prevTasks.map((t) => (t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t))
     );
-    saveChecklistToDatabase(selectedTask.id, updatedChecklist);
-    triggerToast("New task item added to checklist!", "success");
-    setAddExtraItemModalOpen(false);
-    setExtraItemTitleInput("");
-    setExtraItemDescInput("");
+
+    try {
+      await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
+      triggerToast("New task item added to checklist!", "success");
+      setAddExtraItemModalOpen(false);
+      setExtraItemTitleInput("");
+      setExtraItemDescInput("");
+    } catch (err: any) {
+      console.error(err);
+      triggerToast("Failed to add task item: " + err.message, "error");
+    }
   };
 
   // Toast Helper
@@ -580,38 +605,32 @@ export default function PMChecklistPage() {
   const handleSubmitReport = async () => {
     if (!selectedTask || isLocked) return;
 
-    // Check if required/urgent items are completed (status === "Pass", "Error", or "AI Processing")
-    // and that optional items that are started (status !== "Awaiting") are completed
+    // Check if required/urgent items are completed
     const incompleteTasks = selectedTask.checklist.filter((item) => {
       if (item.type === "optional" && item.status === "Awaiting") {
         return false;
       }
-      if (item.status === "Error" || item.status === "AI Processing") {
-        return false;
-      }
-      return item.status !== "Pass";
+      return item.status === "Awaiting";
     });
     if (incompleteTasks.length > 0) {
-      triggerToast(`Cannot proceed! There are ${incompleteTasks.length} required checklist items that are not completed (status PASS/ERROR).`, "error");
+      triggerToast(`Cannot proceed! There are ${incompleteTasks.length} required checklist items that are awaiting evidence.`, "error");
       return;
     }
 
-    // Check if required items (or started optional items that require image) have evidence photos uploaded
+    // Check if required items have evidence photo/video uploaded
     const missingImages = selectedTask.checklist.filter((item) => {
-      // Optional Awaiting tasks don't need a photo
       if (item.type === "optional" && item.status === "Awaiting") {
         return false;
       }
-      // If template/database specified requireImage (true by default for required/urgent)
       const needsImage = item.requireImage !== false;
-      return needsImage && !item.image;
+      return needsImage && !item.image && !item.video;
     });
     if (missingImages.length > 0) {
-      triggerToast(`Cannot proceed! Evidence photo has not been uploaded for ${missingImages.length} checklist items.`, "error");
+      triggerToast(`Cannot proceed! Evidence photo/video has not been uploaded for ${missingImages.length} checklist items.`, "error");
       return;
     }
 
-    // Check if any checklist item with an Error status is missing notes
+    // Check if any checklist item with an Error status is missing repair notes
     const missingNotes = selectedTask.checklist.some((item) => item.status === "Error" && !item.notes?.trim());
     if (missingNotes) {
       triggerToast("Checklist repair notes are required to explain findings for flagged/error items!", "error");
@@ -627,7 +646,7 @@ export default function PMChecklistPage() {
         return;
       }
 
-      // Update task checklist and notes directly, but do not set status to submitted or insert pm_reports yet
+      // Update task checklist and notes directly
       const { error: taskError } = await supabase
         .from("pm_tasks")
         .update({
@@ -660,14 +679,16 @@ export default function PMChecklistPage() {
     triggerToast("Example template images cannot be used as evidence! Please upload an actual photo.", "error");
   };
 
-  // Real File Upload to Supabase Storage
+  // Real File Upload to Supabase Storage (Photo & Video)
   const handleRealFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && uploadTargetId && selectedTask) {
       try {
-        triggerToast("Uploading evidence photo...", "info");
+        const isVideoFile = file.type.startsWith("video") || /\.(mp4|mov|webm|avi|mkv)$/i.test(file.name);
+        const mediaLabel = isVideoFile ? "video" : "photo";
+        triggerToast(`Uploading evidence ${mediaLabel}...`, "info");
         const fileExt = file.name.split('.').pop();
-        const filePath = `${selectedTask.id}-${uploadTargetId}-${Math.random()}.${fileExt}`;
+        const filePath = `${selectedTask.id}-${uploadTargetId}-${Date.now()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("pm_evidence")
@@ -684,7 +705,7 @@ export default function PMChecklistPage() {
           const parts = itemIdStr.split(":::");
           const parentItemId = parts[0];
           const subtaskId = parts[1];
-          const mediaKind = parts[2] || "photo";
+          const mediaKind = parts[2] || (isVideoFile ? "video" : "photo");
 
           const updatedChecklist = selectedTask.checklist.map((item) => {
             if (item.id !== parentItemId) return item;
@@ -692,17 +713,18 @@ export default function PMChecklistPage() {
               if (sub.id !== subtaskId) return sub;
               const req = sub.mediaType || item.mediaType || "photo";
               const newSub = { ...sub };
-              if (mediaKind === "video" || (req === "video" && !mediaKind)) {
+              if (mediaKind === "video" || isVideoFile) {
                 newSub.video = publicUrl;
-                if (!newSub.image) newSub.image = publicUrl;
               } else {
                 newSub.image = publicUrl;
               }
 
               if (req === "both") {
                 newSub.completed = !!(newSub.image && newSub.video);
+              } else if (req === "video") {
+                newSub.completed = !!newSub.video;
               } else {
-                newSub.completed = true;
+                newSub.completed = !!(newSub.image || newSub.video);
               }
               return newSub;
             });
@@ -714,7 +736,7 @@ export default function PMChecklistPage() {
           );
 
           await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
-          triggerToast(`Subtask ${mediaKind.toUpperCase()} evidence uploaded successfully!`, "success");
+          triggerToast(`Subtask ${mediaLabel.toUpperCase()} evidence uploaded successfully!`, "success");
           setUploadTargetId(null);
           return;
         }
@@ -724,8 +746,9 @@ export default function PMChecklistPage() {
           item.id === itemId
             ? {
               ...item,
-              status: "AI Processing" as const,
-              image: publicUrl,
+              status: isVideoFile ? ("Pass" as const) : ("AI Processing" as const),
+              image: isVideoFile ? item.image : publicUrl,
+              video: isVideoFile ? publicUrl : item.video,
               errorMessage: undefined,
             }
             : item
@@ -738,11 +761,11 @@ export default function PMChecklistPage() {
         );
 
         await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
-        triggerToast("Evidence photo uploaded successfully. AI processing...", "success");
+        triggerToast(`Evidence ${mediaLabel} uploaded successfully.${isVideoFile ? "" : " AI processing..."}`, "success");
         setUploadTargetId(null);
       } catch (err: any) {
         console.error(err);
-        triggerToast("Failed to upload evidence photo: " + err.message, "error");
+        triggerToast("Failed to upload evidence: " + err.message, "error");
       }
     }
   };
@@ -1086,6 +1109,20 @@ export default function PMChecklistPage() {
                               <div className="scanning-line absolute top-0 left-0 w-full h-1.5 z-10 bg-[#D32F2F]"></div>
                             )}
                           </div>
+                        ) : item.video ? (
+                          <div className="relative w-28 h-28 rounded-[16px] border-2 border-purple-900 overflow-hidden bg-black group">
+                            <video src={item.video} controls className="w-full h-full object-cover" />
+                            {!isLocked && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemovePhoto(item.id)}
+                                className="absolute top-1 right-1 bg-[#D32F2F] text-white p-1 rounded-full hover:bg-black transition-all cursor-pointer opacity-90 group-hover:opacity-100 z-10 shadow-md"
+                                title="Remove video"
+                              >
+                                <span className="material-symbols-outlined text-xs">close</span>
+                              </button>
+                            )}
+                          </div>
                         ) : (
                           <button
                             onClick={() => !isLocked && handleOpenUpload(item.id)}
@@ -1094,9 +1131,11 @@ export default function PMChecklistPage() {
                               }`}
                           >
                             <span className="material-symbols-outlined text-3xl text-gray-400 transition-transform group-hover:scale-110">
-                              photo_camera
+                              {item.mediaType === "video" ? "videocam" : "photo_camera"}
                             </span>
-                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-tight leading-tight">FULL MACHINE PHOTO</span>
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-tight leading-tight">
+                              {item.mediaType === "video" ? "MACHINE VIDEO" : "FULL MACHINE PHOTO"}
+                            </span>
                           </button>
                         )}
                       </div>
@@ -1107,10 +1146,23 @@ export default function PMChecklistPage() {
                           <h4 className="font-headline-md text-sm uppercase font-extrabold text-black leading-snug">
                             {item.title}
                           </h4>
-                          <span className={`px-2.5 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white shrink-0 ${isPass ? "bg-green-600" : isProcessing ? "bg-yellow-600" : isError ? "bg-[#D32F2F]" : "bg-black"
-                            }`}>
-                            {item.status}
-                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {!isLocked && (item.id.startsWith("item-") || item.type === "optional") && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMainTaskItem(item.id)}
+                                className="text-[9px] font-black uppercase text-[#D32F2F] hover:bg-[#D32F2F]/10 px-2 py-0.5 rounded transition-colors flex items-center gap-1 cursor-pointer border border-[#D32F2F]/30"
+                                title="Remove task item from checklist"
+                              >
+                                <span className="material-symbols-outlined text-xs">delete</span>
+                                <span>REMOVE</span>
+                              </button>
+                            )}
+                            <span className={`px-2.5 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white shrink-0 ${isPass ? "bg-green-600" : isProcessing ? "bg-yellow-600" : isError ? "bg-[#D32F2F]" : "bg-black"
+                              }`}>
+                              {item.status}
+                            </span>
+                          </div>
                         </div>
                         <p className="text-gray-500 text-xs leading-relaxed font-semibold">
                           {item.errorMessage || item.description}
@@ -1705,17 +1757,22 @@ export default function PMChecklistPage() {
         type="file"
         ref={fileInputRef}
         onChange={handleRealFileUpload}
-        accept="image/*"
+        accept={uploadTargetId?.includes(":::video") ? "video/*" : "image/*,video/*"}
         className="hidden"
       />
 
-      {/* Mock Image Upload Modal Dialog */}
+      {/* Upload Media Modal Dialog */}
       {uploadTargetId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setUploadTargetId(null)}></div>
           <div className="relative bg-white border-4 border-black p-8 rounded-[24px] max-w-md w-full z-10 flex flex-col gap-6 text-left shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <header className="flex justify-between items-center pb-4 border-b-2 border-black">
-              <h3 className="font-headline-md text-base uppercase font-black tracking-tight">Upload Evidence Photo</h3>
+              <h3 className="font-headline-md text-base uppercase font-black tracking-tight flex items-center gap-2">
+                <span className="material-symbols-outlined text-lg">
+                  {uploadTargetId.includes(":::video") ? "videocam" : "perm_media"}
+                </span>
+                {uploadTargetId.includes(":::video") ? "Upload Evidence Video" : "Upload Evidence Media"}
+              </h3>
               <button
                 onClick={() => setUploadTargetId(null)}
                 className="w-8 h-8 flex items-center justify-center border-2 border-black rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer bg-white"
@@ -1725,7 +1782,9 @@ export default function PMChecklistPage() {
             </header>
 
             <p className="text-xs text-gray-500 font-bold uppercase tracking-wide leading-relaxed">
-              Capture or choose proof of work. Please upload a real photo from your camera or device (template images are for reference only):
+              {uploadTargetId.includes(":::video")
+                ? "Capture or choose video proof of work (.mp4, .mov, .webm):"
+                : "Capture or choose proof of work. Please upload real photo or video from your device (template images are for reference only):"}
             </p>
 
             <div className="grid grid-cols-2 gap-4">
@@ -1766,7 +1825,7 @@ export default function PMChecklistPage() {
                 className="col-span-2 border-2 border-black rounded-[12px] py-3.5 hover:bg-[#1A1A1A] hover:text-white transition-all font-black text-xs uppercase tracking-widest text-center cursor-pointer flex items-center justify-center gap-2 bg-white"
               >
                 <span className="material-symbols-outlined text-sm">upload_file</span>
-                Upload From Device (Camera/File)
+                {uploadTargetId.includes(":::video") ? "Upload Video File" : "Upload Photo / Video File"}
               </button>
             </div>
           </div>
@@ -1907,17 +1966,32 @@ export default function PMChecklistPage() {
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">Media Requirement</label>
-                <select
-                  value={extraItemMediaTypeInput}
-                  onChange={(e) => setExtraItemMediaTypeInput(e.target.value as any)}
-                  className="w-full h-12 px-3 rounded-xl border-2 border-black font-bold uppercase text-xs outline-none bg-white cursor-pointer"
-                >
-                  <option value="photo">PHOTO REQUIRED</option>
-                  <option value="video">VIDEO REQUIRED</option>
-                  <option value="both">PHOTO & VIDEO REQUIRED</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">Priority / Type</label>
+                  <select
+                    value={extraItemTypeInput}
+                    onChange={(e) => setExtraItemTypeInput(e.target.value as any)}
+                    className="w-full h-12 px-3 rounded-xl border-2 border-black font-bold uppercase text-xs outline-none bg-white cursor-pointer"
+                  >
+                    <option value="optional">OPTIONAL</option>
+                    <option value="required">REQUIRED</option>
+                    <option value="urgent">URGENT</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">Media Requirement</label>
+                  <select
+                    value={extraItemMediaTypeInput}
+                    onChange={(e) => setExtraItemMediaTypeInput(e.target.value as any)}
+                    className="w-full h-12 px-3 rounded-xl border-2 border-black font-bold uppercase text-xs outline-none bg-white cursor-pointer"
+                  >
+                    <option value="photo">PHOTO REQUIRED</option>
+                    <option value="video">VIDEO REQUIRED</option>
+                    <option value="both">PHOTO & VIDEO REQUIRED</option>
+                  </select>
+                </div>
               </div>
 
               <div className="pt-4 border-t-2 border-black flex justify-end gap-3">

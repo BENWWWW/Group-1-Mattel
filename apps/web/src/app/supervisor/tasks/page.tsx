@@ -13,9 +13,12 @@ interface ChecklistItem {
   checked: boolean;
   notes?: string;
   image?: string | null;
+  video?: string | null;
   status?: string;
   type?: "optional" | "required" | "urgent";
   requireImage?: boolean;
+  mediaType?: "photo" | "video" | "both";
+  subtasks?: any[];
 }
 
 interface POI {
@@ -188,34 +191,27 @@ export default function ReviewDetailPage() {
           : [];
         const report = sortedReports.length > 0 ? sortedReports[0] : null;
 
-        // Checklist results format check
+        // Checklist results format check (prefer t.checklist updated by vendor)
         let checklistItems: ChecklistItem[] = [];
-        if (report && report.checklist_results) {
-          const results = Array.isArray(report.checklist_results)
-            ? report.checklist_results
-            : (report.checklist_results.items || []);
-          checklistItems = results.map((c: any) => ({
-            item_id: c.item_id || c.id || "",
-            label: c.label || c.title || c.text || c.task || "Checklist Task",
-            checked: c.checked !== undefined ? c.checked : (c.status === "Pass"),
-            notes: c.notes || "",
-            image: c.image || null,
-            status: c.status || (c.checked ? "Pass" : "Awaiting"),
-            type: c.type || "optional",
-            requireImage: c.requireImage !== undefined ? c.requireImage : false
-          }));
-        } else if (t.pm_templates && Array.isArray(t.pm_templates.checklist_items)) {
-          checklistItems = t.pm_templates.checklist_items.map((c: any) => ({
-            item_id: c.id || "",
-            label: c.text || c.title || c.task || "Checklist Task",
-            checked: false,
-            notes: "",
-            image: null,
-            status: "Awaiting",
-            type: c.type || "optional",
-            requireImage: c.requireImage !== undefined ? c.requireImage : false
-          }));
-        }
+        const rawChecklist = (Array.isArray(t.checklist) && t.checklist.length > 0)
+          ? t.checklist
+          : (report && report.checklist_results
+            ? (Array.isArray(report.checklist_results) ? report.checklist_results : (report.checklist_results.items || []))
+            : (t.pm_templates && Array.isArray(t.pm_templates.checklist_items) ? t.pm_templates.checklist_items : []));
+
+        checklistItems = rawChecklist.map((c: any) => ({
+          item_id: c.item_id || c.id || "",
+          label: c.label || c.title || c.text || c.task || "Checklist Task",
+          checked: c.checked !== undefined ? c.checked : (c.status === "Pass"),
+          notes: c.notes || "",
+          image: c.image || null,
+          video: c.video || null,
+          status: c.status || (c.checked ? "Pass" : "Awaiting"),
+          type: c.type || "optional",
+          requireImage: c.requireImage !== undefined ? c.requireImage : false,
+          mediaType: c.mediaType || "photo",
+          subtasks: Array.isArray(c.subtasks) ? c.subtasks : []
+        }));
 
         // Dummy POIs for AI Analysis visual layout based on score
         const confidence = report?.ai_confidence_score || 85;
@@ -818,13 +814,70 @@ export default function ReviewDetailPage() {
                         </div>
                       )}
 
+                      {/* Main Item Photo Evidence */}
                       {item.image && (
-                        <div className="w-full h-56 border-2 border-[#1A1A1A] rounded-lg overflow-hidden relative group">
-                          <img className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" src={item.image} alt={`Evidence for ${item.label}`} />
-                          <div className="absolute inset-0 bg-[#D32F2F]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button onClick={() => setExpandedImage(item.image || null)} className="bg-white border-2 border-[#1A1A1A] px-4 py-2 text-xs uppercase font-extrabold cursor-pointer hover:bg-gray-100">
-                              Expand
-                            </button>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] font-black text-gray-500 uppercase tracking-wider">📷 Main Photo Evidence</span>
+                          <div className="w-full h-56 border-2 border-[#1A1A1A] rounded-lg overflow-hidden relative group">
+                            <img className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" src={item.image} alt={`Evidence for ${item.label}`} />
+                            <div className="absolute inset-0 bg-[#D32F2F]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button onClick={() => setExpandedImage(item.image || null)} className="bg-white border-2 border-[#1A1A1A] px-4 py-2 text-xs uppercase font-extrabold cursor-pointer hover:bg-gray-100">
+                                Expand
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Main Item Video Evidence */}
+                      {item.video && (
+                        <div className="flex flex-col gap-1 mt-2">
+                          <span className="text-[9px] font-black text-purple-700 uppercase tracking-wider">🎥 Main Video Evidence</span>
+                          <div className="w-full h-56 border-2 border-purple-900 rounded-lg overflow-hidden bg-black">
+                            <video src={item.video} controls className="w-full h-full object-cover" />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Subtasks Evidence Section */}
+                      {item.subtasks && item.subtasks.length > 0 && (
+                        <div className="mt-3 pt-3 border-t-2 border-dashed border-gray-200 flex flex-col gap-2">
+                          <span className="text-[10px] font-black uppercase text-gray-700 tracking-wider">
+                            Subtasks ({item.subtasks.filter((s: any) => s.completed || s.image || s.video).length} / {item.subtasks.length} Completed)
+                          </span>
+                          <div className="flex flex-col gap-2.5">
+                            {item.subtasks.map((sub: any, subIdx: number) => (
+                              <div key={sub.id || subIdx} className="bg-gray-50 border border-black/20 rounded-lg p-3 flex flex-col gap-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-xs font-extrabold text-black">{subIdx + 1}. {sub.text}</span>
+                                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${sub.completed ? "bg-green-100 text-green-800 border-green-300" : "bg-yellow-100 text-yellow-800 border-yellow-300"}`}>
+                                    {sub.completed ? "COMPLETED" : "PENDING"}
+                                  </span>
+                                </div>
+
+                                {/* Subtask Media Evidence */}
+                                {(sub.image || sub.video) && (
+                                  <div className="flex flex-wrap gap-3 mt-1 pt-1">
+                                    {sub.image && (
+                                      <div className="flex flex-col gap-0.5">
+                                        <span className="text-[8px] font-black text-gray-500 uppercase">📷 Photo</span>
+                                        <div className="w-20 h-20 border-2 border-black rounded-lg overflow-hidden">
+                                          <img src={sub.image} alt={sub.text} className="w-full h-full object-cover cursor-pointer" onClick={() => setExpandedImage(sub.image)} />
+                                        </div>
+                                      </div>
+                                    )}
+                                    {sub.video && (
+                                      <div className="flex flex-col gap-0.5">
+                                        <span className="text-[8px] font-black text-purple-700 uppercase">🎥 Video</span>
+                                        <div className="w-28 h-20 border-2 border-purple-900 rounded-lg overflow-hidden bg-black">
+                                          <video src={sub.video} controls className="w-full h-full object-cover" />
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}

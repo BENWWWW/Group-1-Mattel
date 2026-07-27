@@ -303,17 +303,21 @@ CREATE POLICY "Public Access for pm_evidence"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'pm_evidence');
 
+CREATE POLICY "Public Uploads for pm_evidence"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'pm_evidence');
+
 CREATE POLICY "Authenticated Uploads for pm_evidence"
   ON storage.objects FOR INSERT
   WITH CHECK (bucket_id = 'pm_evidence' AND auth.role() = 'authenticated');
 
 CREATE POLICY "Authenticated Updates for pm_evidence"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'pm_evidence' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'pm_evidence');
 
 CREATE POLICY "Authenticated Deletes for pm_evidence"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'pm_evidence' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'pm_evidence');
 
 
 -- ============================================================
