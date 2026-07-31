@@ -29,7 +29,7 @@ interface ChecklistItem {
   mediaType?: "photo" | "video" | "both";
   subtasks?: Subtask[];
   aiConfidence?: number;
-  aiPredictedClass?: string;
+  aiQualityLabel?: string;
 }
 
 interface Task {
@@ -485,26 +485,26 @@ export default function PMChecklistPage() {
     }
   };
 
-  // AI classification via Roboflow API for items in "AI Processing" status
-  const classifyImageWithAI = async (imageUrl: string, expectedClass: string) => {
+  // AI image quality check via SightEngine API for items in "AI Processing" status
+  const checkImageQualityWithAI = async (imageUrl: string) => {
     try {
       const response = await fetch("/api/classify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl, expectedClass }),
+        body: JSON.stringify({ imageUrl }),
       });
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "Classification API failed");
+        throw new Error(errData.error || "Quality check API failed");
       }
       return await response.json();
     } catch (err: any) {
-      console.error("AI classification error:", err);
+      console.error("AI quality check error:", err);
       return null;
     }
   };
 
-  // Process items that enter "AI Processing" status — call real Roboflow API
+  // Process items that enter "AI Processing" status — call SightEngine Quality API
   useEffect(() => {
     if (!selectedTask) return;
     const processingItem = selectedTask.checklist.find((item) => item.status === "AI Processing");
@@ -512,43 +512,34 @@ export default function PMChecklistPage() {
 
     let cancelled = false;
 
-    const runClassification = async () => {
-      // Derive expected class from the asset type/name
-      const assetType = (selectedTask.assetType || selectedTask.asset || "").toLowerCase();
-      const validClasses = ["bearing", "gauge", "pump", "valve"];
-      const expectedClass = validClasses.find((c) => assetType.includes(c)) || "";
-
-      const result = await classifyImageWithAI(processingItem.image!, expectedClass);
+    const runQualityCheck = async () => {
+      const result = await checkImageQualityWithAI(processingItem.image!);
 
       if (cancelled) return;
 
       let newStatus: "Pass" | "Error" = "Pass";
       let errorMessage: string | undefined;
       let confidence = 0;
-      let predictedClass = "";
+      let qualityLabel = "";
 
       if (result) {
         confidence = result.confidence;
-        predictedClass = result.predictedClass;
+        qualityLabel = result.qualityLabel;
 
-        if (!result.isMatch) {
-          // Wrong class detected
+        if (confidence < 45) {
+          // Poor quality — reject
           newStatus = "Error";
-          errorMessage = `AI detected "${predictedClass}" but expected "${expectedClass || "unknown"}". Confidence: ${confidence}%`;
-        } else if (confidence < 50) {
-          // Low confidence
-          newStatus = "Error";
-          errorMessage = `AI confidence too low (${confidence}%). Predicted: "${predictedClass}". Please re-upload a clearer photo.`;
-        } else if (confidence < 80) {
-          // Medium confidence — pass with warning
+          errorMessage = `Image quality too low (${confidence}% — ${qualityLabel}). Please re-upload a clearer, well-lit photo.`;
+        } else if (confidence < 60) {
+          // Fair quality — pass with warning
           newStatus = "Pass";
-          errorMessage = `Medium confidence (${confidence}%). Flagged for supervisor review.`;
+          errorMessage = `Fair image quality (${confidence}%). Flagged for supervisor review.`;
         }
-        // High confidence (>=80%) — clean pass
+        // Good/Excellent quality (>=60%) — clean pass
       } else {
         // API call failed — set error
         newStatus = "Error";
-        errorMessage = "AI classification service unavailable. Please try again.";
+        errorMessage = "AI quality check service unavailable. Please try again.";
       }
 
       const updatedChecklist = selectedTask.checklist.map((item) =>
@@ -562,7 +553,7 @@ export default function PMChecklistPage() {
             }) : undefined,
             errorMessage: errorMessage,
             aiConfidence: confidence,
-            aiPredictedClass: predictedClass,
+            aiQualityLabel: qualityLabel,
           }
           : item
       );
@@ -577,18 +568,18 @@ export default function PMChecklistPage() {
 
       if (newStatus === "Pass") {
         triggerToast(
-          `${processingItem.title.toUpperCase()} — AI VERIFIED: ${predictedClass.toUpperCase()} (${confidence}% confidence)`,
+          `${processingItem.title.toUpperCase()} — QUALITY VERIFIED: ${qualityLabel.toUpperCase()} (${confidence}%)`,
           "success"
         );
       } else {
         triggerToast(
-          errorMessage || "AI classification failed.",
+          errorMessage || "AI quality check failed.",
           "error"
         );
       }
     };
 
-    runClassification();
+    runQualityCheck();
 
     return () => { cancelled = true; };
   }, [tasks, selectedTaskId]);

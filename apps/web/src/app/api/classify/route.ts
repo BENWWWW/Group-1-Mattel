@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  runObjectDetection,
-  RoboflowApiError,
-  RoboflowTimeoutError,
-  RoboflowConfigError,
-} from "@/lib/roboflow";
+  checkImageQuality,
+  SightEngineApiError,
+  SightEngineTimeoutError,
+  SightEngineConfigError,
+} from "@/lib/sightengine";
 
 /**
  * POST /api/classify
  *
- * Accepts an image URL and sends it to the Roboflow Object Detection API
- * via the reusable roboflow client (with retries & timeout).
- * Returns the predicted class and confidence score based on detected objects.
+ * Accepts an image URL and sends it to the SightEngine Image Quality
+ * Detection API. Returns a quality score (0–100) indicating the
+ * technical quality (sharpness, exposure, blur, distortion) of the image.
  *
- * Body: { imageUrl: string, expectedClass?: string }
- * Response: { predictedClass: string, confidence: number, isMatch: boolean, allPredictions: Array }
+ * Body: { imageUrl: string }
+ * Response: { qualityScore: number, confidence: number, isAcceptable: boolean, qualityLabel: string }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { imageUrl, expectedClass } = body;
+    const { imageUrl } = body;
 
     if (!imageUrl) {
       return NextResponse.json(
@@ -28,90 +28,74 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch the image and convert to base64 for Roboflow
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      console.error("Failed to fetch image:", imageResponse.status, imageResponse.statusText);
-      return NextResponse.json(
-        { error: "Failed to fetch image from storage" },
-        { status: 400 }
-      );
-    }
+    // Call SightEngine Image Quality Detection
+    // SightEngine accepts image URLs directly — no base64 conversion needed
+    console.log("[Classify] Running SightEngine image quality check...");
 
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const base64Image = Buffer.from(imageBuffer).toString("base64");
+    const result = await checkImageQuality(imageUrl);
 
-    // Call Roboflow Object Detection via the reusable client
-    console.log("[Classify] Running Roboflow object detection...");
-
-    const result = await runObjectDetection(base64Image, {
-      confidence: parseInt(process.env.ROBOFLOW_CONFIDENCE || "25", 10),
-    });
+    // Convert 0.0–1.0 score to 0–100 percentage
+    const qualityScore = Math.round(result.quality.score * 100);
 
     console.log(
-      `[Classify] Roboflow response: ${result.predictions.length} predictions in ${result.time.toFixed(3)}s`
+      `[Classify] SightEngine response: quality score = ${qualityScore}% (raw: ${result.quality.score})`
     );
 
-    let predictedClass = "";
-    let confidence = 0;
-    let allPredictions: Array<{ class: string; confidence: number }> = [];
+    // Determine quality label and acceptability based on thresholds
+    // Based on SightEngine documentation recommendations:
+    // >= 60: Good to excellent quality → Pass
+    // 45-59: Decent quality → Pass with warning
+    // < 45: Poor quality → Reject
+    let qualityLabel: string;
+    let isAcceptable: boolean;
 
-    if (result.predictions && result.predictions.length > 0) {
-      // Sort by confidence descending, take the highest
-      const sorted = [...result.predictions].sort(
-        (a, b) => (b.confidence || 0) - (a.confidence || 0)
-      );
-
-      predictedClass = (sorted[0].class || "").toLowerCase().trim();
-      confidence = Math.round((sorted[0].confidence || 0) * 100);
-
-      allPredictions = sorted.map((p) => ({
-        class: (p.class || "").toLowerCase().trim(),
-        confidence: Math.round((p.confidence || 0) * 100),
-      }));
+    if (qualityScore >= 85) {
+      qualityLabel = "Excellent";
+      isAcceptable = true;
+    } else if (qualityScore >= 60) {
+      qualityLabel = "Good";
+      isAcceptable = true;
+    } else if (qualityScore >= 45) {
+      qualityLabel = "Fair";
+      isAcceptable = true; // Pass but flagged for review
+    } else if (qualityScore >= 25) {
+      qualityLabel = "Poor";
+      isAcceptable = false;
     } else {
-      // No objects detected
-      console.log("[Classify] No objects detected in image");
-      predictedClass = "unknown";
-      confidence = 0;
+      qualityLabel = "Very Poor";
+      isAcceptable = false;
     }
 
-    // Determine if the prediction matches the expected class
-    const normalizedExpected = (expectedClass || "").toLowerCase().trim();
-    const isMatch = normalizedExpected
-      ? predictedClass === normalizedExpected ||
-        predictedClass.includes(normalizedExpected) ||
-        normalizedExpected.includes(predictedClass)
-      : true;
-
-    console.log(`[Classify] Result: predicted="${predictedClass}", confidence=${confidence}%, expected="${normalizedExpected}", isMatch=${isMatch}`);
+    console.log(
+      `[Classify] Result: qualityScore=${qualityScore}%, label="${qualityLabel}", acceptable=${isAcceptable}`
+    );
 
     return NextResponse.json({
-      predictedClass,
-      confidence,
-      isMatch,
-      allPredictions,
+      qualityScore,
+      confidence: qualityScore, // Alias for backward compatibility
+      isAcceptable,
+      qualityLabel,
     });
   } catch (error: any) {
-    // Handle typed Roboflow errors
-    if (error instanceof RoboflowConfigError) {
-      console.error("[Classify] Roboflow config error:", error.message);
+    // Handle typed SightEngine errors
+    if (error instanceof SightEngineConfigError) {
+      console.error("[Classify] SightEngine config error:", error.message);
       return NextResponse.json(
-        { error: "AI classification service not configured" },
+        { error: "AI quality check service not configured" },
         { status: 500 }
       );
     }
 
-    if (error instanceof RoboflowTimeoutError) {
-      console.error("[Classify] Roboflow timeout:", error.message);
+    if (error instanceof SightEngineTimeoutError) {
+      console.error("[Classify] SightEngine timeout:", error.message);
       return NextResponse.json(
-        { error: "AI classification timed out. Please try again." },
+        { error: "AI quality check timed out. Please try again." },
         { status: 504 }
       );
     }
 
-    if (error instanceof RoboflowApiError) {
-      console.error("[Classify] Roboflow API error:", error.statusCode, error.responseBody);
+    if (error instanceof SightEngineApiError) {
+      console.error("[Classify] SightEngine API error:", error.statusCode, error.responseBody);
       return NextResponse.json(
         { error: "AI service error: " + error.message },
         { status: 502 }

@@ -5,7 +5,7 @@ Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification Syst
 ## Key Features
 
 *   **Role-Based Access Control (RBAC):** Tailored dashboards and strict data permissions for Admins, Supervisors, and Vendors.
-*   **AI Computer Vision Integration:** Embedded AI via Roboflow API to assist vendors with automated image classification and anomaly detection directly on the field.
+*   **AI Image Quality Detection:** Embedded AI via SightEngine API to verify that vendor-uploaded evidence photos meet quality standards (sharpness, exposure, blur detection) directly on the field.
 *   **Real-time Collaboration:** Embedded Live Chat widget and Notification Bell for instant, cross-role communication (Powered by Supabase Realtime).
 *   **Digital Signatures Integration:** Secure, dynamically loaded e-signature implementation for report submission (Vendor) and final approval workflows (Supervisor).
 *   **Advanced Data Management:** Soft-delete mechanisms for assets (ensuring historical PM integrity), dynamic filtering, and robust user management.
@@ -16,7 +16,7 @@ Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification Syst
 *   **Frontend:** Next.js (App Router), React, Tailwind CSS, TypeScript
 *   **Backend / Database:** Supabase (PostgreSQL, Storage, Authentication)
 *   **Real-time engine:** Supabase Realtime
-*   **AI Service:** Roboflow
+*   **AI Service:** SightEngine
 
 ## Project Structure
 
@@ -25,7 +25,7 @@ Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification Syst
     *   `src/app/supervisor/` - Supervisor task tracking, live chat, and report approvals.
     *   `src/app/vendor/` - Field execution, AI-assisted checklist reports, and digital signatures.
     *   `src/components/` - Global components including `ChatWidget` and `NotificationBell`.
-    *   `src/lib/` - Shared utilities, Database schema types, Roboflow API module, and Signature handling.
+    *   `src/lib/` - Shared utilities, Database schema types, SightEngine API module, and Signature handling.
     *   `src/app/api/` - Next.js Serverless API routes.
 *   `supabase/` - Database schema definitions, edge migrations, and RLS policies.
 
@@ -35,7 +35,7 @@ Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification Syst
 *   Node.js (v18+)
 *   npm or yarn
 *   Supabase Account & Project configuration
-*   Roboflow API Key (for AI features)
+*   SightEngine Account & API Keys (for AI quality detection features)
 
 ### Installation
 1. Clone the repository and install dependencies:
@@ -44,11 +44,12 @@ Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification Syst
    npm install
    ```
 2. Configure Environment Variables:
-   Create a `.env.local` file inside `apps/web/` using your Supabase and Roboflow credentials:
+   Create a `.env.local` file inside `apps/web/` using your Supabase and SightEngine credentials:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ROBOFLOW_API_KEY=your_roboflow_key
+   SIGHTENGINE_API_USER=your_sightengine_api_user
+   SIGHTENGINE_API_SECRET=your_sightengine_api_secret
    ```
 3. Start the development server:
    ```bash
