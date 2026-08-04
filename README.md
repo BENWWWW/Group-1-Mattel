@@ -46,10 +46,10 @@ Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification Syst
 2. Configure Environment Variables:
    Create a `.env.local` file inside `apps/web/` using your Supabase and SightEngine credentials:
    ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SIGHTENGINE_API_USER=your_sightengine_api_user
-   SIGHTENGINE_API_SECRET=your_sightengine_api_secret
+   NEXT_PUBLIC_SUPABASE_URL=supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=supabase_anon_key
+   SIGHTENGINE_API_USER=sightengine_api_user
+   SIGHTENGINE_API_SECRET=sightengine_api_secret
    ```
 3. Start the development server:
    ```bash
