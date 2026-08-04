@@ -306,13 +306,41 @@ function AIVerificationScoreContent() {
     setIsPanelOpen(false);
   };
 
-  // Run AI Verification Again (Resolve/Fix checklist item in Database)
+  // Run AI Verification — calls real SightEngine API to validate photo quality
   const handleRunAI = async () => {
     if (!selectedItem) return;
     setIsProcessingAI(true);
 
     try {
-      // 1. Fetch current task from database
+      // 1. Check if a photo exists for this item
+      if (!selectedItem.photoUrl) {
+        triggerToast("No photo uploaded. Please upload a photo first before running AI verification.", "error");
+        setIsProcessingAI(false);
+        return;
+      }
+
+      // 2. Call the real AI quality check API (/api/classify → SightEngine)
+      triggerToast("Running AI quality scan on uploaded photo...", "info");
+
+      const aiResponse = await fetch("/api/classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: selectedItem.photoUrl }),
+      });
+
+      const aiResult = aiResponse.ok ? await aiResponse.json() : null;
+
+      const aiScore: number = aiResult?.qualityScore ?? 0;
+      const aiLabel: string = aiResult?.qualityLabel ?? "Unknown";
+      const isAcceptable: boolean = aiResult?.isAcceptable ?? false;
+
+      // 3. Determine pass/fail based on real AI result
+      const newStatus: "Pass" | "Error" = isAcceptable ? "Pass" : "Error";
+      const errorMessage = isAcceptable
+        ? undefined
+        : `AI Verification Failed — Image quality score: ${aiScore}% (${aiLabel}). Score must be ≥ 45% to pass. Please re-upload a clearer, well-lit photo.`;
+
+      // 4. Fetch current checklist from database
       const { data: taskData, error: fetchError } = await supabase
         .from("pm_tasks")
         .select("checklist")
@@ -321,23 +349,28 @@ function AIVerificationScoreContent() {
 
       if (fetchError) throw fetchError;
 
-      // 2. Update status of the specific checklist item to 'Pass'
+      // 5. Update the checklist item with real AI result
       let updatedChecklist: any[] = [];
       if (Array.isArray(taskData.checklist)) {
         updatedChecklist = taskData.checklist.map((item: any) => {
           if (item.id === selectedItem.id) {
             return {
               ...item,
-              status: "Pass",
-              notes: vendorNote || item.notes || "Resolved manually via verification log.",
-              evidenceTime: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              status: newStatus,
+              notes: vendorNote || item.notes || (isAcceptable ? "Verified by AI." : "AI verification failed."),
+              errorMessage: errorMessage,
+              aiConfidence: aiScore,
+              aiQualityLabel: aiLabel,
+              evidenceTime: newStatus === "Pass"
+                ? new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : undefined,
             };
           }
           return item;
         });
       }
 
-      // 3. Save to database
+      // 6. Save updated checklist to database
       const { error: updateError } = await supabase
         .from("pm_tasks")
         .update({ checklist: updatedChecklist })
@@ -348,13 +381,17 @@ function AIVerificationScoreContent() {
       setTimeout(() => {
         setIsProcessingAI(false);
         setIsPanelOpen(false);
-        triggerToast("Verification Successful. Neural index re-aligned.", "success");
+        if (newStatus === "Pass") {
+          triggerToast(`✅ AI Verification Passed — ${aiLabel} (${aiScore}%). Item approved.`, "success");
+        } else {
+          triggerToast(errorMessage || "AI verification failed.", "error");
+        }
         loadVerificationData();
       }, 1200);
 
     } catch (e: any) {
       console.error(e);
-      triggerToast("Failed to process verification: " + e.message, "error");
+      triggerToast("Failed to run AI verification: " + e.message, "error");
       setIsProcessingAI(false);
     }
   };
