@@ -239,7 +239,7 @@ export default function AdminProfilePage() {
             <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
               <div className="pb-4 border-b border-gray-100">
                 <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Security & Authentication</h4>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Update your Supabase account password</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Update your account login password</p>
               </div>
 
               <form onSubmit={handleSavePassword} className="space-y-4">

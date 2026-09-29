@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
+import SupervisorVerificationVelocityChart, { WeeklyVerificationData } from "@/components/charts/SupervisorVerificationVelocityChart";
+import SupervisorQualityDonutChart, { VerificationQualityData } from "@/components/charts/SupervisorQualityDonutChart";
 
 
 interface ToastType {
@@ -58,12 +60,33 @@ export default function ReviewQueuePage() {
   const [selectedVendorDetail, setSelectedVendorDetail] = useState<VendorCard | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const currentNow = new Date();
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentNow.getMonth()); // 8 = September
+  const [selectedYear, setSelectedYear] = useState<number>(currentNow.getFullYear()); // 2026
+  const [isHeaderCalendarOpen, setIsHeaderCalendarOpen] = useState(false);
+  const [tempHeaderYear, setTempHeaderYear] = useState<number>(currentNow.getFullYear());
+  const [qualityRange, setQualityRange] = useState<string>("month");
+
   // Stats
   const [stats, setStats] = useState({
     pending: 0,
+    pendingInCycle: 0,
+    supervisedInCycle: 0,
+    supervisedAllTime: 0,
+    approvedInCycle: 0,
+    passRateInCycle: 0,
+    needAction: 0,
+    needActionInCycle: 0,
+    monthShort: "Sep",
+    year: 2026,
+  });
+
+  // Chart States
+  const [velocityData, setVelocityData] = useState<WeeklyVerificationData[]>([]);
+  const [qualityData, setQualityData] = useState<VerificationQualityData>({
     approved: 0,
+    revisionRequested: 0,
     rejected: 0,
-    total: 0,
   });
 
   const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
@@ -71,6 +94,7 @@ export default function ReviewQueuePage() {
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
   };
+
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -99,7 +123,7 @@ export default function ReviewQueuePage() {
     }
   }, [supabase]);
 
-  const fetchTasksAndVendors = useCallback(async () => {
+  const fetchTasksAndVendors = useCallback(async (targetMonth = selectedMonth, targetYear = selectedYear, targetRange = qualityRange) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -136,12 +160,6 @@ export default function ReviewQueuePage() {
         due_date: t.due_date,
       }));
       setQueue(mapped);
-
-      // Compute stats
-      const pending = tasks.filter((t: any) => t.status === "submitted" || t.status === "pending" || t.status === "in_progress").length;
-      const approved = tasks.filter((t: any) => t.status === "approved").length;
-      const rejected = tasks.filter((t: any) => t.status === "rejected").length;
-      setStats({ pending, approved, rejected, total: tasks.length });
 
       // Build vendor list from unique vendors in tasks
       const vendorMap = new Map<string, VendorCard>();
@@ -181,8 +199,150 @@ export default function ReviewQueuePage() {
         }
       }
       setVendors(Array.from(vendorMap.values()));
+
+      // Fetch PM Reports to calculate Verification Velocity & Quality Ratio
+      const { data: reportsData } = await supabase
+        .from("pm_reports")
+        .select("id, status, submitted_at, reviewed_at");
+
+      // Weekly Verification Velocity (Realtime Calendar Weeks: 4 or 5 weeks)
+      const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+      const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const mLabel = monthNamesShort[targetMonth];
+
+      const weekDefs = [
+        { week: "Week 1", start: 1, end: 7, label: `1 - 7 ${mLabel}` },
+        { week: "Week 2", start: 8, end: 14, label: `8 - 14 ${mLabel}` },
+        { week: "Week 3", start: 15, end: 21, label: `15 - 21 ${mLabel}` },
+        { week: "Week 4", start: 22, end: 28, label: `22 - 28 ${mLabel}` },
+      ];
+
+      if (daysInMonth > 28) {
+        weekDefs.push({
+          week: "Week 5",
+          start: 29,
+          end: daysInMonth,
+          label: `29 - ${daysInMonth} ${mLabel}`,
+        });
+      }
+
+      const velocityList: WeeklyVerificationData[] = weekDefs.map((def) => {
+        let subm = 0;
+        let rev = 0;
+
+        if (reportsData && reportsData.length > 0) {
+          reportsData.forEach((rep: any) => {
+            const d = new Date(rep.submitted_at || rep.reviewed_at);
+            if (d.getFullYear() === targetYear && d.getMonth() === targetMonth) {
+              const day = d.getDate();
+              if (day >= def.start && day <= def.end) {
+                subm++;
+                if (rep.status === "approved" || rep.status === "rejected") {
+                  rev++;
+                }
+              }
+            }
+          });
+        }
+
+        return {
+          week: def.week,
+          dateRange: def.label,
+          submitted: subm,
+          reviewed: rev,
+        };
+      });
+      setVelocityData(velocityList);
+
+      // Quality Breakdown Calculation with Time Range Filter
+      let approvedCount = 0;
+      let revisionCount = 0;
+      let rejectedCount = 0;
+
+      const now = Date.now();
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+      const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+
+      if (reportsData && reportsData.length > 0) {
+        reportsData.forEach((rep: any) => {
+          const repDate = new Date(rep.reviewed_at || rep.submitted_at).getTime();
+          let inRange = true;
+
+          if (targetRange === "month") {
+            const d = new Date(rep.reviewed_at || rep.submitted_at);
+            inRange = d.getMonth() === targetMonth && d.getFullYear() === targetYear;
+          } else if (targetRange === "30d") {
+            inRange = now - repDate <= thirtyDaysMs;
+          } else if (targetRange === "90d") {
+            inRange = now - repDate <= ninetyDaysMs;
+          }
+
+          if (inRange) {
+            if (rep.status === "approved") approvedCount++;
+            else if (rep.status === "revision_requested") revisionCount++;
+            else if (rep.status === "rejected") rejectedCount++;
+          }
+        });
+      }
+
+      setQualityData({
+        approved: approvedCount,
+        revisionRequested: revisionCount,
+        rejected: rejectedCount,
+      });
+
+      // Compute Top Executive Stats Synchronized for Cycle
+      // Tasks belonging to the selected monthly cycle
+      const cycleTasks = tasks.filter((t: any) => {
+        const d = new Date(t.created_at || t.due_date);
+        return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
+      });
+
+      // 1. Pending Approvals (Real-time queue across all time so no vendor submission is missed)
+      const allPendingReviews = tasks.filter((t: any) => t.status === "submitted");
+      const pendingInCycle = allPendingReviews.filter((t: any) => {
+        const d = new Date(t.created_at || t.due_date);
+        return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
+      }).length;
+
+      // 2. Supervised PMs in Cycle
+      const supervisedInCycleCount = cycleTasks.length;
+      const approvedInCycleCount = cycleTasks.filter((t: any) => t.status === "approved" || t.status === "completed").length;
+
+      // 3. Approval Rate & Approved Count in selected cycle
+      const cycleReports = (reportsData || []).filter((rep: any) => {
+        const d = new Date(rep.reviewed_at || rep.submitted_at);
+        return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
+      });
+      const cycleApprovedReports = cycleReports.filter((rep: any) => rep.status === "approved").length;
+      const cycleDecidedReports = cycleReports.filter((rep: any) => rep.status === "approved" || rep.status === "rejected" || rep.status === "revision_requested").length;
+      const passRateInCycle = cycleDecidedReports > 0 ? Math.round((cycleApprovedReports / cycleDecidedReports) * 100) : 0;
+
+      // 4. Requires Action (Rejected or overdue)
+      const needActionRealtime = tasks.filter((t: any) => t.status === "rejected" || (t.status !== "approved" && t.status !== "completed" && new Date(t.due_date).getTime() < now)).length;
+      const needActionInCycle = cycleTasks.filter((t: any) => t.status === "rejected" || (t.status !== "approved" && t.status !== "completed" && new Date(t.due_date).getTime() < now)).length;
+
+      setStats({
+        pending: allPendingReviews.length,
+        pendingInCycle: pendingInCycle,
+        supervisedInCycle: supervisedInCycleCount,
+        supervisedAllTime: tasks.length,
+        approvedInCycle: cycleApprovedReports || approvedInCycleCount,
+        passRateInCycle: passRateInCycle,
+        needAction: needActionRealtime,
+        needActionInCycle: needActionInCycle,
+        monthShort: mLabel,
+        year: targetYear,
+      });
     }
   }, [supabase]);
+
+  const handlePeriodChange = useCallback((m: number, y: number) => {
+    setSelectedMonth(m);
+    setSelectedYear(y);
+    setTempHeaderYear(y);
+    fetchTasksAndVendors(m, y, qualityRange);
+  }, [fetchTasksAndVendors, qualityRange]);
 
   useEffect(() => {
     const load = async () => {
@@ -290,7 +450,7 @@ export default function ReviewQueuePage() {
             className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
           >
             <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
-              <img className="w-full h-full object-cover" alt="Profil" src={avatarSrc} />
+              <img className="w-full h-full object-cover" alt="Profile" src={avatarSrc} />
             </div>
             <div className="overflow-hidden">
               <p className="text-xs font-bold truncate text-white uppercase">{currentUser?.full_name || "Supervisor"}</p>
@@ -328,21 +488,239 @@ export default function ReviewQueuePage() {
 
       {/* Main Content Area */}
       <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] pb-20 lg:pb-0">
-        <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-12">
+        <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10">
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          {/* Section Header with Global Period Selector & Live Sync Indicator */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-gray-100">
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-headline-md text-base sm:text-lg font-black text-[#1A1A1A] uppercase tracking-tight">
+                  Verification Overview
+                </h3>
+              </div>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-0.5">
+                Realtime supervisor review queue &amp; quality metrics synchronized for {stats.monthShort} {selectedYear}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Reset to Current Month Button (visible if navigating away from current month) */}
+              {(selectedMonth !== currentNow.getMonth() || selectedYear !== currentNow.getFullYear()) && (
+                <button
+                  type="button"
+                  onClick={() => handlePeriodChange(currentNow.getMonth(), currentNow.getFullYear())}
+                  className="px-2.5 py-1.5 text-[10px] font-black uppercase rounded-xl border border-gray-300 hover:border-[#1A1A1A] bg-white text-gray-700 hover:text-[#1A1A1A] transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                  title="Return to Current Month"
+                >
+                  <span className="material-symbols-outlined text-xs text-[#D32F2F]">today</span>
+                  This Month
+                </button>
+              )}
+
+              {/* Month & Year Navigation with Popover */}
+              <div className="relative inline-flex items-center bg-white border-2 border-[#1A1A1A] rounded-xl p-1 shadow-[2px_2px_0px_0px_#1A1A1A]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedMonth === 0) {
+                      handlePeriodChange(11, selectedYear - 1);
+                    } else {
+                      handlePeriodChange(selectedMonth - 1, selectedYear);
+                    }
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-[#1A1A1A] font-black cursor-pointer transition-colors"
+                  title="Previous Month"
+                >
+                  <span className="material-symbols-outlined text-sm">chevron_left</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTempHeaderYear(selectedYear);
+                    setIsHeaderCalendarOpen(!isHeaderCalendarOpen);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase text-[#1A1A1A] hover:text-[#D32F2F] cursor-pointer transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm text-[#D32F2F]">calendar_month</span>
+                  <span>{stats.monthShort} {selectedYear}</span>
+                  <span className="material-symbols-outlined text-xs text-gray-500">
+                    {isHeaderCalendarOpen ? "expand_less" : "expand_more"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedMonth === 11) {
+                      handlePeriodChange(0, selectedYear + 1);
+                    } else {
+                      handlePeriodChange(selectedMonth + 1, selectedYear);
+                    }
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-[#1A1A1A] font-black cursor-pointer transition-colors"
+                  title="Next Month"
+                >
+                  <span className="material-symbols-outlined text-sm">chevron_right</span>
+                </button>
+
+                {/* Popover Calendar */}
+                {isHeaderCalendarOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setIsHeaderCalendarOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-72 bg-white border-2 border-[#1A1A1A] rounded-2xl p-4 shadow-[6px_6px_0px_0px_#1A1A1A] z-40 animate-in fade-in zoom-in-95 duration-150">
+                      {/* Popover Year Navigation */}
+                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100">
+                        <button
+                          type="button"
+                          onClick={() => setTempHeaderYear((prev) => prev - 1)}
+                          className="px-2 py-0.5 rounded border border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white text-xs font-black cursor-pointer transition-colors"
+                        >
+                          ◀
+                        </button>
+                        <span className="text-xs font-black text-[#1A1A1A] uppercase tracking-wider">
+                          Year {tempHeaderYear}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setTempHeaderYear((prev) => prev + 1)}
+                          className="px-2 py-0.5 rounded border border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white text-xs font-black cursor-pointer transition-colors"
+                        >
+                          ▶
+                        </button>
+                      </div>
+
+                      {/* 12 Months Grid */}
+                      <div className="grid grid-cols-4 gap-1">
+                        {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((mShort, idx) => {
+                          const isSelected = idx === selectedMonth && tempHeaderYear === selectedYear;
+                          const isCurrentActual = idx === currentNow.getMonth() && tempHeaderYear === currentNow.getFullYear();
+                          return (
+                            <button
+                              key={mShort}
+                              type="button"
+                              onClick={() => {
+                                handlePeriodChange(idx, tempHeaderYear);
+                                setIsHeaderCalendarOpen(false);
+                              }}
+                              className={`py-1.5 text-[10px] font-black uppercase rounded-lg border transition-all cursor-pointer relative ${
+                                isSelected
+                                  ? "bg-[#D32F2F] text-white border-[#D32F2F]"
+                                  : "bg-white text-gray-700 border-gray-200 hover:border-[#1A1A1A] hover:bg-gray-50"
+                              }`}
+                            >
+                              {mShort}
+                              {isCurrentActual && (
+                                <span className={`absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#D32F2F]"}`} />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Glowing Live Realtime Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border-2 border-green-600 rounded-full text-green-800 text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_0px_#166534] self-start sm:self-auto">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+                <span>Live • Auto Data Sync</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Overview Grid (Matching Vendor & Admin High-Clarity Design) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
             {[
-              { label: "Pending Reviews", value: stats.pending, color: "text-[#D32F2F]" },
-              { label: "Total Tasks", value: stats.total, color: "text-[#1A1A1A]" },
-              { label: "Approved", value: stats.approved, color: "text-green-600" },
-              { label: "Rejected", value: stats.rejected, color: "text-gray-700" },
-            ].map((s) => (
-              <div key={s.label} className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col justify-center items-center">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-2 font-bold text-center">{s.label}</p>
-                <div className={`text-[44px] font-extrabold leading-none ${s.color}`}>{s.value}</div>
+              {
+                label: "Pending Approvals",
+                value: stats.pending,
+                icon: "rate_review",
+                delta: `${stats.pendingInCycle} submitted in ${stats.monthShort} • Awaiting inspection signoff`,
+                badge: "Review Queue",
+                badgeColor: "text-amber-700 bg-amber-50 border-amber-300",
+              },
+              {
+                label: "Supervised PMs",
+                value: stats.supervisedInCycle,
+                icon: "assignment",
+                delta: `${stats.approvedInCycle} approved • Total ${stats.supervisedAllTime} all-time`,
+                badge: `${stats.monthShort} ${selectedYear}`,
+                badgeColor: "text-blue-700 bg-blue-50 border-blue-300",
+              },
+              {
+                label: "Approved & Verified",
+                value: stats.approvedInCycle,
+                icon: "verified",
+                delta: stats.approvedInCycle > 0
+                  ? `${stats.passRateInCycle}% first-time pass rate in ${stats.monthShort}`
+                  : `0% pass rate • No reports verified yet in ${stats.monthShort}`,
+                badge: "Verified Done",
+                badgeColor: "text-green-700 bg-green-50 border-green-300",
+              },
+              {
+                label: "Requires Action",
+                value: stats.needAction,
+                icon: "warning",
+                delta: stats.needActionInCycle > 0 
+                  ? `${stats.needActionInCycle} in ${stats.monthShort} cycle • Immediate inspection`
+                  : "Rejected reports or SLA overdue tasks",
+                badge: "Immediate Action",
+                badgeColor: "text-red-700 bg-red-50 border-red-300",
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 lg:p-8 flex flex-col justify-between hover:border-[#D32F2F] transition-all group"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider block">
+                      {stat.label}
+                    </span>
+                    <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase border px-2 py-0.5 rounded-full mt-1 ${stat.badgeColor}`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                      {stat.badge}
+                    </span>
+                  </div>
+                  <span className="material-symbols-outlined text-[#D32F2F] group-hover:scale-110 transition-transform">
+                    {stat.icon}
+                  </span>
+                </div>
+                <div className="mt-4">
+                  <p className="text-5xl font-extrabold text-[#D32F2F] tracking-tighter">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs text-gray-500 font-bold mt-1">
+                    {stat.delta}
+                  </p>
+                </div>
               </div>
             ))}
+          </div>
+
+          {/* Verification Velocity & Quality Analytics Charts */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <SupervisorVerificationVelocityChart
+              data={velocityData}
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              onPeriodChange={handlePeriodChange}
+            />
+            <SupervisorQualityDonutChart
+              data={qualityData}
+              selectedRange={qualityRange}
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              onRangeChange={(range) => {
+                setQualityRange(range);
+                fetchTasksAndVendors(selectedMonth, selectedYear, range);
+              }}
+            />
           </div>
 
           {/* Urgent Items */}

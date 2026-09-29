@@ -198,7 +198,7 @@ export default function VendorReportsPage() {
   const pendingReportsCount = reports.filter((rep) => rep.status === "Pending").length;
   const avgConfidence = reports.length > 0
     ? Math.round(reports.reduce((acc, curr) => acc + curr.confidence, 0) / reports.length)
-    : 100;
+    : 0;
 
   // Drawer interactions
   const handleOpenDrawer = (rep: Report) => {
