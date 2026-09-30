@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import AssetLookupModal from "@/components/AssetLookupModal";
+import { type Reading, isNumeric, inRange, limitsText, pickReading } from "@/lib/readings";
 
 interface Subtask {
   id: string;
@@ -17,7 +18,7 @@ interface Subtask {
 // "none" = plain checkbox, no photo/video evidence needed.
 type MediaType = "none" | "photo" | "video" | "both";
 
-interface ChecklistItem {
+interface ChecklistItem extends Reading {
   id: string;
   title: string;
   description: string;
@@ -321,7 +322,8 @@ export default function PMChecklistPage() {
             video: c.video || undefined,
             requireImage: !!c.requireImage,
             mediaType: itemMediaType(c),
-            subtasks: Array.isArray(c.subtasks) ? c.subtasks : []
+            subtasks: Array.isArray(c.subtasks) ? c.subtasks : [],
+            ...pickReading(c)
           }));
         } else if (t.pm_templates && Array.isArray(t.pm_templates.checklist_items) && t.pm_templates.checklist_items.length > 0) {
           checklistMapped = t.pm_templates.checklist_items.map((c: any, index: number) => ({
@@ -337,7 +339,8 @@ export default function PMChecklistPage() {
             video: c.video || undefined,
             requireImage: !!c.requireImage,
             mediaType: itemMediaType(c),
-            subtasks: Array.isArray(c.subtasks) ? c.subtasks : []
+            subtasks: Array.isArray(c.subtasks) ? c.subtasks : [],
+            ...pickReading(c)
           }));
         } else {
           // Fallback checklist default items if database is empty
@@ -500,6 +503,28 @@ export default function PMChecklistPage() {
     await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
   };
 
+  // Measured value for "number" items. Without photo evidence, the reading itself decides Pass / Error.
+  const handleSetReading = async (itemId: string, raw: string) => {
+    if (!selectedTask || isLocked) return;
+    const value = raw.trim() === "" || isNaN(Number(raw)) ? undefined : Number(raw);
+    const updatedChecklist = selectedTask.checklist.map((item) => {
+      if (item.id !== itemId) return item;
+      if (item.requireImage) return { ...item, value };
+      const status = value == null ? ("Awaiting" as const) : inRange(item, value) ? ("Pass" as const) : ("Error" as const);
+      return {
+        ...item,
+        value,
+        status,
+        evidenceTime: status === "Awaiting" ? undefined : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        errorMessage: status === "Error" ? `Out of spec: ${value} ${item.unit || ""} (spec ${limitsText(item)})` : undefined,
+      };
+    });
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t))
+    );
+    await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
+  };
+
   // AI image quality check via SightEngine API for items in "AI Processing" status
   const checkImageQualityWithAI = async (imageUrl: string) => {
     try {
@@ -647,8 +672,22 @@ export default function PMChecklistPage() {
       return;
     }
 
-    // Check if any checklist item with an Error status is missing repair notes
-    const missingNotes = selectedTask.checklist.some((item) => item.status === "Error" && !item.notes?.trim());
+    // Reading items need their measured value
+    const missingReadings = selectedTask.checklist.filter((item) => {
+      if (item.type === "optional" && item.status === "Awaiting") {
+        return false;
+      }
+      return isNumeric(item) && item.value == null;
+    });
+    if (missingReadings.length > 0) {
+      triggerToast(`Cannot proceed! ${missingReadings.length} checklist items still need a measured value.`, "error");
+      return;
+    }
+
+    // Check if any checklist item with an Error status or out-of-spec reading is missing repair notes
+    const missingNotes = selectedTask.checklist.some((item) =>
+      (item.status === "Error" || (isNumeric(item) && item.value != null && !inRange(item, item.value))) && !item.notes?.trim()
+    );
     if (missingNotes) {
       triggerToast("Checklist repair notes are required to explain findings for flagged/error items!", "error");
       return;
@@ -1094,6 +1133,7 @@ export default function PMChecklistPage() {
                 const isProcessing = item.status === "AI Processing";
                 const isAwaiting = item.status === "Awaiting";
                 const isError = item.status === "Error";
+                const outOfSpec = isNumeric(item) && item.value != null && !inRange(item, item.value);
 
                 return (
                   <div
@@ -1144,6 +1184,11 @@ export default function PMChecklistPage() {
                                 <span className="material-symbols-outlined text-xs">close</span>
                               </button>
                             )}
+                          </div>
+                        ) : isNumeric(item) && !item.requireImage ? (
+                          <div className="w-28 h-28 rounded-[16px] border border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-1 text-gray-400">
+                            <span className="material-symbols-outlined text-3xl">straighten</span>
+                            <span className="text-[8px] font-semibold uppercase tracking-tight">Reading</span>
                           </div>
                         ) : !item.requireImage ? (
                           <div className="w-28 flex flex-col gap-2">
@@ -1209,6 +1254,30 @@ export default function PMChecklistPage() {
                         <p className="text-gray-500 text-xs leading-relaxed font-semibold">
                           {item.errorMessage || item.description}
                         </p>
+
+                        {isNumeric(item) && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input
+                              key={`${item.id}-${item.value ?? ""}`}
+                              type="number"
+                              step="any"
+                              inputMode="decimal"
+                              defaultValue={item.value ?? ""}
+                              disabled={isLocked}
+                              onBlur={(e) => {
+                                if (e.target.value !== String(item.value ?? "")) handleSetReading(item.id, e.target.value);
+                              }}
+                              placeholder="VALUE"
+                              className={`w-28 h-9 px-3 rounded-lg border text-sm font-semibold outline-none ${outOfSpec ? "border-[#D32F2F] text-[#D32F2F] bg-red-50" : "border-gray-200 text-black bg-white focus:border-[#D32F2F]"} ${isLocked ? "cursor-not-allowed opacity-60" : ""}`}
+                            />
+                            {item.unit && <span className="text-xs font-semibold text-gray-600">{item.unit}</span>}
+                            {limitsText(item) && (
+                              <span className={`text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border ${outOfSpec ? "border-[#D32F2F] text-[#D32F2F]" : "border-gray-200 text-gray-500"}`}>
+                                {outOfSpec ? "Out of spec" : "Spec"} {limitsText(item)}
+                              </span>
+                            )}
+                          </div>
+                        )}
 
                         {/* Quick Action Button for awaiting */}
                         {isAwaiting && !isLocked && item.requireImage && (
@@ -1377,7 +1446,7 @@ export default function PMChecklistPage() {
                     {(item.image || item.video || !isAwaiting) && !isProcessing && (
                       <div className="mt-4 pt-4 border-t border-dashed border-gray-200 animate-in fade-in duration-200">
                         <label className="text-[9px] text-gray-500 font-semibold uppercase tracking-wider block mb-1">
-                          {isError ? "Findings / Repair Notes (Required)" : "Notes / Observations (Optional)"} {isLocked && "(Locked)"}
+                          {isError || outOfSpec ? "Findings / Repair Notes (Required)" : "Notes / Observations (Optional)"} {isLocked && "(Locked)"}
                         </label>
                         <textarea
                           value={item.notes || ""}

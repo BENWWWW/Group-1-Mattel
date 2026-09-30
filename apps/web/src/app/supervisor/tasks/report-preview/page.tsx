@@ -3,8 +3,9 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { type Reading, isNumeric, inRange, readingText, pickReading } from "@/lib/readings";
 
-interface ChecklistItem {
+interface ChecklistItem extends Reading {
   item_id: string;
   label: string;
   checked: boolean;
@@ -145,7 +146,8 @@ function ReportPreviewContent() {
                 image: c.image || null,
                 status: c.status || (c.checked ? "Pass" : "Awaiting"),
                 type: c.type && c.type !== "optional" ? "required" : "optional",
-                requireImage: c.requireImage !== undefined ? c.requireImage : false
+                requireImage: c.requireImage !== undefined ? c.requireImage : false,
+                ...pickReading(c)
               }));
               vendorSig = reportData.vendor_signature || reportData.vendorSignature || "";
               superSig = reportData.supervisor_signature || reportData.supervisorSignature || "";
@@ -159,7 +161,8 @@ function ReportPreviewContent() {
                 image: c.image || null,
                 status: c.status || (c.checked ? "Pass" : "Awaiting"),
                 type: c.type && c.type !== "optional" ? "required" : "optional",
-                requireImage: c.requireImage !== undefined ? c.requireImage : false
+                requireImage: c.requireImage !== undefined ? c.requireImage : false,
+                ...pickReading(c)
               }));
               vendorSig = cr.vendorSignature || cr.vendor_signature || reportData.vendor_signature || reportData.vendorSignature || "";
               vendorName = cr.vendorName || cr.vendor_name || vendorName;
@@ -175,7 +178,8 @@ function ReportPreviewContent() {
               image: c.image || null,
               status: c.status || (c.checked ? "Pass" : "Awaiting"),
               type: c.type && c.type !== "optional" ? "required" : "optional",
-              requireImage: c.requireImage !== undefined ? c.requireImage : false
+              requireImage: c.requireImage !== undefined ? c.requireImage : false,
+                ...pickReading(c)
             }));
           }
 
@@ -426,6 +430,12 @@ function ReportPreviewContent() {
                               {item.requireImage ? "Photo Req." : "No Photo"}
                             </span>
                           </div>
+                          {isNumeric(item) && (
+                            <p className={`mt-1.5 font-semibold normal-case ${item.value != null && !inRange(item, item.value) ? "text-[#D32F2F]" : ""}`}>
+                              {item.value != null ? readingText(item) : "No reading recorded"}
+                              {item.value != null && !inRange(item, item.value) && " — OUT OF SPEC"}
+                            </p>
+                          )}
                           {item.image && (
                             <div className="mt-3 w-32 h-20 border border-gray-300 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
                               <img src={item.image} alt={item.label} className="w-full h-full object-cover" />

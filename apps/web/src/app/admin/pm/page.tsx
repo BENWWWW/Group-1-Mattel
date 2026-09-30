@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { Reading } from "@/lib/readings";
 
 type MediaType = "none"|"photo"|"video"|"both";
 interface SubtaskItem { id: string; text: string; mediaType?: MediaType; }
-interface TaskItem { id: string; text: string; type: "optional"|"required"; requireImage?: boolean; mediaType?: MediaType; subtasks?: SubtaskItem[]; }
+interface TaskItem extends Reading { id: string; text: string; type: "optional"|"required"; requireImage?: boolean; mediaType?: MediaType; subtasks?: SubtaskItem[]; }
 
 const MEDIA_OPTIONS: { value: MediaType; label: string; icon: string }[] = [
   { value: "none", label: "Checkbox", icon: "check_box" },
@@ -122,6 +123,7 @@ export default function PMTemplatesPage() {
   const handleMediaTypeChange = (id: string, mediaType: MediaType) => setFormTasks(formTasks.map(t=>t.id===id?{...t,mediaType,requireImage:mediaType!=="none"}:t));
   const handleSubtaskMediaTypeChange = (taskId: string, subtaskId: string, mediaType: MediaType) =>
     setFormTasks(formTasks.map(t => t.id !== taskId ? t : { ...t, subtasks: (t.subtasks || []).map(s => s.id === subtaskId ? { ...s, mediaType } : s) }));
+  const handleReadingChange = (id: string, patch: Partial<Reading>) => setFormTasks(formTasks.map(t=>t.id===id?{...t,...patch}:t));
   const handleRemoveTask = (id: string) => setFormTasks(formTasks.filter(t=>t.id!==id));
 
   const handleAddSubtask = (taskId: string) => {
@@ -427,6 +429,27 @@ export default function PMTemplatesPage() {
                               </div>
                             ))}
                           </div>
+                        )}
+                      </div>
+
+                      {/* Result input: OK/Fail tick, or a measured value checked against limits */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-semibold uppercase text-gray-400">Result:</span>
+                        <div className="flex items-center gap-1 border border-gray-200 rounded p-0.5 bg-gray-50">
+                          {([["check","OK / Fail"],["number","Reading"]] as const).map(([value,label])=>(
+                            <button key={value} type="button" onClick={()=>handleReadingChange(task.id,{inputType:value})}
+                              className={`px-2.5 py-1 rounded font-semibold text-[9px] uppercase tracking-wider transition-all cursor-pointer ${(task.inputType||"check")===value?"bg-[#1A1A1A] text-white":"text-gray-400 hover:text-gray-700"}`}>{label}</button>
+                          ))}
+                        </div>
+                        {task.inputType==="number" && (
+                          <>
+                            <input type="text" value={task.unit||""} onChange={e=>handleReadingChange(task.id,{unit:e.target.value})} placeholder="UNIT (mm, °C)"
+                              className="w-24 h-7 px-2 border border-gray-200 rounded text-[10px] font-medium outline-none focus:border-[#D32F2F]"/>
+                            <input type="number" step="any" value={task.min??""} onChange={e=>handleReadingChange(task.id,{min:e.target.value===""?undefined:Number(e.target.value)})} placeholder="MIN"
+                              className="w-20 h-7 px-2 border border-gray-200 rounded text-[10px] font-medium outline-none focus:border-[#D32F2F]"/>
+                            <input type="number" step="any" value={task.max??""} onChange={e=>handleReadingChange(task.id,{max:e.target.value===""?undefined:Number(e.target.value)})} placeholder="MAX"
+                              className="w-20 h-7 px-2 border border-gray-200 rounded text-[10px] font-medium outline-none focus:border-[#D32F2F]"/>
+                          </>
                         )}
                       </div>
 

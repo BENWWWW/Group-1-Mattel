@@ -6,8 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
 import AssetLookupModal from "@/components/AssetLookupModal";
 import { getMySignatures, saveSignature } from "@/lib/signatures";
+import { type Reading, isNumeric, inRange, readingText, pickReading } from "@/lib/readings";
 
-interface ChecklistItem {
+interface ChecklistItem extends Reading {
   item_id: string;
   label: string;
   checked: boolean;
@@ -201,7 +202,8 @@ export default function ReviewDetailPage() {
           type: c.type && c.type !== "optional" ? "required" : "optional",
           requireImage: c.requireImage !== undefined ? c.requireImage : false,
           mediaType: c.mediaType || "photo",
-          subtasks: Array.isArray(c.subtasks) ? c.subtasks : []
+          subtasks: Array.isArray(c.subtasks) ? c.subtasks : [],
+          ...pickReading(c)
         }));
 
         // Audit Logs list
@@ -753,6 +755,12 @@ export default function ReviewDetailPage() {
                               {item.requireImage ? "Photo Req." : "No Photo"}
                             </span>
                           </div>
+                          {isNumeric(item) && (
+                            <p className={`mt-2 text-sm font-semibold ${item.value != null && !inRange(item, item.value) ? "text-[#D32F2F]" : "text-black"}`}>
+                              {item.value != null ? readingText(item) : "No reading recorded"}
+                              {item.value != null && !inRange(item, item.value) && <span className="ml-2 text-[9px] uppercase tracking-wider">Out of spec</span>}
+                            </p>
+                          )}
                         </div>
                         {(() => {
                           const status = item.status || (item.checked ? "Pass" : "Awaiting");
