@@ -392,22 +392,22 @@ export default function ReviewQueuePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-white">
+      <div className="flex h-screen w-full items-center justify-center bg-page">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Dashboard...</p>
+          <div className="w-12 h-12 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-medium uppercase tracking-widest text-gray-500">Loading Dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md select-none relative overflow-hidden">
+    <div className="flex h-screen w-full bg-page text-[#1A1A1A] font-body-md select-none relative overflow-hidden">
       {/* SideNavBar */}
-      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r border-gray-200">
         <div className="px-6 mb-10">
-          <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN</h1>
-          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
+          <h1 className="font-headline-md text-xl font-semibold text-white leading-tight">MAINTAIN</h1>
+          <p className="text-[10px] text-[#D32F2F] font-medium uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           <button
@@ -440,7 +440,7 @@ export default function ReviewQueuePage() {
               await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
-            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-xs cursor-pointer border-none mb-4"
+            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-medium text-xs cursor-pointer border-none mb-4"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             <span>Logout</span>
@@ -449,23 +449,23 @@ export default function ReviewQueuePage() {
             onClick={() => router.push("/supervisor/profile")}
             className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
           >
-            <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               <img className="w-full h-full object-cover" alt="Profile" src={avatarSrc} />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase">{currentUser?.full_name || "Supervisor"}</p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">{currentUser?.department || "Supervisor"}</p>
+              <p className="text-xs font-medium truncate text-white uppercase">{currentUser?.full_name || "Supervisor"}</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-medium">{currentUser?.department || "Supervisor"}</p>
             </div>
           </button>
         </div>
       </aside>
 
       {/* TopNavBar */}
-      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b-2 border-[#1A1A1A] h-20 px-6 lg:px-10 flex justify-between items-center z-40 gap-4">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b border-gray-200 h-20 px-6 lg:px-10 flex justify-between items-center z-40 gap-4">
         <div className="flex items-center gap-4">
           <div>
-            <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Supervisor Dashboard</h2>
-            <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-bold">Manage & approve maintenance reports</p>
+            <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight">Supervisor Dashboard</h2>
+            <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-medium">Manage & approve maintenance reports</p>
           </div>
         </div>
         <div className="flex-1 max-w-md mx-4 relative hidden sm:block">
@@ -475,30 +475,30 @@ export default function ReviewQueuePage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Filter queue by task code, title, tech..."
-            className="w-full bg-white border-2 border-[#1A1A1A] rounded-full py-1.5 pl-10 pr-4 text-xs focus:outline-none focus:border-[#D32F2F] font-body-md"
+            className="w-full bg-white border border-gray-200 rounded-full py-1.5 pl-10 pr-4 text-xs focus:outline-none focus:border-[#D32F2F] font-body-md"
           />
         </div>
         <div className="flex items-center gap-4">
           <NotificationBell />
-          <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
+          <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
             <img className="w-full h-full object-cover" src={avatarSrc} alt="User Profile" />
           </div>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] pb-20 lg:pb-0">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-page w-full lg:w-[calc(100%-220px)] pb-20 lg:pb-0">
         <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10">
 
           {/* Section Header with Global Period Selector */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-gray-100">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-headline-md text-base sm:text-lg font-black text-[#1A1A1A] uppercase tracking-tight">
+                <h3 className="font-headline-md text-base sm:text-lg font-semibold text-[#1A1A1A] uppercase tracking-tight">
                   Verification Overview
                 </h3>
               </div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-0.5">
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mt-0.5">
                 {stats.monthShort} {selectedYear}
               </p>
             </div>
@@ -509,16 +509,16 @@ export default function ReviewQueuePage() {
                 <button
                   type="button"
                   onClick={() => handlePeriodChange(currentNow.getMonth(), currentNow.getFullYear())}
-                  className="px-2.5 py-1.5 text-[10px] font-black uppercase rounded-xl border border-gray-300 hover:border-[#1A1A1A] bg-white text-gray-700 hover:text-[#1A1A1A] transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                  className="px-2.5 py-1.5 text-[10px] font-semibold uppercase rounded-xl border border-gray-300 hover:border-gray-400 bg-white text-gray-700 hover:text-[#1A1A1A] transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                   title="Return to Current Month"
                 >
-                  <span className="material-symbols-outlined text-xs text-[#D32F2F]">today</span>
+                  <span className="material-symbols-outlined text-xs text-gray-400">today</span>
                   This Month
                 </button>
               )}
 
               {/* Month & Year Navigation with Popover */}
-              <div className="relative inline-flex items-center bg-white border-2 border-[#1A1A1A] rounded-xl p-1 shadow-[2px_2px_0px_0px_#1A1A1A]">
+              <div className="relative inline-flex items-center bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
                 <button
                   type="button"
                   onClick={() => {
@@ -528,7 +528,7 @@ export default function ReviewQueuePage() {
                       handlePeriodChange(selectedMonth - 1, selectedYear);
                     }
                   }}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-[#1A1A1A] font-black cursor-pointer transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-[#1A1A1A] font-semibold cursor-pointer transition-colors"
                   title="Previous Month"
                 >
                   <span className="material-symbols-outlined text-sm">chevron_left</span>
@@ -540,9 +540,9 @@ export default function ReviewQueuePage() {
                     setTempHeaderYear(selectedYear);
                     setIsHeaderCalendarOpen(!isHeaderCalendarOpen);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase text-[#1A1A1A] hover:text-[#D32F2F] cursor-pointer transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase text-[#1A1A1A] hover:text-[#D32F2F] cursor-pointer transition-colors"
                 >
-                  <span className="material-symbols-outlined text-sm text-[#D32F2F]">calendar_month</span>
+                  <span className="material-symbols-outlined text-sm text-gray-400">calendar_month</span>
                   <span>{stats.monthShort} {selectedYear}</span>
                   <span className="material-symbols-outlined text-xs text-gray-500">
                     {isHeaderCalendarOpen ? "expand_less" : "expand_more"}
@@ -558,7 +558,7 @@ export default function ReviewQueuePage() {
                       handlePeriodChange(selectedMonth + 1, selectedYear);
                     }
                   }}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-[#1A1A1A] font-black cursor-pointer transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-[#1A1A1A] font-semibold cursor-pointer transition-colors"
                   title="Next Month"
                 >
                   <span className="material-symbols-outlined text-sm">chevron_right</span>
@@ -571,23 +571,23 @@ export default function ReviewQueuePage() {
                       className="fixed inset-0 z-30"
                       onClick={() => setIsHeaderCalendarOpen(false)}
                     />
-                    <div className="absolute right-0 top-full mt-2 w-72 bg-white border-2 border-[#1A1A1A] rounded-2xl p-4 shadow-[6px_6px_0px_0px_#1A1A1A] z-40 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl p-4 shadow-lg z-40 animate-in fade-in zoom-in-95 duration-150">
                       {/* Popover Year Navigation */}
                       <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100">
                         <button
                           type="button"
                           onClick={() => setTempHeaderYear((prev) => prev - 1)}
-                          className="px-2 py-0.5 rounded border border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white text-xs font-black cursor-pointer transition-colors"
+                          className="px-2 py-0.5 rounded border border-gray-200 hover:bg-[#1A1A1A] hover:text-white text-xs font-semibold cursor-pointer transition-colors"
                         >
                           ◀
                         </button>
-                        <span className="text-xs font-black text-[#1A1A1A] uppercase tracking-wider">
+                        <span className="text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">
                           Year {tempHeaderYear}
                         </span>
                         <button
                           type="button"
                           onClick={() => setTempHeaderYear((prev) => prev + 1)}
-                          className="px-2 py-0.5 rounded border border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white text-xs font-black cursor-pointer transition-colors"
+                          className="px-2 py-0.5 rounded border border-gray-200 hover:bg-[#1A1A1A] hover:text-white text-xs font-semibold cursor-pointer transition-colors"
                         >
                           ▶
                         </button>
@@ -606,10 +606,10 @@ export default function ReviewQueuePage() {
                                 handlePeriodChange(idx, tempHeaderYear);
                                 setIsHeaderCalendarOpen(false);
                               }}
-                              className={`py-1.5 text-[10px] font-black uppercase rounded-lg border transition-all cursor-pointer relative ${
+                              className={`py-1.5 text-[10px] font-semibold uppercase rounded-lg border transition-all cursor-pointer relative ${
                                 isSelected
                                   ? "bg-[#D32F2F] text-white border-[#D32F2F]"
-                                  : "bg-white text-gray-700 border-gray-200 hover:border-[#1A1A1A] hover:bg-gray-50"
+                                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:bg-gray-50"
                               }`}
                             >
                               {mShort}
@@ -661,23 +661,23 @@ export default function ReviewQueuePage() {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 lg:p-8 flex flex-col justify-between hover:border-[#D32F2F] transition-all group"
+                className="bg-white rounded-[20px] p-6 lg:p-8 flex flex-col justify-between hover:shadow-md transition-all group shadow-sm"
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider block">
+                    <span className="font-label-md text-xs font-medium text-gray-500 uppercase tracking-wider block">
                       {stat.label}
                     </span>
                   </div>
-                  <span className="material-symbols-outlined text-[#D32F2F] group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-gray-400 group-hover:scale-110 transition-transform">
                     {stat.icon}
                   </span>
                 </div>
                 <div className="mt-4">
-                  <p className="text-5xl font-extrabold text-[#D32F2F] tracking-tighter">
+                  <p className="text-5xl font-semibold text-gray-900 tracking-tighter">
                     {stat.value}
                   </p>
-                  <p className="text-xs text-gray-500 font-bold mt-1">
+                  <p className="text-xs text-gray-500 font-medium mt-1">
                     {stat.delta}
                   </p>
                 </div>
@@ -709,8 +709,8 @@ export default function ReviewQueuePage() {
           {urgentItems.length > 0 && (
             <section className="space-y-6">
               <div className="flex items-center gap-4">
-                <h3 className="font-headline-lg text-lg font-extrabold text-[#1A1A1A] uppercase tracking-wide">High Priority</h3>
-                <span className="bg-[#D32F2F] text-white px-3 py-0.5 rounded-full font-bold text-[10px] border-2 border-[#1A1A1A] uppercase tracking-wider">
+                <h3 className="font-headline-lg text-lg font-semibold text-[#1A1A1A] uppercase tracking-wide">High Priority</h3>
+                <span className="bg-[#D32F2F] text-white px-3 py-0.5 rounded-full font-medium text-[10px] border border-gray-200 uppercase tracking-wider">
                   {urgentItems.length} Items
                 </span>
               </div>
@@ -719,20 +719,20 @@ export default function ReviewQueuePage() {
                   <div
                     key={item.id}
                     onClick={() => router.push("/supervisor/tasks")}
-                    className="bg-white border-2 border-[#1A1A1A] border-l-[12px] border-l-[#D32F2F] rounded-[20px] p-6 cursor-pointer hover:border-[#D32F2F] transition-all flex items-center justify-between gap-6"
+                    className="bg-white border-l-[12px] border-l-[#D32F2F] rounded-[20px] p-6 cursor-pointer hover:shadow-md transition-all flex items-center justify-between gap-6 shadow-sm"
                   >
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-[#D32F2F] text-white px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">{item.priority.toUpperCase()}</span>
-                        <span className="text-gray-400 text-[10px] font-bold">{item.task_code}</span>
+                        <span className="bg-[#D32F2F] text-white px-2 py-0.5 rounded-full text-[9px] font-medium uppercase">{item.priority.toUpperCase()}</span>
+                        <span className="text-gray-400 text-[10px] font-medium">{item.task_code}</span>
                       </div>
-                      <h4 className="font-extrabold text-base text-[#1A1A1A]">{item.title}</h4>
+                      <h4 className="font-semibold text-base text-[#1A1A1A]">{item.title}</h4>
                       <p className="text-xs text-gray-500 mt-1">Tech: <strong className="text-[#1A1A1A]">{item.tech}</strong> • {item.location}</p>
                       <p className="text-[10px] text-gray-400 mt-1">Due: {item.due_date} • {item.time}</p>
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); router.push("/supervisor/tasks"); }}
-                      className="bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full px-6 py-2 font-bold text-xs uppercase tracking-wider hover:bg-[#B71C1C] transition-all cursor-pointer shrink-0"
+                      className="bg-[#D32F2F] text-white border border-gray-200 rounded-full px-6 py-2 font-medium text-xs uppercase tracking-wider hover:bg-[#B71C1C] transition-all cursor-pointer shrink-0"
                     >
                       Review
                     </button>
@@ -745,15 +745,15 @@ export default function ReviewQueuePage() {
           {/* Active Queue — Submitted Reports */}
           <section className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="font-headline-lg text-lg font-extrabold text-[#1A1A1A] uppercase tracking-wide">
+              <h3 className="font-headline-lg text-lg font-semibold text-[#1A1A1A] uppercase tracking-wide">
                 Active Queue
                 {submittedItems.length > 0 && (
-                  <span className="ml-3 bg-[#D32F2F] text-white px-2 py-0.5 rounded-full text-[10px] font-bold">{submittedItems.length}</span>
+                  <span className="ml-3 bg-[#D32F2F] text-white px-2 py-0.5 rounded-full text-[10px] font-medium">{submittedItems.length}</span>
                 )}
               </h3>
               <button
                 onClick={() => router.push("/supervisor/tasks")}
-                className="text-[#D32F2F] font-bold hover:underline flex items-center gap-1 uppercase text-xs tracking-wider border-none bg-transparent cursor-pointer"
+                className="text-[#D32F2F] font-medium hover:underline flex items-center gap-1 uppercase text-xs tracking-wider border-none bg-transparent cursor-pointer"
               >
                 View All
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -761,9 +761,9 @@ export default function ReviewQueuePage() {
             </div>
 
             {activeQueue.length === 0 ? (
-              <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-[20px]">
+              <div className="text-center py-16 border border-dashed border-gray-200 rounded-[20px]">
                 <span className="material-symbols-outlined text-4xl text-gray-300">inbox</span>
-                <p className="text-xs font-bold uppercase text-gray-400 tracking-wider mt-2">
+                <p className="text-xs font-medium uppercase text-gray-400 tracking-wider mt-2">
                   No active or incomplete tasks
                 </p>
               </div>
@@ -773,22 +773,22 @@ export default function ReviewQueuePage() {
                   <div
                     key={item.id}
                     onClick={() => router.push("/supervisor/tasks")}
-                    className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex items-center justify-between hover:border-[#D32F2F] transition-all duration-200 cursor-pointer group"
+                    className="bg-white rounded-[20px] p-6 flex items-center justify-between hover:shadow-md transition-all duration-200 cursor-pointer group shadow-sm"
                   >
                     <div className="flex items-center gap-6">
-                      <div className="w-14 h-14 border-2 border-[#1A1A1A] rounded-xl overflow-hidden bg-[#D32F2F]/5 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-[#D32F2F] text-2xl">build</span>
+                      <div className="w-14 h-14 border border-gray-200 rounded-xl overflow-hidden bg-[#D32F2F]/5 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-gray-400 text-2xl">build</span>
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`${statusColor[item.status] || "bg-gray-400 text-white"} px-2 py-0.5 rounded-full text-[9px] font-bold uppercase`}>
+                          <span className={`${statusColor[item.status] || "bg-gray-400 text-white"} px-2 py-0.5 rounded-full text-[9px] font-medium uppercase`}>
                             {item.status.replace("_", " ")}
                           </span>
-                          <span className="text-gray-400 text-[10px] font-bold">{item.time}</span>
+                          <span className="text-gray-400 text-[10px] font-medium">{item.time}</span>
                         </div>
-                        <h5 className="font-headline-md text-sm font-extrabold mb-0.5 text-[#1A1A1A]">{item.title}</h5>
+                        <h5 className="font-headline-md text-sm font-semibold mb-0.5 text-[#1A1A1A]">{item.title}</h5>
                         <p className="text-gray-500 text-xs">
-                          <span className="font-bold text-[10px] text-gray-400 uppercase">{item.task_code}</span> • Tech: <strong className="text-[#1A1A1A]">{item.tech}</strong> • {item.location}
+                          <span className="font-medium text-[10px] text-gray-400 uppercase">{item.task_code}</span> • Tech: <strong className="text-[#1A1A1A]">{item.tech}</strong> • {item.location}
                         </p>
                       </div>
                     </div>
@@ -802,14 +802,14 @@ export default function ReviewQueuePage() {
           {/* Vendors Under Responsibility */}
           <section className="space-y-6 pt-6 border-t border-gray-100">
             <div>
-              <h3 className="font-headline-lg text-lg font-extrabold text-[#1A1A1A] uppercase tracking-wide">Vendors Under Responsibility</h3>
+              <h3 className="font-headline-lg text-lg font-semibold text-[#1A1A1A] uppercase tracking-wide">Vendors Under Responsibility</h3>
               <p className="text-xs text-gray-500 font-medium">Vendors that have active tasks with this supervisor.</p>
             </div>
 
             {vendors.length === 0 ? (
-              <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-[20px]">
+              <div className="text-center py-10 border border-dashed border-gray-200 rounded-[20px]">
                 <span className="material-symbols-outlined text-4xl text-gray-300">groups</span>
-                <p className="text-xs font-bold uppercase text-gray-400 tracking-wider mt-2">No vendors connected yet</p>
+                <p className="text-xs font-medium uppercase text-gray-400 tracking-wider mt-2">No vendors connected yet</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -817,21 +817,21 @@ export default function ReviewQueuePage() {
                   <div
                     key={vendor.id}
                     onClick={() => setSelectedVendorDetail(vendor)}
-                    className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 hover:border-[#D32F2F] transition-all duration-200 cursor-pointer flex flex-col justify-between h-44 relative group"
+                    className="bg-white rounded-[20px] p-6 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between h-44 relative group shadow-sm"
                   >
                     <div>
                       <div className="flex justify-between items-start">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border-2 border-[#1A1A1A] uppercase ${vendor.is_active ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-medium border border-gray-200 uppercase ${vendor.is_active ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                           {vendor.is_active ? "Active" : "Inactive"}
                         </span>
                       </div>
-                      <h4 className="font-headline-lg text-base font-extrabold mt-3 text-[#1A1A1A] group-hover:text-[#D32F2F] transition-colors leading-tight">
+                      <h4 className="font-headline-lg text-base font-semibold mt-3 text-[#1A1A1A] group-hover:text-[#D32F2F] transition-colors leading-tight">
                         {vendor.full_name}
                       </h4>
-                      <p className="text-xs text-gray-400 font-bold mt-1 truncate">{vendor.email || vendor.department || "—"}</p>
+                      <p className="text-xs text-gray-400 font-medium mt-1 truncate">{vendor.email || vendor.department || "—"}</p>
                     </div>
                     <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                      <span className="text-[10px] text-gray-500 font-bold uppercase">{vendor.taskCount} Total tasks</span>
+                      <span className="text-[10px] text-gray-500 font-medium uppercase">{vendor.taskCount} Total tasks</span>
                       <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </div>
                   </div>
@@ -849,66 +849,66 @@ export default function ReviewQueuePage() {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setSelectedVendorDetail(null)}
           ></div>
-          <div className="relative bg-white border-4 border-[#1A1A1A] p-8 rounded-[24px] max-w-sm w-full z-10 flex flex-col gap-6 text-left shadow-[8px_8px_0px_0px_rgba(0,0,0,0.15)] animate-in zoom-in-95 duration-200">
-            <header className="flex justify-between items-center pb-4 border-b-2 border-[#1A1A1A]">
+          <div className="relative bg-white p-8 rounded-[24px] max-w-sm w-full z-10 flex flex-col gap-6 text-left shadow-lg animate-in zoom-in-95 duration-200">
+            <header className="flex justify-between items-center pb-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[#D32F2F] text-2xl">badge</span>
-                <h3 className="font-headline-md text-base uppercase font-black tracking-tight">Vendor Profile</h3>
+                <span className="material-symbols-outlined text-gray-400 text-2xl">badge</span>
+                <h3 className="font-headline-md text-base uppercase font-semibold tracking-tight">Vendor Profile</h3>
               </div>
               <button
                 onClick={() => setSelectedVendorDetail(null)}
-                className="w-8 h-8 flex items-center justify-center border-2 border-[#1A1A1A] rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer bg-white"
+                className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer bg-white"
               >
                 <span className="material-symbols-outlined text-sm">close</span>
               </button>
             </header>
 
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full border-2 border-[#1A1A1A] bg-[#D32F2F]/5 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#D32F2F] text-3xl">engineering</span>
+              <div className="w-16 h-16 rounded-full border border-gray-200 bg-[#D32F2F]/5 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-gray-400 text-3xl">engineering</span>
               </div>
               <div className="overflow-hidden">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border border-[#1A1A1A] uppercase ${selectedVendorDetail.is_active ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-medium border border-gray-200 uppercase ${selectedVendorDetail.is_active ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                     {selectedVendorDetail.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
-                <h4 className="font-headline-lg text-lg font-black leading-tight text-[#1A1A1A] uppercase truncate">
+                <h4 className="font-headline-lg text-lg font-semibold leading-tight text-[#1A1A1A] uppercase truncate">
                   {selectedVendorDetail.full_name}
                 </h4>
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 border-2 border-[#1A1A1A] rounded-xl">
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl">
                 <div>
-                  <p className="text-[9px] uppercase font-bold text-gray-400">Vendor ID</p>
-                  <p className="font-extrabold text-xs text-[#1A1A1A]">#{selectedVendorDetail.employee_id || "N/A"}</p>
+                  <p className="text-[9px] uppercase font-medium text-gray-400">Vendor ID</p>
+                  <p className="font-semibold text-xs text-[#1A1A1A]">#{selectedVendorDetail.employee_id || "N/A"}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase font-bold text-gray-400">Department</p>
-                  <p className="font-extrabold text-xs text-[#1A1A1A]">{selectedVendorDetail.department || "General Maintenance"}</p>
+                  <p className="text-[9px] uppercase font-medium text-gray-400">Department</p>
+                  <p className="font-semibold text-xs text-[#1A1A1A]">{selectedVendorDetail.department || "General Maintenance"}</p>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-[9px] uppercase font-bold text-gray-400">Email Address</p>
-                  <p className="font-extrabold text-xs text-[#1A1A1A] break-all">{selectedVendorDetail.email || "—"}</p>
+                  <p className="text-[9px] uppercase font-medium text-gray-400">Email Address</p>
+                  <p className="font-semibold text-xs text-[#1A1A1A] break-all">{selectedVendorDetail.email || "—"}</p>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-[9px] uppercase font-bold text-gray-400">Phone Contact</p>
-                  <p className="font-extrabold text-xs text-[#1A1A1A]">{selectedVendorDetail.phone || "No phone registered"}</p>
+                  <p className="text-[9px] uppercase font-medium text-gray-400">Phone Contact</p>
+                  <p className="font-semibold text-xs text-[#1A1A1A]">{selectedVendorDetail.phone || "No phone registered"}</p>
                 </div>
               </div>
 
-              <div className="bg-[#1A1A1A] text-white p-4 rounded-xl border-2 border-[#1A1A1A] flex justify-between items-center">
+              <div className="bg-[#1A1A1A] text-white p-4 rounded-xl flex justify-between items-center">
                 <div>
-                  <p className="text-[9px] uppercase font-bold text-white/50">Current Workload</p>
-                  <p className="font-black text-sm uppercase tracking-tight text-white">Active Assignments</p>
+                  <p className="text-[9px] uppercase font-medium text-white/50">Current Workload</p>
+                  <p className="font-semibold text-sm uppercase tracking-tight text-white">Active Assignments</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-black text-[#D32F2F] bg-white border border-[#1A1A1A] px-3 py-1 rounded-lg">
+                  <span className="text-2xl font-semibold text-[#D32F2F] bg-white border border-gray-200 px-3 py-1 rounded-lg">
                     {selectedVendorDetail.taskCount}
                   </span>
-                  <span className="text-white/60 font-bold text-[10px] uppercase">Tasks</span>
+                  <span className="text-white/60 font-medium text-[10px] uppercase">Tasks</span>
                 </div>
               </div>
             </div>
@@ -918,7 +918,7 @@ export default function ReviewQueuePage() {
                 setSelectedVendorDetail(null);
                 router.push("/supervisor/tasks");
               }}
-              className="w-full py-3.5 bg-[#D32F2F] text-white font-black text-xs uppercase tracking-widest rounded-lg border-2 border-[#1A1A1A] hover:bg-[#1A1A1A] transition-all cursor-pointer text-center"
+              className="w-full py-3.5 bg-[#D32F2F] text-white font-semibold text-xs uppercase tracking-widest rounded-lg border border-gray-200 hover:bg-[#1A1A1A] transition-all cursor-pointer text-center"
             >
               View Associated Tasks
             </button>
@@ -931,12 +931,12 @@ export default function ReviewQueuePage() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 border-[#D32F2F] shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300"
+            className="pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border border-[#D32F2F] shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300"
           >
-            <span className="material-symbols-outlined text-[#D32F2F]">
+            <span className="material-symbols-outlined text-gray-400">
               {t.type === "success" ? "check_circle" : t.type === "error" ? "error" : "info"}
             </span>
-            <span className="font-black uppercase tracking-widest text-xs">{t.message}</span>
+            <span className="font-semibold uppercase tracking-widest text-xs">{t.message}</span>
           </div>
         ))}
       </div>

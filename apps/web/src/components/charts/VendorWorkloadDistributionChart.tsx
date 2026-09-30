@@ -51,7 +51,7 @@ export default function VendorWorkloadDistributionChart({
                   <div className="h-full rounded-full" style={{ width: `${(r.count / max) * 100}%`, background: r.color }} />
                 )}
               </div>
-              <span className="text-right font-bold text-[#1A1A1A] tabular-nums">{r.count}</span>
+              <span className="text-right font-medium text-[#1A1A1A] tabular-nums">{r.count}</span>
             </div>
           ))}
         </div>

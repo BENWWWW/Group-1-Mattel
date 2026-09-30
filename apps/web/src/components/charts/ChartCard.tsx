@@ -24,10 +24,10 @@ export function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col gap-5">
+    <div className="bg-white rounded-[20px] p-6 flex flex-col gap-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-extrabold uppercase tracking-tight text-[#1A1A1A]">{title}</h3>
+          <h3 className="text-base font-semibold uppercase tracking-tight text-[#1A1A1A]">{title}</h3>
           {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
         </div>
         {action}
@@ -42,7 +42,7 @@ export function Stats({ items }: { items: { label: string; value: React.ReactNod
     <div className="flex flex-wrap gap-x-8 gap-y-3">
       {items.map((s) => (
         <div key={s.label}>
-          <div className="text-2xl font-extrabold text-[#1A1A1A] leading-none">{s.value}</div>
+          <div className="text-2xl font-semibold text-[#1A1A1A] leading-none">{s.value}</div>
           <div className="text-xs text-gray-500 mt-1">{s.label}</div>
         </div>
       ))}
@@ -72,7 +72,7 @@ export function EmptyChart({ text }: { text: string }) {
 }
 
 const inputClass =
-  "border border-gray-300 rounded-lg px-2 py-1 text-xs font-semibold text-[#1A1A1A] bg-white cursor-pointer focus:outline-none focus:border-[#1A1A1A]";
+  "border border-gray-300 rounded-lg px-2 py-1 text-xs font-semibold text-[#1A1A1A] bg-white cursor-pointer focus:outline-none focus:border-gray-200";
 
 export function Select({
   value,

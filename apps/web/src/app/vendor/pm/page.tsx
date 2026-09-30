@@ -197,17 +197,17 @@ export default function VPMHistoryPage() {
 
   if (loading && records.length === 0) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-white">
+      <div className="flex h-screen w-full items-center justify-center bg-page">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading PM History...</p>
+          <div className="w-12 h-12 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-medium uppercase tracking-widest text-gray-500">Loading PM History...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full select-none bg-white text-on-surface font-body-md overflow-hidden relative">
+    <div className="flex h-screen w-full select-none bg-page text-on-surface font-body-md overflow-hidden relative">
       <style jsx global>{`
         ::-webkit-scrollbar {
           width: 8px;
@@ -228,10 +228,10 @@ export default function VPMHistoryPage() {
       `}</style>
 
       {/* SideNavBar */}
-      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r border-gray-200">
         <div className="px-6 mb-10">
-          <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN</h1>
-          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
+          <h1 className="font-headline-md text-xl font-semibold text-white leading-tight">MAINTAIN</h1>
+          <p className="text-[10px] text-[#D32F2F] font-medium uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
 
         <nav className="flex-1 space-y-2 px-2">
@@ -278,7 +278,7 @@ export default function VPMHistoryPage() {
               await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
-            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-xs cursor-pointer border-none mb-4"
+            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-medium text-xs cursor-pointer border-none mb-4"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             <span>Logout</span>
@@ -288,7 +288,7 @@ export default function VPMHistoryPage() {
             onClick={() => router.push("/vendor/profile")}
             className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
           >
-            <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               <img
                 alt="Vendor Headshot"
                 className="w-full h-full object-cover"
@@ -296,22 +296,22 @@ export default function VPMHistoryPage() {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Vendor"}</p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
+              <p className="text-xs font-medium truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Vendor"}</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-medium">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="lg:ml-[220px] h-screen overflow-y-auto bg-white flex-grow flex flex-col relative w-full lg:w-[calc(100%-220px)] pb-20 lg:pb-0">
+      <main className="lg:ml-[220px] h-screen overflow-y-auto bg-page flex-grow flex flex-col relative w-full lg:w-[calc(100%-220px)] pb-20 lg:pb-0">
         {/* TopNavBar */}
-        <header className="flex justify-between items-center h-20 px-6 lg:px-10 border-b-2 border-[#1A1A1A] bg-white shrink-0 z-40">
+        <header className="flex justify-between items-center h-20 px-6 lg:px-10 border-b border-gray-200 bg-white shrink-0 z-40">
           <div>
-            <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+            <h2 className="font-headline-md text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight">
               Preventive Maintenance History
             </h2>
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">
               Field Calibration logs & Precision records
             </p>
           </div>
@@ -320,10 +320,10 @@ export default function VPMHistoryPage() {
         {/* Content Canvas */}
         <div className="flex-grow p-4 lg:p-10 space-y-6 lg:space-y-10 max-w-[1400px] w-full mx-auto">
           {/* Filters controls panel */}
-          <div className="flex flex-wrap justify-between items-end gap-4 lg:gap-6 bg-white p-4 lg:p-6 rounded-[20px] border-2 border-[#1A1A1A]">
+          <div className="flex flex-wrap justify-between items-end gap-4 lg:gap-6 bg-white p-4 lg:p-6 rounded-[20px] shadow-sm">
             <div className="flex flex-wrap gap-4 flex-grow">
               <div className="flex-grow min-w-[250px]">
-                <label className="block text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Search Records</label>
+                <label className="block text-xs font-medium mb-2 uppercase opacity-60 tracking-wider">Search Records</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400">search</span>
                   <input
@@ -331,17 +331,17 @@ export default function VPMHistoryPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by System Name, Location, Reference..."
-                    className="w-full pl-10 pr-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm focus:border-[#D32F2F] outline-none"
+                    className="w-full pl-10 pr-4 py-3 rounded-[20px] border border-gray-200 font-medium text-sm focus:border-[#D32F2F] outline-none"
                   />
                 </div>
               </div>
 
               <div className="w-[180px]">
-                <label className="block text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Category</label>
+                <label className="block text-xs font-medium mb-2 uppercase opacity-60 tracking-wider">Category</label>
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm outline-none cursor-pointer bg-white"
+                  className="w-full px-4 py-3 rounded-[20px] border border-gray-200 font-medium text-sm outline-none cursor-pointer bg-white"
                 >
                   <option value="All Categories">All Categories</option>
                   {uniqueCategories.map((cat) => (
@@ -351,11 +351,11 @@ export default function VPMHistoryPage() {
               </div>
 
               <div className="w-[180px]">
-                <label className="block text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Status</label>
+                <label className="block text-xs font-medium mb-2 uppercase opacity-60 tracking-wider">Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm outline-none cursor-pointer bg-white"
+                  className="w-full px-4 py-3 rounded-[20px] border border-gray-200 font-medium text-sm outline-none cursor-pointer bg-white"
                 >
                   <option value="All Statuses">All Statuses</option>
                   <option value="OK">OK</option>
@@ -369,7 +369,7 @@ export default function VPMHistoryPage() {
                 <div className="flex items-end pb-0">
                   <button
                     onClick={handleResetFilters}
-                    className="flex items-center gap-1 px-4 py-3 border-2 border-[#1A1A1A] rounded-[20px] font-bold text-xs uppercase tracking-wider hover:bg-[#1A1A1A] hover:text-white transition-colors cursor-pointer bg-white text-[#1A1A1A]"
+                    className="flex items-center gap-1 px-4 py-3 border border-gray-200 rounded-[20px] font-medium text-xs uppercase tracking-wider hover:bg-[#1A1A1A] hover:text-white transition-colors cursor-pointer bg-white text-[#1A1A1A]"
                   >
                     <span className="material-symbols-outlined text-sm">filter_alt_off</span>
                     Reset
@@ -382,42 +382,42 @@ export default function VPMHistoryPage() {
           {/* PM Records Bento Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredRecords.length === 0 ? (
-              <div className="col-span-full py-16 text-center border-2 border-dashed border-gray-300 rounded-[20px]">
+              <div className="col-span-full py-16 text-center border border-dashed border-gray-300 rounded-[20px]">
                 <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">find_in_page</span>
-                <p className="font-extrabold uppercase text-gray-500 tracking-wider text-xs">No records matching filters in database</p>
+                <p className="font-semibold uppercase text-gray-500 tracking-wider text-xs">No records matching filters in database</p>
               </div>
             ) : (
               filteredRecords.map((rec) => (
-                <div key={rec.reportId || rec.id} className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 hover:border-[#D32F2F] transition-all flex flex-col justify-between gap-6">
+                <div key={rec.reportId || rec.id} className="bg-white rounded-[20px] p-6 hover:shadow-md transition-all flex flex-col justify-between gap-6 shadow-sm">
                   <div className="flex justify-between items-start gap-4">
-                    <span className="border-2 border-[#D32F2F] text-[#D32F2F] px-3 py-0.5 rounded-full text-[9px] font-black tracking-widest uppercase">
+                    <span className="border border-[#D32F2F] text-[#D32F2F] px-3 py-0.5 rounded-full text-[9px] font-semibold tracking-widest uppercase">
                       {rec.category}
                     </span>
-                    <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${rec.status === "OK" ? "bg-green-600" : rec.status === "Warning" ? "bg-black" : "bg-[#D32F2F]"
+                    <span className={`px-3 py-0.5 border border-gray-200 rounded-full text-[9px] font-semibold uppercase tracking-wider text-white ${rec.status === "OK" ? "bg-green-600" : rec.status === "Warning" ? "bg-black" : "bg-[#D32F2F]"
                       }`}>
                       {rec.status}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">{rec.id}</span>
-                    <h4 className="font-headline-md text-lg font-extrabold text-black uppercase mt-1 leading-tight">{rec.name}</h4>
-                    <p className="text-gray-500 font-bold text-xs mt-2 uppercase tracking-wide">
+                    <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">{rec.id}</span>
+                    <h4 className="font-headline-md text-lg font-semibold text-black uppercase mt-1 leading-tight">{rec.name}</h4>
+                    <p className="text-gray-500 font-medium text-xs mt-2 uppercase tracking-wide">
                       Location: <span className="text-black">{rec.location}</span>
                     </p>
                     <p className="text-gray-500 text-xs mt-1 font-semibold uppercase tracking-wide">
-                      Auditor Accuracy: <span className="text-[#D32F2F] font-extrabold">{rec.accuracy}%</span>
+                      Auditor Accuracy: <span className="text-[#D32F2F] font-semibold">{rec.accuracy}%</span>
                     </p>
                   </div>
 
                   <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-2">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase flex items-center gap-1">
+                    <span className="text-[10px] text-gray-400 font-medium uppercase flex items-center gap-1">
                       <span className="material-symbols-outlined text-xs">calendar_today</span>
                       {rec.date}
                     </span>
                     <button
                       onClick={() => handleOpenDrawer(rec)}
-                      className="px-5 py-2 border-2 border-black rounded-xl font-black text-xs uppercase bg-white text-black hover:bg-black hover:text-white transition-all cursor-pointer"
+                      className="px-5 py-2 border border-gray-200 rounded-xl font-semibold text-xs uppercase bg-white text-black hover:bg-black hover:text-white transition-all cursor-pointer"
                     >
                       View Logs
                     </button>
@@ -435,15 +435,15 @@ export default function VPMHistoryPage() {
       )}
 
       <aside
-        className={`fixed top-0 right-0 h-screen w-full max-w-lg bg-white border-l-2 border-[#1A1A1A] z-[70] transition-transform duration-300 flex flex-col ${isDrawerOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 h-screen w-full max-w-lg bg-white border-l border-gray-200 z-[70] transition-transform duration-300 flex flex-col ${isDrawerOpen ? "translate-x-0" : "translate-x-full"
           }`}
       >
         {selectedRecord && (
           <>
             {/* Drawer Header */}
-            <div className="p-6 border-b-2 border-[#1A1A1A] flex justify-between items-center bg-[#1A1A1A] text-white shrink-0">
-              <h2 className="text-sm uppercase font-black tracking-widest flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#D32F2F]">analytics</span>
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-[#1A1A1A] text-white shrink-0">
+              <h2 className="text-sm uppercase font-semibold tracking-widest flex items-center gap-2">
+                <span className="material-symbols-outlined text-gray-400">analytics</span>
                 PM Record: {selectedRecord.id}
               </h2>
               <button onClick={handleCloseDrawer} className="p-1 hover:bg-white/10 rounded cursor-pointer text-white border-none bg-transparent">
@@ -454,35 +454,35 @@ export default function VPMHistoryPage() {
             {/* Scrollable details */}
             <div className="flex-grow p-8 overflow-y-auto space-y-6 scroll-container text-left">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Main System Name</p>
-                <h3 className="font-headline-md text-xl text-black font-extrabold uppercase mt-1">{selectedRecord.name}</h3>
+                <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-widest">Main System Name</p>
+                <h3 className="font-headline-md text-xl text-black font-semibold uppercase mt-1">{selectedRecord.name}</h3>
               </div>
 
               {/* Status and Confidence */}
-              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 border border-black/10 rounded-xl">
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 border-black/10 rounded-xl">
                 <div>
-                  <p className="text-[9px] uppercase font-bold text-gray-400">Status</p>
-                  <span className={`mt-1 inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase text-white ${selectedRecord.status === "OK" ? "bg-green-600" : "bg-[#D32F2F]"
+                  <p className="text-[9px] uppercase font-medium text-gray-400">Status</p>
+                  <span className={`mt-1 inline-block px-2.5 py-0.5 rounded text-[10px] font-semibold uppercase text-white ${selectedRecord.status === "OK" ? "bg-green-600" : "bg-[#D32F2F]"
                     }`}>
                     {selectedRecord.status}
                   </span>
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase font-bold text-gray-400">Verification Accuracy</p>
-                  <p className="font-extrabold text-sm text-[#D32F2F] mt-1">{selectedRecord.accuracy}% Accurate</p>
+                  <p className="text-[9px] uppercase font-medium text-gray-400">Verification Accuracy</p>
+                  <p className="font-semibold text-sm text-[#D32F2F] mt-1">{selectedRecord.accuracy}% Accurate</p>
                 </div>
               </div>
 
               <div>
-                <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Discrepancies & Observations</p>
-                <p className="text-xs font-semibold text-gray-700 mt-2 bg-gray-50 border-l-4 border-black p-4 leading-relaxed whitespace-pre-wrap">
+                <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-widest">Discrepancies & Observations</p>
+                <p className="text-xs font-semibold text-gray-700 mt-2 bg-gray-50 border-l border-gray-200 p-4 leading-relaxed whitespace-pre-wrap">
                   {selectedRecord.details}
                 </p>
               </div>
 
               <div>
-                <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Action Recommendations</p>
-                <p className="text-xs font-semibold text-gray-700 mt-2 bg-gray-50 border-l-4 border-[#D32F2F] p-4 leading-relaxed whitespace-pre-wrap">
+                <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-widest">Action Recommendations</p>
+                <p className="text-xs font-semibold text-gray-700 mt-2 bg-gray-50 border-l border-[#D32F2F] p-4 leading-relaxed whitespace-pre-wrap">
                   {selectedRecord.recommendation}
                 </p>
               </div>
@@ -490,10 +490,10 @@ export default function VPMHistoryPage() {
               {/* Photos Gallery */}
               {selectedRecord.photos && selectedRecord.photos.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Evidence Photos ({selectedRecord.photos.length})</p>
+                  <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-widest mb-2">Evidence Photos ({selectedRecord.photos.length})</p>
                   <div className="grid grid-cols-2 gap-4">
                     {selectedRecord.photos.map((photo, i) => (
-                      <div key={i} className="aspect-video border-2 border-black rounded-xl overflow-hidden bg-gray-100">
+                      <div key={i} className="aspect-video border border-gray-200 rounded-xl overflow-hidden bg-gray-100">
                         <img src={photo} alt={`Inspection Photo ${i + 1}`} className="w-full h-full object-cover" />
                       </div>
                     ))}
@@ -502,29 +502,29 @@ export default function VPMHistoryPage() {
               )}
 
               {/* Supervisor Sign-off widget */}
-              <div className="bg-gray-50 p-6 rounded-xl border border-black/10 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full border border-black overflow-hidden bg-white shrink-0">
+              <div className="bg-gray-50 p-6 rounded-xl border-black/10 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full border-gray-200 overflow-hidden bg-white shrink-0">
                   <img src={selectedRecord.supervisor_avatar} alt={selectedRecord.supervisor} className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase font-bold text-gray-400">Lead Supervisor</p>
-                  <p className="font-extrabold text-sm uppercase text-black">{selectedRecord.supervisor}</p>
-                  <p className="text-[9px] font-bold text-green-600 uppercase mt-0.5">Signed off digitally</p>
+                  <p className="text-[9px] uppercase font-medium text-gray-400">Lead Supervisor</p>
+                  <p className="font-semibold text-sm uppercase text-black">{selectedRecord.supervisor}</p>
+                  <p className="text-[9px] font-medium text-green-600 uppercase mt-0.5">Signed off digitally</p>
                 </div>
               </div>
             </div>
 
             {/* Bottom Actions */}
-            <div className="p-8 pb-24 lg:pb-8 border-t-2 border-[#1A1A1A] bg-white grid grid-cols-2 gap-4 shrink-0">
+            <div className="p-8 pb-24 lg:pb-8 border-t border-gray-200 bg-white grid grid-cols-2 gap-4 shrink-0">
               <button
                 onClick={handleDownloadReport}
-                className="w-full py-4 border-2 border-black text-black font-black uppercase text-xs rounded-lg hover:bg-black hover:text-white transition-all cursor-pointer bg-white"
+                className="w-full py-4 border border-gray-200 text-black font-semibold uppercase text-xs rounded-lg hover:bg-black hover:text-white transition-all cursor-pointer bg-white"
               >
                 Download Report
               </button>
               <button
                 onClick={handleCloseDrawer}
-                className="w-full py-4 bg-[#D32F2F] text-white border-2 border-[#1A1A1A] font-black uppercase text-xs rounded-lg hover:bg-black transition-all cursor-pointer border-none"
+                className="w-full py-4 bg-[#D32F2F] text-white border border-gray-200 font-semibold uppercase text-xs rounded-lg hover:bg-black transition-all cursor-pointer border-none"
               >
                 Close Logs
               </button>
@@ -536,12 +536,12 @@ export default function VPMHistoryPage() {
       {/* Floating Toast Containers */}
       <div className="fixed top-10 right-10 z-[100] flex flex-col gap-3 pointer-events-none">
         {toasts.map((t) => (
-          <div key={t.id} className="pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-[20px] border-2 border-black bg-white text-black animate-in fade-in slide-in-from-top-4 duration-300">
+          <div key={t.id} className="pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-[20px] border border-gray-200 bg-white text-black animate-in fade-in slide-in-from-top-4 duration-300">
             <span className={`material-symbols-outlined ${t.type === "success" ? "text-green-600" : t.type === "error" ? "text-[#D32F2F]" : "text-blue-500"
               }`}>
               {t.type === "success" ? "check_circle" : t.type === "error" ? "error" : "info"}
             </span>
-            <span className="font-label-md text-xs uppercase font-bold">{t.message}</span>
+            <span className="font-label-md text-xs uppercase font-medium">{t.message}</span>
           </div>
         ))}
       </div>

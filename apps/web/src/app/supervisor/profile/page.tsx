@@ -302,17 +302,17 @@ export default function SupervisorProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-white">
+      <div className="flex h-screen w-full items-center justify-center bg-page">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Profile...</p>
+          <div className="w-12 h-12 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-medium uppercase tracking-widest text-gray-500">Loading Profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md overflow-hidden relative">
+    <div className="flex h-screen w-full bg-page text-[#1A1A1A] font-body-md overflow-hidden relative">
       <style jsx global>{`
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #FFFFFF; }
@@ -322,10 +322,10 @@ export default function SupervisorProfilePage() {
       `}</style>
 
       {/* SideNavBar */}
-      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r border-gray-200">
         <div className="px-6 mb-10">
-          <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN</h1>
-          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
+          <h1 className="font-headline-md text-xl font-semibold text-white leading-tight">MAINTAIN</h1>
+          <p className="text-[10px] text-[#D32F2F] font-medium uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
 
         <nav className="flex-1 space-y-2 px-2">
@@ -358,21 +358,21 @@ export default function SupervisorProfilePage() {
         <div className="px-4 mt-auto border-t border-white/10 pt-4 pb-2">
           <button
             onClick={handleLogout}
-            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-xs cursor-pointer border-none mb-4"
+            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-medium text-xs cursor-pointer border-none mb-4"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             <span>Logout</span>
           </button>
 
           <div className="flex items-center gap-3 text-left w-full bg-white/10 p-2 rounded-lg">
-            <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               <img alt="Supervisor" className="w-full h-full object-cover" src={avatarSrc} />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">
+              <p className="text-xs font-medium truncate text-white uppercase leading-none mb-1">
                 {fullName || "Supervisor"}
               </p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-medium">
                 {profile?.role || "supervisor"}
               </p>
             </div>
@@ -381,10 +381,10 @@ export default function SupervisorProfilePage() {
       </aside>
 
       {/* TopNavBar */}
-      <header className="fixed top-0 right-0 left-0 lg:left-[220px] w-full lg:w-[calc(100%-220px)] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-6 lg:px-10 z-40">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] w-full lg:w-[calc(100%-220px)] border-b border-gray-200 bg-white flex justify-between items-center h-20 px-6 lg:px-10 z-40">
         <div>
-          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Supervisor Profile</h2>
-          <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-wide">Manage credentials & auditor profile details</p>
+          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight">Supervisor Profile</h2>
+          <p className="text-[9px] sm:text-xs text-gray-500 font-medium uppercase tracking-wide">Manage credentials & auditor profile details</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden sm:block">
@@ -392,7 +392,7 @@ export default function SupervisorProfilePage() {
           </div>
           <button
             onClick={() => router.push("/supervisor/dashboard")}
-            className="flex items-center gap-2 border-2 border-[#1A1A1A] rounded-full px-4 py-2 font-bold text-xs uppercase hover:bg-gray-100 transition-all cursor-pointer bg-transparent"
+            className="flex items-center gap-2 border border-gray-200 rounded-full px-4 py-2 font-medium text-xs uppercase hover:bg-gray-100 transition-all cursor-pointer bg-transparent"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
             <span>Dashboard</span>
@@ -401,13 +401,13 @@ export default function SupervisorProfilePage() {
       </header>
 
       {/* Main Content Area */}
-      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-page w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
         <div className="p-4 lg:p-10 max-w-[1200px] mx-auto space-y-6 lg:space-y-10">
 
           {/* Profile Header Card */}
-          <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+          <section className="bg-white rounded-[20px] p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden shadow-sm">
             <div className="relative group cursor-pointer" onClick={handlePhotoClick}>
-              <div className="w-32 h-32 rounded-full border-4 border-[#D32F2F] overflow-hidden shrink-0 bg-gray-100">
+              <div className="w-32 h-32 rounded-full overflow-hidden shrink-0 bg-gray-100">
                 <img src={avatarSrc} alt={fullName} className="w-full h-full object-cover" />
               </div>
               <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -424,25 +424,25 @@ export default function SupervisorProfilePage() {
 
             <div className="flex-1 text-center md:text-left space-y-2">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                <h3 className="font-headline-lg text-2xl font-extrabold text-black uppercase">{fullName || "—"}</h3>
-                <span className="bg-[#D32F2F] text-white px-3 py-1 rounded-full text-[9px] font-extrabold tracking-widest uppercase">
+                <h3 className="font-headline-lg text-2xl font-semibold text-black uppercase">{fullName || "—"}</h3>
+                <span className="bg-[#D32F2F] text-white px-3 py-1 rounded-full text-[9px] font-semibold tracking-widest uppercase">
                   Supervisor
                 </span>
                 {profile?.is_active && (
-                  <span className="bg-green-100 text-green-700 border border-green-300 px-3 py-1 rounded-full text-[9px] font-extrabold tracking-widest uppercase">
+                  <span className="bg-green-100 text-green-700 border border-green-300 px-3 py-1 rounded-full text-[9px] font-semibold tracking-widest uppercase">
                     Active
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
                 Department: {department || "—"} | Employee ID: {profile?.employee_id || "—"}
               </p>
               <p className="text-xs text-gray-400 font-medium">
-                Email: <span className="font-bold text-gray-600">{email}</span>
+                Email: <span className="font-medium text-gray-600">{email}</span>
               </p>
               <button
                 onClick={handlePhotoClick}
-                className="mt-2 text-xs font-bold text-[#D32F2F] hover:underline bg-transparent border-none cursor-pointer p-0"
+                className="mt-2 text-xs font-medium text-[#D32F2F] hover:underline bg-transparent border-none cursor-pointer p-0"
               >
                 Change Profile Photo
               </button>
@@ -453,40 +453,40 @@ export default function SupervisorProfilePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
             {/* General Info Card */}
-            <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
+            <section className="bg-white rounded-[20px] p-8 space-y-6 shadow-sm">
               <div className="pb-4 border-b border-gray-100">
-                <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Account Details</h4>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Update system information fields</p>
+                <h4 className="font-headline-md text-lg text-black font-semibold uppercase tracking-tight">Account Details</h4>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Update system information fields</p>
               </div>
 
               <form onSubmit={handleSaveGeneralInfo} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
+                    <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">
                       Full Name
                     </label>
                     <input
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full bg-white border border-[#1A1A1A] rounded-lg p-2.5 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"
+                      className="w-full bg-white border border-gray-200 rounded-lg p-2.5 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
+                    <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">
                       Department
                     </label>
                     <input
                       type="text"
                       value={department}
                       onChange={(e) => setDepartment(e.target.value)}
-                      className="w-full bg-white border border-[#1A1A1A] rounded-lg p-2.5 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"
+                      className="w-full bg-white border border-gray-200 rounded-lg p-2.5 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
+                  <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">
                     Email Address
                   </label>
                   <input
@@ -499,21 +499,21 @@ export default function SupervisorProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
+                  <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">
                     Phone Number
                   </label>
                   <input
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-white border border-[#1A1A1A] rounded-lg p-2.5 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"
+                    className="w-full bg-white border border-gray-200 rounded-lg p-2.5 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"
                     placeholder="+62..."
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">
+                    <label className="block text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">
                       Employee ID (Read Only)
                     </label>
                     <input
@@ -524,7 +524,7 @@ export default function SupervisorProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">
+                    <label className="block text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">
                       Role (Read Only)
                     </label>
                     <input
@@ -539,7 +539,7 @@ export default function SupervisorProfilePage() {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="w-full bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full py-3 font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors cursor-pointer mt-4 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-[#D32F2F] text-white border border-gray-200 rounded-full py-3 font-medium text-xs uppercase tracking-wider hover:bg-black transition-colors cursor-pointer mt-4 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSaving ? (
                     <>
@@ -555,17 +555,17 @@ export default function SupervisorProfilePage() {
 
             <div className="space-y-8">
               {/* Account Stats Card */}
-              <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
+              <section className="bg-white rounded-[20px] p-8 space-y-6 shadow-sm">
                 <div className="pb-4 border-b border-gray-100">
-                  <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">System Info</h4>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Account status & security</p>
+                  <h4 className="font-headline-md text-lg text-black font-semibold uppercase tracking-tight">System Info</h4>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Account status & security</p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center py-3 border-b border-gray-100">
                     <div>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Status Akun</p>
-                      <p className="font-extrabold text-sm mt-0.5">
+                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Status Akun</p>
+                      <p className="font-semibold text-sm mt-0.5">
                         {profile?.is_active ? (
                           <span className="text-green-600">● Active</span>
                         ) : (
@@ -578,23 +578,23 @@ export default function SupervisorProfilePage() {
 
                   <div className="flex justify-between items-center py-3 border-b border-gray-100">
                     <div>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Role</p>
-                      <p className="font-extrabold text-sm mt-0.5 uppercase">{profile?.role || "supervisor"}</p>
+                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Role</p>
+                      <p className="font-semibold text-sm mt-0.5 uppercase">{profile?.role || "supervisor"}</p>
                     </div>
-                    <span className="material-symbols-outlined text-[#D32F2F]">admin_panel_settings</span>
+                    <span className="material-symbols-outlined text-gray-400">admin_panel_settings</span>
                   </div>
 
                   <div className="flex justify-between items-center py-3 border-b border-gray-100">
                     <div>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Employee ID</p>
-                      <p className="font-extrabold text-sm mt-0.5 font-mono">{profile?.employee_id || "—"}</p>
+                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Employee ID</p>
+                      <p className="font-semibold text-sm mt-0.5 font-mono">{profile?.employee_id || "—"}</p>
                     </div>
                     <span className="material-symbols-outlined text-gray-400">badge</span>
                   </div>
 
                   <button
                     onClick={handleLogout}
-                    className="w-full bg-white text-[#D32F2F] border-2 border-[#D32F2F] rounded-full py-3 font-bold text-xs uppercase tracking-wider hover:bg-[#D32F2F] hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full bg-white text-[#D32F2F] border border-[#D32F2F] rounded-full py-3 font-medium text-xs uppercase tracking-wider hover:bg-[#D32F2F] hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-[16px]">logout</span>
                     Log Out of System
@@ -603,27 +603,27 @@ export default function SupervisorProfilePage() {
               </section>
 
               {/* Digital Signature Card */}
-              <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
+              <section className="bg-white rounded-[20px] p-8 space-y-6 shadow-sm">
                 <div className="pb-4 border-b border-gray-100">
-                  <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Digital Signature</h4>
-                  <p className="text-[10px] text-[#D32F2F] uppercase tracking-wider font-extrabold">Only 1 active signature is saved for security. Adding a new one replaces the old.</p>
+                  <h4 className="font-headline-md text-lg text-black font-semibold uppercase tracking-tight">Digital Signature</h4>
+                  <p className="text-[10px] text-[#D32F2F] uppercase tracking-wider font-semibold">Only 1 active signature is saved for security. Adding a new one replaces the old.</p>
                 </div>
 
                 {/* Stored Signature Preview */}
                 {signaturesList.length > 0 ? (
                   <div className="space-y-4">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Saved Signatures</label>
+                    <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide">Saved Signatures</label>
                     <div className="grid grid-cols-1 gap-3">
                       {signaturesList.map((sig) => (
-                        <div key={sig.id} className={`flex items-center justify-between p-4 border-2 rounded-xl transition-all ${sig.is_default ? 'border-[#D32F2F] bg-red-50/10' : 'border-[#1A1A1A]/10'}`}>
+                        <div key={sig.id} className={`flex items-center justify-between p-4 border rounded-xl transition-all ${sig.is_default ? 'border-[#D32F2F] bg-red-50/10' : 'border-[#1A1A1A]/10'}`}>
                           <div className="flex items-center gap-3">
                             <div className="w-16 h-10 bg-white border border-[#1A1A1A]/10 rounded flex items-center justify-center overflow-hidden shrink-0">
                               <img src={sig.signature_data} alt={sig.label} className="max-h-full max-w-full object-contain" />
                             </div>
                             <div>
-                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-black">{sig.label}</p>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-black">{sig.label}</p>
                               {sig.is_default && (
-                                <span className="inline-block bg-[#D32F2F] text-white px-2 py-0.5 rounded text-[8px] font-extrabold uppercase mt-0.5">DEFAULT</span>
+                                <span className="inline-block bg-[#D32F2F] text-white px-2 py-0.5 rounded text-[8px] font-semibold uppercase mt-0.5">DEFAULT</span>
                               )}
                             </div>
                           </div>
@@ -631,7 +631,7 @@ export default function SupervisorProfilePage() {
                             {!sig.is_default && (
                               <button
                                 onClick={() => handleSetDefaultSignature(sig.id)}
-                                className="px-2 py-1 text-[9px] font-extrabold uppercase border border-[#1A1A1A] rounded hover:bg-gray-100 bg-white cursor-pointer"
+                                className="px-2 py-1 text-[9px] font-semibold uppercase border border-gray-200 rounded hover:bg-gray-100 bg-white cursor-pointer"
                               >
                                 Set Default
                               </button>
@@ -648,15 +648,15 @@ export default function SupervisorProfilePage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 border border-dashed border-[#1A1A1A]/20 p-4 rounded-xl text-center text-xs text-gray-400 font-bold uppercase">
+                  <div className="bg-gray-50 border-dashed border-[#1A1A1A]/20 p-4 rounded-xl text-center text-xs text-gray-400 font-medium uppercase">
                     No saved signatures. Draw or upload below to set up.
                   </div>
                 )}
 
                 {/* Draw Signature Area */}
                 <div className="space-y-3 pt-4 border-t border-gray-100">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Draw Signature</label>
-                  <div className="relative border-2 border-dashed border-[#1A1A1A]/40 rounded-xl overflow-hidden bg-white aspect-video max-w-full">
+                  <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide">Draw Signature</label>
+                  <div className="relative border border-dashed border-[#1A1A1A]/40 rounded-xl overflow-hidden bg-white aspect-video max-w-full">
                     <canvas
                       ref={canvasRef}
                       onMouseDown={startDrawing}
@@ -674,13 +674,13 @@ export default function SupervisorProfilePage() {
                   <div className="flex justify-between gap-3">
                     <button
                       onClick={clearCanvas}
-                      className="flex-1 py-2 bg-white text-[#1A1A1A] border-2 border-[#1A1A1A] rounded-full font-bold text-xs uppercase hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="flex-1 py-2 bg-white text-[#1A1A1A] border border-gray-200 rounded-full font-medium text-xs uppercase hover:bg-gray-50 transition-colors cursor-pointer"
                     >
                       Clear Canvas
                     </button>
                     <button
                       onClick={handleSaveDrawnSignature}
-                      className="flex-1 py-2 bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full font-bold text-xs uppercase hover:bg-black transition-colors cursor-pointer"
+                      className="flex-1 py-2 bg-[#D32F2F] text-white border border-gray-200 rounded-full font-medium text-xs uppercase hover:bg-black transition-colors cursor-pointer"
                     >
                       Save Drawn
                     </button>
@@ -689,7 +689,7 @@ export default function SupervisorProfilePage() {
 
                 {/* Import Signature Area */}
                 <div className="space-y-3 pt-4 border-t border-gray-100">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Upload Signature Image</label>
+                  <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide">Upload Signature Image</label>
                   <input
                     type="file"
                     ref={sigFileInputRef}
@@ -699,7 +699,7 @@ export default function SupervisorProfilePage() {
                   />
                   <button
                     onClick={() => sigFileInputRef.current?.click()}
-                    className="w-full py-3 bg-white text-[#1A1A1A] border-2 border-dashed border-[#1A1A1A] rounded-xl font-bold text-xs uppercase hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3 bg-white text-[#1A1A1A] border border-dashed border-gray-200 rounded-xl font-medium text-xs uppercase hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-sm">upload_file</span>
                     Choose Signature Image File
@@ -717,12 +717,12 @@ export default function SupervisorProfilePage() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 border-[#D32F2F] shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300"
+            className="pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border border-[#D32F2F] shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300"
           >
-            <span className="material-symbols-outlined text-[#D32F2F]">
+            <span className="material-symbols-outlined text-gray-400">
               {t.type === "success" ? "check_circle" : t.type === "error" ? "error" : "info"}
             </span>
-            <span className="font-black uppercase tracking-widest text-xs">{t.message}</span>
+            <span className="font-semibold uppercase tracking-widest text-xs">{t.message}</span>
           </div>
         ))}
       </div>

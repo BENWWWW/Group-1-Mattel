@@ -64,7 +64,7 @@ export default function SupervisorQualityDonutChart({
       ) : (
         <>
           <div>
-            <div className="text-4xl font-extrabold text-[#1A1A1A] leading-none">{pct(data.approved)}%</div>
+            <div className="text-4xl font-semibold text-[#1A1A1A] leading-none">{pct(data.approved)}%</div>
             <div className="text-xs text-gray-500 mt-1">approved, of {total} reports</div>
           </div>
           <div className="flex h-3 gap-[2px]">
@@ -84,7 +84,7 @@ export default function SupervisorQualityDonutChart({
               <div key={r.label} className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-sm" style={{ background: r.color }} />
                 <span className="text-gray-600 flex-1">{r.label}</span>
-                <span className="font-bold text-[#1A1A1A] tabular-nums">{r.count}</span>
+                <span className="font-medium text-[#1A1A1A] tabular-nums">{r.count}</span>
                 <span className="w-10 text-right text-gray-500 tabular-nums">{pct(r.count)}%</span>
               </div>
             ))}

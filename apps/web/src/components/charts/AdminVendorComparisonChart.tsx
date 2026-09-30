@@ -58,7 +58,7 @@ export default function AdminVendorComparisonChart({
               <span className="w-24 text-right tabular-nums text-gray-600">
                 {v.totalAssigned > 0 ? (
                   <>
-                    <span className="font-bold text-[#1A1A1A]">{v.onTimeRate}%</span> · {v.totalAssigned} tasks
+                    <span className="font-medium text-[#1A1A1A]">{v.onTimeRate}%</span> · {v.totalAssigned} tasks
                   </>
                 ) : (
                   "No tasks"

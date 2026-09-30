@@ -398,10 +398,10 @@ export default function AdminDashboardPage() {
 
   const getPriorityStyle = (priority: string) => {
     switch (priority) {
-      case "critical": return "text-[#D32F2F] font-black";
-      case "high": return "text-orange-600 font-bold";
-      case "medium": return "text-yellow-600 font-bold";
-      default: return "text-gray-500 font-bold";
+      case "critical": return "text-[#D32F2F] font-semibold";
+      case "high": return "text-orange-600 font-medium";
+      case "medium": return "text-yellow-600 font-medium";
+      default: return "text-gray-500 font-medium";
     }
   };
 
@@ -439,15 +439,15 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md overflow-hidden">
+    <div className="flex h-screen w-full bg-page text-[#1A1A1A] font-body-md overflow-hidden">
 
       {/* TopNavBar */}
-      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b-2 border-[#1A1A1A] h-20 px-4 lg:px-10 flex justify-between items-center z-40 gap-4">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b border-gray-200 h-20 px-4 lg:px-10 flex justify-between items-center z-40 gap-4">
         <div>
-          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight">
             Admin Dashboard
           </h2>
-          <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+          <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-medium">
             System overview &amp; management
           </p>
         </div>
@@ -456,14 +456,14 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-2">
 
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-extrabold uppercase text-[#1A1A1A] leading-none">
+              <p className="text-xs font-semibold uppercase text-[#1A1A1A] leading-none">
                 {adminName}
               </p>
-              <p className="text-[10px] text-gray-400 uppercase font-bold">
+              <p className="text-[10px] text-gray-400 uppercase font-medium">
                 Admin Access
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
               {adminAvatar ? (
                 <img
                   className="w-full h-full object-cover"
@@ -471,7 +471,7 @@ export default function AdminDashboardPage() {
                   alt="Admin Portrait"
                 />
               ) : (
-                <span className="material-symbols-outlined text-[#D32F2F]">
+                <span className="material-symbols-outlined text-gray-400">
                   account_circle
                 </span>
               )}
@@ -481,26 +481,26 @@ export default function AdminDashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] pb-24 lg:pb-8">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-page w-full lg:w-[calc(100%-220px)] pb-24 lg:pb-8">
         <div className="p-4 lg:p-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10">
 
           {/* Section Header with Global Year Selector */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-gray-100">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-headline-md text-base sm:text-lg font-black text-[#1A1A1A] uppercase tracking-tight">
+                <h3 className="font-headline-md text-base sm:text-lg font-semibold text-[#1A1A1A] uppercase tracking-tight">
                   Overview
                 </h3>
               </div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-0.5">
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mt-0.5">
                 Year {selectedYear}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               {/* Total Registered Assets Pill */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border-2 border-[#1A1A1A] rounded-xl text-xs font-black uppercase text-[#1A1A1A]">
-                <span className="material-symbols-outlined text-xs text-[#D32F2F]">precision_manufacturing</span>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold uppercase text-[#1A1A1A]">
+                <span className="material-symbols-outlined text-xs text-gray-400">precision_manufacturing</span>
                 <span>{isLoading ? "—" : stats.totalAssets} Registered Assets</span>
               </div>
 
@@ -509,20 +509,20 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => handleYearChange(currentNow.getFullYear())}
-                  className="px-2.5 py-1.5 text-[10px] font-black uppercase rounded-xl border border-gray-300 hover:border-[#1A1A1A] bg-white text-gray-700 hover:text-[#1A1A1A] transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                  className="px-2.5 py-1.5 text-[10px] font-semibold uppercase rounded-xl border border-gray-300 hover:border-gray-400 bg-white text-gray-700 hover:text-[#1A1A1A] transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                   title="Return to Current Year"
                 >
-                  <span className="material-symbols-outlined text-xs text-[#D32F2F]">today</span>
+                  <span className="material-symbols-outlined text-xs text-gray-400">today</span>
                   This Year
                 </button>
               )}
 
               {/* Global Year Navigator & Decade Popover */}
-              <div className="relative inline-flex items-center bg-white border-2 border-[#1A1A1A] rounded-xl p-1 shadow-[2px_2px_0px_0px_#1A1A1A]">
+              <div className="relative inline-flex items-center bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
                 <button
                   type="button"
                   onClick={() => handleYearChange(selectedYear - 1)}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-[#1A1A1A] font-black cursor-pointer transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-[#1A1A1A] font-semibold cursor-pointer transition-colors"
                   title="Previous Year"
                 >
                   <span className="material-symbols-outlined text-sm">chevron_left</span>
@@ -534,9 +534,9 @@ export default function AdminDashboardPage() {
                     setDecadeStart(Math.floor(selectedYear / 10) * 10);
                     setIsYearPickerOpen(!isYearPickerOpen);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase text-[#1A1A1A] hover:text-[#D32F2F] cursor-pointer transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase text-[#1A1A1A] hover:text-[#D32F2F] cursor-pointer transition-colors"
                 >
-                  <span className="material-symbols-outlined text-sm text-[#D32F2F]">calendar_today</span>
+                  <span className="material-symbols-outlined text-sm text-gray-400">calendar_today</span>
                   <span>Year {selectedYear}</span>
                   <span className="material-symbols-outlined text-xs text-gray-500">
                     {isYearPickerOpen ? "expand_less" : "expand_more"}
@@ -546,7 +546,7 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => handleYearChange(selectedYear + 1)}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-[#1A1A1A] font-black cursor-pointer transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-[#1A1A1A] font-semibold cursor-pointer transition-colors"
                   title="Next Year"
                 >
                   <span className="material-symbols-outlined text-sm">chevron_right</span>
@@ -559,24 +559,24 @@ export default function AdminDashboardPage() {
                       className="fixed inset-0 z-30"
                       onClick={() => setIsYearPickerOpen(false)}
                     />
-                    <div className="absolute right-0 top-full mt-2 w-72 bg-white border-2 border-[#1A1A1A] rounded-2xl p-4 shadow-[6px_6px_0px_0px_#1A1A1A] z-40 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl p-4 shadow-lg z-40 animate-in fade-in zoom-in-95 duration-150">
                       {/* Decade Paging Header */}
                       <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100">
                         <button
                           type="button"
                           onClick={() => setDecadeStart((prev) => prev - 10)}
-                          className="px-2 py-0.5 rounded border border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white text-xs font-black cursor-pointer transition-colors"
+                          className="px-2 py-0.5 rounded border border-gray-200 hover:bg-[#1A1A1A] hover:text-white text-xs font-semibold cursor-pointer transition-colors"
                           title="Previous Decade"
                         >
                           ◀
                         </button>
-                        <span className="text-xs font-black text-[#1A1A1A] uppercase tracking-wider">
+                        <span className="text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">
                           {decadeStart} - {decadeStart + 9}
                         </span>
                         <button
                           type="button"
                           onClick={() => setDecadeStart((prev) => prev + 10)}
-                          className="px-2 py-0.5 rounded border border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white text-xs font-black cursor-pointer transition-colors"
+                          className="px-2 py-0.5 rounded border border-gray-200 hover:bg-[#1A1A1A] hover:text-white text-xs font-semibold cursor-pointer transition-colors"
                           title="Next Decade"
                         >
                           ▶
@@ -597,12 +597,12 @@ export default function AdminDashboardPage() {
                                 handleYearChange(yr);
                                 setIsYearPickerOpen(false);
                               }}
-                              className={`py-2 text-xs font-black uppercase rounded-lg border transition-all cursor-pointer relative ${
+                              className={`py-2 text-xs font-semibold uppercase rounded-lg border transition-all cursor-pointer relative ${
                                 isSelected
                                   ? "bg-[#D32F2F] text-white border-[#D32F2F]"
                                   : isOutsideDecade
                                   ? "bg-gray-50 text-gray-400 border-gray-100 hover:border-gray-300"
-                                  : "bg-white text-gray-700 border-gray-200 hover:border-[#1A1A1A] hover:bg-gray-50"
+                                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:bg-gray-50"
                               }`}
                             >
                               {yr}
@@ -625,15 +625,15 @@ export default function AdminDashboardPage() {
             {statCards.map((stat) => (
               <div
                 key={stat.label}
-                className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 lg:p-8 flex flex-col justify-between hover:border-[#D32F2F] transition-all group"
+                className="bg-white rounded-[20px] p-6 lg:p-8 flex flex-col justify-between hover:shadow-md transition-all group shadow-sm"
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider block">
+                    <span className="font-label-md text-xs font-medium text-gray-500 uppercase tracking-wider block">
                       {stat.label}
                     </span>
                   </div>
-                  <span className="material-symbols-outlined text-[#D32F2F] group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-gray-400 group-hover:scale-110 transition-transform">
                     {stat.icon}
                   </span>
                 </div>
@@ -641,11 +641,11 @@ export default function AdminDashboardPage() {
                   {isLoading ? (
                     <div className="h-12 w-20 bg-gray-100 rounded-lg animate-pulse" />
                   ) : (
-                    <p className="text-5xl font-extrabold text-[#D32F2F] tracking-tighter">
+                    <p className="text-5xl font-semibold text-gray-900 tracking-tighter">
                       {stat.value}
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 font-bold mt-1">
+                  <p className="text-xs text-gray-500 font-medium mt-1">
                     {stat.delta}
                   </p>
                 </div>
@@ -670,16 +670,16 @@ export default function AdminDashboardPage() {
           <div className="space-y-4">
             <div className="flex justify-between items-end">
               <div>
-                <h3 className="font-headline-md text-lg text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+                <h3 className="font-headline-md text-lg text-[#1A1A1A] font-semibold uppercase tracking-tight">
                   Recent Tasks
                 </h3>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">
                   Latest 5 PM task assignments
                 </p>
               </div>
               <button
                 onClick={() => router.push("/admin/tasks")}
-                className="text-[10px] font-extrabold uppercase tracking-wider text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent flex items-center gap-1"
+                className="text-[10px] font-semibold uppercase tracking-wider text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent flex items-center gap-1"
               >
                 View All
                 <span className="material-symbols-outlined text-[14px]">
@@ -688,7 +688,7 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
-            <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] overflow-hidden overflow-x-auto">
+            <div className="bg-white border border-gray-200 rounded-[20px] overflow-hidden overflow-x-auto">
               {isLoading ? (
                 <div className="p-10 space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -699,7 +699,7 @@ export default function AdminDashboardPage() {
                   ))}
                 </div>
               ) : recentTasks.length === 0 ? (
-                <div className="p-10 text-center text-gray-400 font-bold uppercase text-sm">
+                <div className="p-10 text-center text-gray-400 font-medium uppercase text-sm">
                   <span className="material-symbols-outlined text-4xl block mb-2 opacity-30">
                     assignment
                   </span>
@@ -708,12 +708,12 @@ export default function AdminDashboardPage() {
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b-2 border-[#1A1A1A] bg-gray-50">
+                    <tr className="border-b border-gray-200 bg-gray-50">
                       {["Task Code", "Asset", "Vendor", "Priority", "Status", "Due Date"].map(
                         (h) => (
                           <th
                             key={h}
-                            className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-gray-500"
+                            className="px-6 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500"
                           >
                             {h}
                           </th>
@@ -729,13 +729,13 @@ export default function AdminDashboardPage() {
                           i === recentTasks.length - 1 ? "border-b-0" : ""
                         }`}
                       >
-                        <td className="px-6 py-4 font-black text-xs uppercase tracking-wider text-[#D32F2F]">
+                        <td className="px-6 py-4 font-semibold text-xs uppercase tracking-wider text-[#D32F2F]">
                           {task.task_code}
                         </td>
-                        <td className="px-6 py-4 font-bold text-xs uppercase text-gray-700">
+                        <td className="px-6 py-4 font-medium text-xs uppercase text-gray-700">
                           {task.asset_name}
                         </td>
-                        <td className="px-6 py-4 font-bold text-xs uppercase text-gray-700">
+                        <td className="px-6 py-4 font-medium text-xs uppercase text-gray-700">
                           {task.vendor_name}
                         </td>
                         <td className={`px-6 py-4 text-xs uppercase ${getPriorityStyle(task.priority)}`}>
@@ -743,12 +743,12 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="px-6 py-4">
                           <span
-                            className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border ${getStatusStyle(task.status)}`}
+                            className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase border ${getStatusStyle(task.status)}`}
                           >
                             {task.status.replace("_", " ")}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-bold text-xs text-gray-500">
+                        <td className="px-6 py-4 font-medium text-xs text-gray-500">
                           {new Date(task.due_date).toLocaleDateString("en-GB", {
                             day: "2-digit",
                             month: "short",
@@ -766,10 +766,10 @@ export default function AdminDashboardPage() {
           {/* Quick Actions Panel */}
           <div className="space-y-4">
             <div>
-              <h3 className="font-headline-md text-lg text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+              <h3 className="font-headline-md text-lg text-[#1A1A1A] font-semibold uppercase tracking-tight">
                 Quick Actions
               </h3>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">
                 Trigger direct operational tasks
               </p>
             </div>
@@ -790,7 +790,7 @@ export default function AdminDashboardPage() {
                   label: "Add Asset Unit",
                   desc: "Onboard new heavy machinery or equipment",
                   icon: "add_to_photos",
-                  color: "bg-[#1A1A1A] text-white border-[#1A1A1A]",
+                  color: "bg-[#1A1A1A] text-white border-gray-200",
                   hover: "hover:bg-white hover:text-[#1A1A1A]",
                   action: () => {
                     if (typeof window !== "undefined" && window.innerWidth >= 1024) {
@@ -804,7 +804,7 @@ export default function AdminDashboardPage() {
                   label: "Onboard Personnel",
                   desc: "Register a new vendor or supervisor account",
                   icon: "person_add",
-                  color: "bg-white text-[#1A1A1A] border-[#1A1A1A]",
+                  color: "bg-white text-[#1A1A1A] border-gray-200",
                   hover: "hover:bg-[#1A1A1A] hover:text-white",
                   action: () => {
                     if (typeof window !== "undefined" && window.innerWidth >= 1024) {
@@ -832,7 +832,7 @@ export default function AdminDashboardPage() {
                 <button
                   key={act.label}
                   onClick={act.action}
-                  className={`border-2 rounded-[20px] p-6 flex flex-col justify-between gap-6 transition-all text-left cursor-pointer group shadow-none min-h-[160px] ${act.color} ${act.hover}`}
+                  className={`border rounded-[20px] p-6 flex flex-col justify-between gap-6 transition-all text-left cursor-pointer group shadow-none min-h-[160px] ${act.color} ${act.hover}`}
                 >
                   <div className="flex justify-between items-start w-full">
                     <span className="material-symbols-outlined text-3xl">
@@ -843,7 +843,7 @@ export default function AdminDashboardPage() {
                     </span>
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-sm uppercase tracking-tight">
+                    <h4 className="font-semibold text-sm uppercase tracking-tight">
                       {act.label}
                     </h4>
                     <p className="text-[10px] opacity-80 mt-1 font-medium">
@@ -863,7 +863,7 @@ export default function AdminDashboardPage() {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className="pointer-events-auto bg-[#1a1c1c] text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 border-2 border-[#D32F2F] animate-in fade-in slide-in-from-top-5 duration-300"
+            className="pointer-events-auto bg-[#1a1c1c] text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 border border-[#D32F2F] animate-in fade-in slide-in-from-top-5 duration-300"
           >
             <span
               className={`material-symbols-outlined text-sm ${
@@ -880,7 +880,7 @@ export default function AdminDashboardPage() {
                 ? "error"
                 : "info"}
             </span>
-            <span className="font-bold text-xs uppercase tracking-wider">
+            <span className="font-medium text-xs uppercase tracking-wider">
               {toast.message}
             </span>
           </div>

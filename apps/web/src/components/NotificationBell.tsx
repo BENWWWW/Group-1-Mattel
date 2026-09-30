@@ -249,28 +249,28 @@ export default function NotificationBell() {
           notifications
         </span>
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-1 bg-[#D32F2F] border border-white text-white text-[9px] font-black rounded-full flex items-center justify-center">
+          <span className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-1 bg-[#D32F2F] border border-white text-white text-[9px] font-semibold rounded-full flex items-center justify-center">
             {unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <aside className="fixed left-4 right-4 md:absolute md:left-auto md:right-0 top-20 md:top-auto mt-3 w-auto md:w-80 bg-white border-4 border-black rounded-[20px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <aside className="fixed left-4 right-4 md:absolute md:left-auto md:right-0 top-20 md:top-auto mt-3 w-auto md:w-80 bg-white border border-gray-200 rounded-[20px] shadow-lg z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {/* Header */}
-          <header className="bg-[#1A1A1A] text-white px-4 py-3 border-b-2 border-black flex justify-between items-center shrink-0">
+          <header className="bg-[#1A1A1A] text-white px-4 py-3 border-b border-gray-200 flex justify-between items-center shrink-0">
             <div>
-              <h4 className="font-extrabold text-xs uppercase tracking-wider text-white leading-none">
+              <h4 className="font-semibold text-xs uppercase tracking-wider text-white leading-none">
                 Notifications
               </h4>
-              <p className="text-[8px] text-gray-400 font-extrabold uppercase tracking-wider leading-none mt-1">
+              <p className="text-[8px] text-gray-400 font-semibold uppercase tracking-wider leading-none mt-1">
                 {unreadCount} Unread
               </p>
             </div>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-[9px] font-black uppercase text-[#D32F2F] bg-transparent border-none cursor-pointer hover:underline p-0"
+                className="text-[9px] font-semibold uppercase text-[#D32F2F] bg-transparent border-none cursor-pointer hover:underline p-0"
               >
                 Mark All As Read
               </button>
@@ -284,7 +284,7 @@ export default function NotificationBell() {
                 <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">
                   notifications_off
                 </span>
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                   No Notifications
                 </span>
               </div>
@@ -308,10 +308,10 @@ export default function NotificationBell() {
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <div className="flex justify-between items-baseline mb-0.5">
-                      <h5 className="font-extrabold text-xs text-black uppercase leading-tight truncate">
+                      <h5 className="font-semibold text-xs text-black uppercase leading-tight truncate">
                         {notif.title}
                       </h5>
-                      <span className="text-[8px] font-bold text-gray-400 shrink-0 ml-2">
+                      <span className="text-[8px] font-medium text-gray-400 shrink-0 ml-2">
                         {new Date(notif.created_at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",

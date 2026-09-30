@@ -2,6 +2,8 @@
 
 @theme {
   --color-primary: #D32F2F;
+  /* App page background behind white cards (not used on login) */
+  --color-page: #E4E6EA;
   --color-on-surface: #1A1A1A;
   --color-on-surface-variant: #1A1A1A;
   --color-outline: #1A1A1A;
@@ -96,9 +98,11 @@
   border: 2px solid #1A1A1A;
 }
 
-/* Remove shadows globally for flat aesthetic */
-* {
-  box-shadow: none !important;
+/* Tailwind v4 defaults border color to currentColor; keep unstyled borders light */
+@layer base {
+  *, ::before, ::after {
+    border-color: var(--color-gray-200);
+  }
 }
 
 /* Transition for Label and Input */
@@ -121,20 +125,20 @@ body {
 /* Checklist Template Management Page Styles */
 .industrial-card {
   background: #ffffff;
-  border: 2px solid #1a1c1c;
+  border: 1px solid #E5E7EB;
   border-radius: 4px;
   padding: 24px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .industrial-card.active {
   border-color: #af101a;
-  box-shadow: 4px 4px 0px #af101a !important; /* Override global box-shadow override */
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
 }
 .pill-button-sharp {
-  border: 2px solid #1a1c1c;
+  border: 1px solid #E5E7EB;
   border-radius: 4px;
   padding: 10px 24px;
-  font-weight: 800;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -147,11 +151,11 @@ body {
 }
 .status-badge-sharp {
   display: inline-block;
-  border: 2px solid #1a1c1c;
+  border: 1px solid #E5E7EB;
   border-radius: 4px;
   padding: 4px 10px;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
 }
 .custom-toggle {
@@ -170,7 +174,7 @@ body {
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
   background-color: #e2e2e2;
-  border: 2px solid #1a1c1c;
+  border: 1px solid #E5E7EB;
   transition: .3s;
   border-radius: 24px;
 }
@@ -198,7 +202,7 @@ input:checked + .slider:before {
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
   background-color: #e2e2e2;
-  border: 2px solid #1a1c1c;
+  border: 1px solid #E5E7EB;
   transition: .3s;
   border-radius: 24px;
 }
@@ -244,7 +248,7 @@ input:checked + .slider-urgent:before {
   background: #f9f9f9;
 }
 .scroll-container::-webkit-scrollbar-thumb {
-  background: #1a1c1c;
+  background: #D1D5DB;
   border-radius: 10px;
 }
 
@@ -255,29 +259,28 @@ input:checked + .slider-urgent:before {
 }
 
 .heritage-card {
-  border: 2px solid #1A1A1A;
+  border: 1px solid #E5E7EB;
   border-radius: 20px;
   padding: 32px;
   transition: transform 0.1s ease-in-out;
-  box-shadow: none !important;
 }
 
 .heritage-pill {
-  border: 2px solid #1A1A1A;
+  border: 1px solid #E5E7EB;
   border-radius: 20px;
   padding: 8px 24px;
   transition: all 0.1s ease-in-out;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .heritage-badge {
   display: inline-block;
-  border: 2px solid #1A1A1A;
+  border: 1px solid #E5E7EB;
   border-radius: 20px;
   padding: 4px 16px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -289,7 +292,7 @@ input:checked + .slider-urgent:before {
   height: 64px;
   background-color: #D32F2F;
   color: #FFFFFF;
-  border: 2px solid #1A1A1A;
+  border: 1px solid #E5E7EB;
   border-radius: 20px;
   display: flex;
   align-items: center;

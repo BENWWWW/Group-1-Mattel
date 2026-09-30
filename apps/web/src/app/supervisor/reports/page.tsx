@@ -217,17 +217,17 @@ export default function ReportsPage() {
 
   if (loading && reports.length === 0) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-white">
+      <div className="flex h-screen w-full items-center justify-center bg-page">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Reports...</p>
+          <div className="w-12 h-12 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-medium uppercase tracking-widest text-gray-500">Loading Reports...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md select-none relative overflow-hidden">
+    <div className="flex h-screen w-full bg-page text-[#1A1A1A] font-body-md select-none relative overflow-hidden">
       <style jsx global>{`
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #FFFFFF; }
@@ -237,10 +237,10 @@ export default function ReportsPage() {
       `}</style>
 
       {/* SideNavBar */}
-      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r border-gray-200">
         <div className="px-6 mb-10">
-          <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN</h1>
-          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
+          <h1 className="font-headline-md text-xl font-semibold text-white leading-tight">MAINTAIN</h1>
+          <p className="text-[10px] text-[#D32F2F] font-medium uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           <button
@@ -278,7 +278,7 @@ export default function ReportsPage() {
               await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
-            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-xs cursor-pointer border-none mb-4"
+            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-medium text-xs cursor-pointer border-none mb-4"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             <span>Logout</span>
@@ -288,7 +288,7 @@ export default function ReportsPage() {
             onClick={() => router.push("/supervisor/profile")}
             className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
           >
-            <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               <img
                 className="w-full h-full object-cover"
                 alt="Supervisor Profile Portrait"
@@ -296,145 +296,145 @@ export default function ReportsPage() {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase">{currentUser?.full_name || "Supervisor"}</p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold font-bold">{currentUser?.department || "Auditor"}</p>
+              <p className="text-xs font-medium truncate text-white uppercase">{currentUser?.full_name || "Supervisor"}</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-medium font-medium">{currentUser?.department || "Auditor"}</p>
             </div>
           </button>
         </div>
       </aside>
 
       {/* TopNavBar */}
-      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b-2 border-[#1A1A1A] h-20 px-6 lg:px-10 flex justify-between items-center z-40">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b border-gray-200 h-20 px-6 lg:px-10 flex justify-between items-center z-40">
         <div>
-          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight">
             Auditing Reports
           </h2>
-          <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+          <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-medium">
             Monitor precision statistics and compliance rates
           </p>
         </div>
         <div className="flex items-center gap-4">
           <NotificationBell />
-          <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
+          <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
             <img className="w-full h-full object-cover" src={avatarSrc} alt="User Profile" />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-page w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
         <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-12">
 
           {/* Key Metrics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col justify-between">
+            <div className="bg-white rounded-[20px] p-6 flex flex-col justify-between shadow-sm">
               <div className="flex justify-between items-start">
-                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <span className="font-label-md text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Audit Passing Rate
                 </span>
                 <span className="material-symbols-outlined text-green-600">done_all</span>
               </div>
               <div className="mt-4">
-                <p className="font-headline-xl text-4xl font-extrabold text-green-600 tracking-tighter">{stats.completionRate}</p>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Total: {stats.totalAudits} Reports</p>
+                <p className="font-headline-xl text-4xl font-semibold text-green-600 tracking-tighter">{stats.completionRate}</p>
+                <p className="text-[10px] text-gray-400 font-medium uppercase mt-1">Total: {stats.totalAudits} Reports</p>
               </div>
             </div>
 
-            <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col justify-between">
+            <div className="bg-white rounded-[20px] p-6 flex flex-col justify-between shadow-sm">
               <div className="flex justify-between items-start">
-                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <span className="font-label-md text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total Approved
                 </span>
                 <span className="material-symbols-outlined text-green-600">check_circle</span>
               </div>
               <div className="mt-4">
-                <p className="font-headline-xl text-4xl font-extrabold text-black tracking-tighter">{stats.approvedCount}</p>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Approved reports</p>
+                <p className="font-headline-xl text-4xl font-semibold text-black tracking-tighter">{stats.approvedCount}</p>
+                <p className="text-[10px] text-gray-400 font-medium uppercase mt-1">Approved reports</p>
               </div>
             </div>
 
-            <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col justify-between">
+            <div className="bg-white rounded-[20px] p-6 flex flex-col justify-between shadow-sm">
               <div className="flex justify-between items-start">
-                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <span className="font-label-md text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Rejection Frequency
                 </span>
-                <span className="material-symbols-outlined text-[#D32F2F]">error_outline</span>
+                <span className="material-symbols-outlined text-gray-400">error_outline</span>
               </div>
               <div className="mt-4">
-                <p className="font-headline-xl text-4xl font-extrabold text-[#D32F2F] tracking-tighter">{stats.rejectionRate}</p>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Rejected reports</p>
+                <p className="font-headline-xl text-4xl font-semibold text-gray-900 tracking-tighter">{stats.rejectionRate}</p>
+                <p className="text-[10px] text-gray-400 font-medium uppercase mt-1">Rejected reports</p>
               </div>
             </div>
 
-            <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 flex flex-col justify-between border-l-8 border-l-[#D32F2F]">
+            <div className="bg-white rounded-[20px] p-6 flex flex-col justify-between shadow-sm">
               <div className="flex justify-between items-start">
-                <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <span className="font-label-md text-xs font-medium text-gray-500 uppercase tracking-wider">
                   System Compliance
                 </span>
-                <span className="material-symbols-outlined text-[#D32F2F]">verified_user</span>
+                <span className="material-symbols-outlined text-gray-400">verified_user</span>
               </div>
               <div className="mt-4">
-                <p className="font-headline-xl text-4xl font-extrabold text-[#1A1A1A] tracking-tighter">OPTIMAL</p>
-                <p className="text-[10px] text-[#D32F2F] font-bold uppercase mt-1">No major system breaches</p>
+                <p className="font-headline-xl text-4xl font-semibold text-[#1A1A1A] tracking-tighter">OPTIMAL</p>
+                <p className="text-[10px] text-[#D32F2F] font-medium uppercase mt-1">No major system breaches</p>
               </div>
             </div>
           </div>
 
           {/* Details & Statistics Section */}
-          <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 space-y-6">
+          <div className="bg-white rounded-[20px] p-6 space-y-6 shadow-sm">
             <div>
-              <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Distribution Category</h3>
+              <h3 className="font-headline-lg text-lg font-semibold uppercase tracking-tight">Distribution Category</h3>
               <p className="text-xs text-gray-500 font-medium">Audit distribution based on machine category</p>
             </div>
 
             <div className="space-y-4">
               {/* Mechanical */}
               <div className="space-y-1">
-                <div className="flex justify-between text-xs font-bold">
+                <div className="flex justify-between text-xs font-medium">
                   <span>Mechanical</span>
                   <span>{categoryDist.Mechanical || 0}%</span>
                 </div>
 
                 {/* Electrical */}
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
+                  <div className="flex justify-between text-xs font-medium">
                     <span>Electrical</span>
                     <span>{categoryDist.Electrical || 0}%</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                  <div className="w-full bg-gray-100 rounded-full h-3 border-[#1A1A1A]/10 overflow-hidden">
                     <div className="bg-[#1A1A1A] h-full" style={{ width: `${categoryDist.Electrical || 0}%` }}></div>
                   </div>
                 </div>
 
                 {/* HVAC */}
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
+                  <div className="flex justify-between text-xs font-medium">
                     <span>HVAC</span>
                     <span>{categoryDist.HVAC || 0}%</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                  <div className="w-full bg-gray-100 rounded-full h-3 border-[#1A1A1A]/10 overflow-hidden">
                     <div className="bg-orange-500 h-full" style={{ width: `${categoryDist.HVAC || 0}%` }}></div>
                   </div>
                 </div>
 
                 {/* Safety */}
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
+                  <div className="flex justify-between text-xs font-medium">
                     <span>Safety</span>
                     <span>{categoryDist.Safety || 0}%</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                  <div className="w-full bg-gray-100 rounded-full h-3 border-[#1A1A1A]/10 overflow-hidden">
                     <div className="bg-green-600 h-full" style={{ width: `${categoryDist.Safety || 0}%` }}></div>
                   </div>
                 </div>
 
                 {/* Facilities */}
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
+                  <div className="flex justify-between text-xs font-medium">
                     <span>Facilities</span>
                     <span>{categoryDist.Facilities || 0}%</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 border border-[#1A1A1A]/10 overflow-hidden">
+                  <div className="w-full bg-gray-100 rounded-full h-3 border-[#1A1A1A]/10 overflow-hidden">
                     <div className="bg-blue-600 h-full" style={{ width: `${categoryDist.Facilities || 0}%` }}></div>
                   </div>
                 </div>
@@ -443,10 +443,10 @@ export default function ReportsPage() {
           </div>
 
           {/* Audit Trail Table */}
-          <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 space-y-6">
+          <div className="bg-white rounded-[20px] p-6 space-y-6 shadow-sm">
             <div className="flex flex-wrap justify-between items-center gap-4">
               <div>
-                <h3 className="font-headline-lg text-lg font-extrabold uppercase tracking-tight">Audit History Ledger</h3>
+                <h3 className="font-headline-lg text-lg font-semibold uppercase tracking-tight">Audit History Ledger</h3>
                 <p className="text-xs text-gray-500 font-medium">History log of all approved / rejected reports</p>
               </div>
 
@@ -457,14 +457,14 @@ export default function ReportsPage() {
                   placeholder="Search Reports..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-auto px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold outline-none focus:border-[#D32F2F] bg-white text-[#1A1A1A]"
+                  className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-[#D32F2F] bg-white text-[#1A1A1A]"
                 />
 
                 {/* Filter */}
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full sm:w-auto px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold bg-white text-[#1A1A1A] cursor-pointer outline-none font-bold"
+                  className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl text-xs font-medium bg-white text-[#1A1A1A] cursor-pointer outline-none font-medium"
                 >
                   <option value="All">All Categories</option>
                   <option value="Mechanical">Mechanical</option>
@@ -478,7 +478,7 @@ export default function ReportsPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full sm:w-auto px-4 py-2 border-2 border-[#1A1A1A] rounded-xl text-xs font-bold bg-white text-[#1A1A1A] cursor-pointer outline-none font-bold"
+                  className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl text-xs font-medium bg-white text-[#1A1A1A] cursor-pointer outline-none font-medium"
                 >
                   <option value="All">All Statuses</option>
                   <option value="Approved">Approved</option>
@@ -490,7 +490,7 @@ export default function ReportsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b-2 border-[#1A1A1A] font-bold text-xs uppercase tracking-wider text-gray-500">
+                  <tr className="border-b border-gray-200 font-medium text-xs uppercase tracking-wider text-gray-500">
                     <th className="pb-3 pr-4">Task Code</th>
                     <th className="pb-3 px-4">Title / Asset</th>
                     <th className="pb-3 px-4">Vendor</th>
@@ -503,15 +503,15 @@ export default function ReportsPage() {
                 <tbody className="divide-y divide-gray-100 text-xs">
                   {filteredReports.map((report) => (
                     <tr key={report.reportId} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="py-4 pr-4 font-black text-[#D32F2F]">{report.id}</td>
-                      <td className="py-4 px-4 font-bold">
+                      <td className="py-4 pr-4 font-semibold text-[#D32F2F]">{report.id}</td>
+                      <td className="py-4 px-4 font-medium">
                         <p>{report.title}</p>
                         <p className="text-[10px] text-gray-400 uppercase font-medium">{report.asset}</p>
                       </td>
-                      <td className="py-4 px-4 font-extrabold text-[#1A1A1A]">{report.vendorName}</td>
-                      <td className="py-4 px-4 font-bold text-gray-500">{report.date}</td>
+                      <td className="py-4 px-4 font-semibold text-[#1A1A1A]">{report.vendorName}</td>
+                      <td className="py-4 px-4 font-medium text-gray-500">{report.date}</td>
                       <td className="py-4 px-4">
-                        <span className={`px-2.5 py-1 rounded-full font-bold text-[9px] uppercase tracking-wider ${report.status === "Approved"
+                        <span className={`px-2.5 py-1 rounded-full font-medium text-[9px] uppercase tracking-wider ${report.status === "Approved"
                           ? "bg-green-100 text-green-700 border border-green-600/20"
                           : "bg-red-100 text-red-700 border border-red-600/20"
                           }`}>
@@ -525,14 +525,14 @@ export default function ReportsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => window.open(`/supervisor/tasks/report-preview?reportId=${report.reportId}`, "_blank")}
-                            className="p-1.5 hover:bg-[#D32F2F]/10 rounded-full transition-all border border-[#1A1A1A] bg-white cursor-pointer text-[#1A1A1A] hover:text-[#D32F2F] flex items-center justify-center"
+                            className="p-1.5 hover:bg-[#D32F2F]/10 rounded-full transition-all border border-gray-200 bg-white cursor-pointer text-[#1A1A1A] hover:text-[#D32F2F] flex items-center justify-center"
                             title="Open PDF Report"
                           >
                             <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
                           </button>
                           <button
                             onClick={() => handleDownload(report)}
-                            className="p-1.5 hover:bg-[#D32F2F]/10 rounded-full transition-all border border-[#1A1A1A] bg-white cursor-pointer text-[#1A1A1A] hover:text-[#D32F2F] flex items-center justify-center"
+                            className="p-1.5 hover:bg-[#D32F2F]/10 rounded-full transition-all border border-gray-200 bg-white cursor-pointer text-[#1A1A1A] hover:text-[#D32F2F] flex items-center justify-center"
                             title="Download Report File"
                           >
                             <span className="material-symbols-outlined text-[16px]">download</span>
@@ -543,7 +543,7 @@ export default function ReportsPage() {
                   ))}
                   {filteredReports.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-gray-400 font-bold uppercase text-[10px]">
+                      <td colSpan={7} className="py-8 text-center text-gray-400 font-medium uppercase text-[10px]">
                         No completed audit history yet
                       </td>
                     </tr>
@@ -563,14 +563,14 @@ export default function ReportsPage() {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setViewTargetReport(null)}
           ></div>
-          <div className="relative bg-white border-2 border-[#1A1A1A] w-full max-w-lg p-8 rounded-[20px] space-y-6 z-10 animate-in zoom-in-95 duration-200">
+          <div className="relative bg-white w-full max-w-lg p-8 rounded-[20px] space-y-6 z-10 animate-in zoom-in-95 duration-200 shadow-sm">
             <div className="flex justify-between items-start">
               <div>
-                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border-2 border-[#1A1A1A] uppercase ${viewTargetReport.status === "Approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-medium border border-gray-200 uppercase ${viewTargetReport.status === "Approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                   }`}>
                   {viewTargetReport.status}
                 </span>
-                <h3 className="font-headline-lg text-xl font-extrabold mt-2 text-[#1A1A1A]">
+                <h3 className="font-headline-lg text-xl font-semibold mt-2 text-[#1A1A1A]">
                   {viewTargetReport.title}
                 </h3>
               </div>
@@ -582,7 +582,7 @@ export default function ReportsPage() {
               </button>
             </div>
 
-            <div className="bg-gray-50 border-2 border-[#1A1A1A] rounded-xl p-4 space-y-2 text-xs font-semibold text-gray-700">
+            <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-xs font-semibold text-gray-700">
               <p>
                 <strong>Task Code:</strong> {viewTargetReport.id}
               </p>
@@ -601,7 +601,7 @@ export default function ReportsPage() {
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-headline-lg text-xs font-black uppercase tracking-wider text-gray-500 border-b pb-2">
+              <h4 className="font-headline-lg text-xs font-semibold uppercase tracking-wider text-gray-500 border-b pb-2">
                 Audit Supervisor Notes
               </h4>
               <p className="text-xs text-gray-600 leading-relaxed font-medium bg-gray-50 p-3 rounded-lg border border-dashed">
@@ -612,14 +612,14 @@ export default function ReportsPage() {
             <div className="flex gap-4 pt-2">
               <button
                 onClick={() => handleDownload(viewTargetReport)}
-                className="flex-1 bg-white text-[#1A1A1A] border-2 border-[#1A1A1A] rounded-full py-2.5 font-bold text-xs uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+                className="flex-1 bg-white text-[#1A1A1A] border border-gray-200 rounded-full py-2.5 font-medium text-xs uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
               >
                 <span className="material-symbols-outlined text-[16px]">download</span>
                 Download Log File
               </button>
               <button
                 onClick={() => setViewTargetReport(null)}
-                className="flex-1 bg-[#1A1A1A] text-white border-2 border-[#1A1A1A] rounded-full py-2.5 font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-all cursor-pointer active:scale-95"
+                className="flex-1 bg-[#1A1A1A] text-white border border-gray-200 rounded-full py-2.5 font-medium text-xs uppercase tracking-wider hover:bg-gray-800 transition-all cursor-pointer active:scale-95"
               >
                 Close
               </button>
@@ -633,12 +633,12 @@ export default function ReportsPage() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 border-[#D32F2F] shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300"
+            className="pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border border-[#D32F2F] shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300"
           >
-            <span className="material-symbols-outlined text-[#D32F2F]">
+            <span className="material-symbols-outlined text-gray-400">
               {t.type === "success" ? "check_circle" : "error"}
             </span>
-            <span className="font-black uppercase tracking-widest text-xs">{t.message}</span>
+            <span className="font-semibold uppercase tracking-widest text-xs">{t.message}</span>
           </div>
         ))}
       </div>

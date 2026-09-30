@@ -521,22 +521,22 @@ function AIVerificationScoreContent() {
 
   if (loading && flaggedItems.length === 0) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-white">
+      <div className="flex h-screen w-full items-center justify-center bg-page">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading...</p>
+          <div className="w-12 h-12 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-medium uppercase tracking-widest text-gray-500">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full select-none bg-white text-on-surface font-body-md overflow-hidden relative">
+    <div className="flex h-screen w-full select-none bg-page text-on-surface font-body-md overflow-hidden relative">
       {/* SideNavBar */}
-      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r border-gray-200">
         <div className="px-6 mb-10">
-          <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN</h1>
-          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
+          <h1 className="font-headline-md text-xl font-semibold text-white leading-tight">MAINTAIN</h1>
+          <p className="text-[10px] text-[#D32F2F] font-medium uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           <button
@@ -582,7 +582,7 @@ function AIVerificationScoreContent() {
               await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
-            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-xs cursor-pointer border-none mb-4"
+            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-medium text-xs cursor-pointer border-none mb-4"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             <span>Logout</span>
@@ -592,7 +592,7 @@ function AIVerificationScoreContent() {
             onClick={() => router.push("/vendor/profile")}
             className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
           >
-            <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               <img
                 alt="Vendor Headshot"
                 className="w-full h-full object-cover"
@@ -600,25 +600,25 @@ function AIVerificationScoreContent() {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Vendor"}</p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
+              <p className="text-xs font-medium truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Vendor"}</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-medium">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="lg:ml-[220px] h-screen flex flex-col relative w-full lg:w-[calc(100%-220px)] bg-white pb-20 lg:pb-0">
+      <main className="lg:ml-[220px] h-screen flex flex-col relative w-full lg:w-[calc(100%-220px)] bg-page pb-20 lg:pb-0">
         {/* TopNavBar */}
-        <header className="flex justify-between items-center h-20 px-6 lg:px-10 border-b-2 border-[#1A1A1A] bg-white shrink-0 z-40">
+        <header className="flex justify-between items-center h-20 px-6 lg:px-10 border-b border-gray-200 bg-white shrink-0 z-40">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/vendor/tasks")}
-              className="hover:bg-gray-100 p-2 rounded-full transition-all flex items-center justify-center cursor-pointer border-2 border-transparent bg-transparent"
+              className="hover:bg-gray-100 p-2 rounded-full transition-all flex items-center justify-center cursor-pointer border border-transparent bg-transparent"
             >
               <span className="material-symbols-outlined text-[#1A1A1A]">arrow_back</span>
             </button>
-            <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+            <h2 className="font-headline-md text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight">
               Review & Sign
             </h2>
           </div>
@@ -631,14 +631,14 @@ function AIVerificationScoreContent() {
             <div className="flex flex-col gap-6 w-full">
               <div className="flex flex-col sm:flex-row justify-between sm:items-end mb-4 px-2 gap-4">
                 <div>
-                  <h3 className="text-2xl text-[#1A1A1A] font-black uppercase tracking-tight">
+                  <h3 className="text-2xl text-[#1A1A1A] font-semibold uppercase tracking-tight">
                     Flagged Items
                   </h3>
-                  <p className="text-xs text-[#1A1A1A]/70 font-bold mt-1">
+                  <p className="text-xs text-[#1A1A1A]/70 font-medium mt-1">
                     Requires manual verification for report finalization
                   </p>
                 </div>
-                <span className="font-bold text-[11px] px-5 py-2 bg-[#1A1A1A] text-white border-2 border-[#1A1A1A] rounded-lg uppercase tracking-wider shrink-0 text-center">
+                <span className="font-medium text-[11px] px-5 py-2 bg-[#1A1A1A] text-white border border-gray-200 rounded-lg uppercase tracking-wider shrink-0 text-center">
                   {reviewCount} Awaiting Verification
                 </span>
               </div>
@@ -648,11 +648,11 @@ function AIVerificationScoreContent() {
                   flaggedItems.map((item) => (
                     <div
                       key={`${item.taskId}-${item.id}`}
-                      className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-primary transition-all group duration-300"
+                      className="bg-white p-6 rounded-[20px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-primary transition-all group duration-300 shadow-sm"
                     >
                       <div className="flex items-center gap-5">
                         <div
-                          className={`w-14 h-14 rounded-xl flex items-center justify-center border-2 border-[#1A1A1A] shrink-0 ${item.icon === "image_not_supported"
+                          className={`w-14 h-14 rounded-xl flex items-center justify-center border border-gray-200 shrink-0 ${item.icon === "image_not_supported"
                             ? "bg-primary"
                             : "bg-[#1A1A1A]"
                             }`}
@@ -667,12 +667,12 @@ function AIVerificationScoreContent() {
                           </span>
                         </div>
                         <div>
-                          <h4 className="text-sm sm:text-md text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+                          <h4 className="text-sm sm:text-md text-[#1A1A1A] font-semibold uppercase tracking-tight">
                             {item.title}
                           </h4>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="w-2.5 h-2.5 rounded-full bg-primary"></span>
-                            <p className={`text-[10px] font-black uppercase tracking-wider ${item.subColor}`}>
+                            <p className={`text-[10px] font-semibold uppercase tracking-wider ${item.subColor}`}>
                               {item.issueType}
                             </p>
                           </div>
@@ -680,18 +680,18 @@ function AIVerificationScoreContent() {
                       </div>
                       <button
                         onClick={() => handleOpenReview(item)}
-                        className="w-full sm:w-auto px-8 py-2.5 bg-primary text-white font-bold text-xs rounded-lg border-2 border-[#1A1A1A] hover:bg-[#1A1A1A] transition-all uppercase tracking-widest cursor-pointer hover:border-[#1A1A1A] text-center"
+                        className="w-full sm:w-auto px-8 py-2.5 bg-primary text-white font-medium text-xs rounded-lg border border-gray-200 hover:bg-[#1A1A1A] transition-all uppercase tracking-widest cursor-pointer hover:border-gray-400 text-center"
                       >
                         Review
                       </button>
                     </div>
                   ))
                 ) : (
-                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-[20px] p-12 text-center">
+                  <div className="bg-gray-50 border-dashed border-gray-300 rounded-[20px] p-12 text-center">
                     <span className="material-symbols-outlined text-4xl text-gray-400 mb-2">
                       verified_user
                     </span>
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                       All audit conflicts verified and resolved.
                     </p>
                   </div>
@@ -699,20 +699,20 @@ function AIVerificationScoreContent() {
               </div>
 
               {/* Vendor Signature Box */}
-              <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col gap-4 mt-6">
+              <div className="bg-white p-6 rounded-[20px] flex flex-col gap-4 mt-6 shadow-sm">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h4 className="text-sm text-[#1A1A1A] font-extrabold uppercase tracking-tight">
+                    <h4 className="text-sm text-[#1A1A1A] font-semibold uppercase tracking-tight">
                       Vendor Digital Signature
                     </h4>
-                    <p className="text-[10px] text-[#1A1A1A]/70 font-bold mt-0.5">
+                    <p className="text-[10px] text-[#1A1A1A]/70 font-medium mt-0.5">
                       Sign before submitting the final PM report
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => clearSignature(sigCanvasRef.current, setSigned)}
-                    className="text-[10px] font-black uppercase text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent"
+                    className="text-[10px] font-semibold uppercase text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent"
                   >
                     Clear Signature
                   </button>
@@ -720,13 +720,13 @@ function AIVerificationScoreContent() {
 
                 {savedSignatures.length > 0 && (
                   <div className="flex flex-wrap gap-2 items-center bg-gray-50 p-3 rounded-[15px] border border-[#1A1A1A]/10">
-                    <span className="text-[9px] font-extrabold text-gray-500 uppercase tracking-wider">Use Saved Signature:</span>
+                    <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">Use Saved Signature:</span>
                     {savedSignatures.map((sig) => (
                       <button
                         key={sig.id}
                         type="button"
                         onClick={() => handleLoadSavedSignature(sig.signature_data)}
-                        className="px-2.5 py-1 text-[9px] font-extrabold uppercase border border-[#1A1A1A] bg-white rounded-lg hover:bg-gray-50 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                        className="px-2.5 py-1 text-[9px] font-semibold uppercase border border-gray-200 bg-white rounded-lg hover:bg-gray-50 active:scale-95 cursor-pointer flex items-center gap-1.5"
                       >
                         <img src={sig.signature_data} className="w-6 h-4 object-contain" alt="" />
                         <span>{sig.label} {sig.is_default && "★"}</span>
@@ -735,9 +735,9 @@ function AIVerificationScoreContent() {
                   </div>
                 )}
 
-                <div className="w-full h-32 bg-black/5 border-2 border-[#1A1A1A] rounded-[20px] flex items-center justify-center relative overflow-hidden">
+                <div className="w-full h-32 bg-black/5 border border-gray-200 rounded-[20px] flex items-center justify-center relative overflow-hidden">
                   {!signed && (
-                    <span className="absolute text-gray-400 text-[10px] font-bold uppercase tracking-widest pointer-events-none">
+                    <span className="absolute text-gray-400 text-[10px] font-medium uppercase tracking-widest pointer-events-none">
                       Draw signature here
                     </span>
                   )}
@@ -754,7 +754,7 @@ function AIVerificationScoreContent() {
                   />
                 </div>
                 {!signed && (
-                  <p className="text-[9px] text-[#D32F2F] font-bold uppercase">
+                  <p className="text-[9px] text-[#D32F2F] font-medium uppercase">
                     Digital signature is required before submitting.
                   </p>
                 )}
@@ -764,11 +764,11 @@ function AIVerificationScoreContent() {
         </div>
 
         {/* Sticky Footer Action */}
-        <footer className="p-8 bg-white border-t-2 border-[#1A1A1A] flex items-center justify-center shrink-0">
+        <footer className="p-8 bg-white border-t border-gray-200 flex items-center justify-center shrink-0">
           <button
             onClick={handleSubmitReport}
             disabled={isSubmitting || isSubmitted}
-            className={`w-full max-w-4xl h-16 text-white font-bold rounded-lg border-2 border-[#1A1A1A] flex items-center justify-center gap-4 transition-all duration-300 uppercase tracking-[0.2em] active:scale-[0.98] cursor-pointer ${isSubmitted
+            className={`w-full max-w-4xl h-16 text-white font-medium rounded-lg border border-gray-200 flex items-center justify-center gap-4 transition-all duration-300 uppercase tracking-[0.2em] active:scale-[0.98] cursor-pointer ${isSubmitted
               ? "bg-green-700 border-green-700 pointer-events-none"
               : isSubmitting
                 ? "bg-primary opacity-80 cursor-wait pointer-events-none"
@@ -795,14 +795,14 @@ function AIVerificationScoreContent() {
 
       {/* Review Panel Slide-out Drawer */}
       <aside
-        className={`fixed top-0 right-0 h-screen w-full max-w-lg bg-white border-l-2 border-[#1A1A1A] z-[70] transition-transform duration-300 flex flex-col ${isPanelOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 h-screen w-full max-w-lg bg-white border-l border-gray-200 z-[70] transition-transform duration-300 flex flex-col ${isPanelOpen ? "translate-x-0" : "translate-x-full"
           }`}
       >
         {selectedItem && (
           <>
             {/* Drawer Header */}
-            <div className="p-6 border-b-2 border-[#1A1A1A] flex justify-between items-center bg-[#1A1A1A] text-white shrink-0">
-              <h2 className="text-md uppercase font-black tracking-tight flex items-center gap-2">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-[#1A1A1A] text-white shrink-0">
+              <h2 className="text-md uppercase font-semibold tracking-tight flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">analytics</span>
                 Review Detail
               </h2>
@@ -818,66 +818,66 @@ function AIVerificationScoreContent() {
             <div className="flex-1 overflow-y-auto p-8 space-y-8 scroll-container">
               {/* Info Section */}
               <section className="space-y-4">
-                <h3 className="text-[10px] text-[#1A1A1A]/60 uppercase font-black tracking-widest">
+                <h3 className="text-[10px] text-[#1A1A1A]/60 uppercase font-semibold tracking-widest">
                   Task Information
                 </h3>
-                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 border border-on-surface/10 rounded-xl">
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 border-on-surface/10 rounded-xl">
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-[#1A1A1A]/50">Task Name</p>
-                    <p className="font-bold text-xs text-[#1A1A1A]">{selectedItem.title}</p>
+                    <p className="text-[9px] uppercase font-medium text-[#1A1A1A]/50">Task Name</p>
+                    <p className="font-medium text-xs text-[#1A1A1A]">{selectedItem.title}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-[#1A1A1A]/50">Asset ID</p>
-                    <p className="font-bold text-xs text-[#1A1A1A]">{selectedItem.assetId}</p>
+                    <p className="text-[9px] uppercase font-medium text-[#1A1A1A]/50">Asset ID</p>
+                    <p className="font-medium text-xs text-[#1A1A1A]">{selectedItem.assetId}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-[#1A1A1A]/50">Location</p>
-                    <p className="font-bold text-xs text-[#1A1A1A]">{selectedItem.location}</p>
+                    <p className="text-[9px] uppercase font-medium text-[#1A1A1A]/50">Location</p>
+                    <p className="font-medium text-xs text-[#1A1A1A]">{selectedItem.location}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-[#1A1A1A]/50">Date</p>
-                    <p className="font-bold text-xs text-[#1A1A1A]">{selectedItem.date}</p>
+                    <p className="text-[9px] uppercase font-medium text-[#1A1A1A]/50">Date</p>
+                    <p className="font-medium text-xs text-[#1A1A1A]">{selectedItem.date}</p>
                   </div>
                 </div>
               </section>
 
               {/* Status & AI Result Card */}
-              <section className="bg-[#1A1A1A] text-white p-6 rounded-xl border-2 border-[#1A1A1A]">
+              <section className="bg-[#1A1A1A] text-white p-6 rounded-xl">
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-white/50 mb-1">Status</p>
-                    <span className="px-2 py-0.5 bg-primary text-white text-[9px] font-black uppercase rounded">
+                    <p className="text-[9px] uppercase font-medium text-white/50 mb-1">Status</p>
+                    <span className="px-2 py-0.5 bg-primary text-white text-[9px] font-semibold uppercase rounded">
                       Flagged
                     </span>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-white/50 mb-1">Issue Type</p>
-                    <p className="font-bold text-xs">{selectedItem.issueType}</p>
+                    <p className="text-[9px] uppercase font-medium text-white/50 mb-1">Issue Type</p>
+                    <p className="font-medium text-xs">{selectedItem.issueType}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-white/50 mb-1">AI Score</p>
-                    <p className="text-xl font-black text-primary">{selectedItem.confidence ?? "—"}</p>
+                    <p className="text-[9px] uppercase font-medium text-white/50 mb-1">AI Score</p>
+                    <p className="text-xl font-semibold text-primary">{selectedItem.confidence ?? "—"}</p>
                   </div>
                 </div>
               </section>
 
               {/* AI Explanation Text */}
               <section className="space-y-2">
-                <h3 className="text-[10px] text-[#1A1A1A]/60 uppercase font-black tracking-widest">
+                <h3 className="text-[10px] text-[#1A1A1A]/60 uppercase font-semibold tracking-widest">
                   Details
                 </h3>
-                <p className="text-xs font-bold leading-relaxed text-[#1A1A1A] bg-primary/5 p-4 border-l-4 border-primary rounded-r">
+                <p className="text-xs font-medium leading-relaxed text-[#1A1A1A] bg-primary/5 p-4 border-l border-primary rounded-r">
                   {selectedItem.explanation}
                 </p>
               </section>
 
               {/* Evidence Upload Slot */}
               <section className="space-y-4">
-                <h3 className="text-[10px] text-[#1A1A1A]/60 uppercase font-black tracking-widest">
+                <h3 className="text-[10px] text-[#1A1A1A]/60 uppercase font-semibold tracking-widest">
                   Evidence
                 </h3>
                 {selectedItem.photoUrl ? (
-                  <div className="aspect-video border-2 border-[#1A1A1A] rounded-xl overflow-hidden bg-gray-50 relative">
+                  <div className="aspect-video border border-gray-200 rounded-xl overflow-hidden bg-gray-50 relative">
                     <img
                       src={selectedItem.photoUrl}
                       alt="Inspection detail"
@@ -885,23 +885,23 @@ function AIVerificationScoreContent() {
                     />
                   </div>
                 ) : (
-                  <div className="aspect-video bg-[#1A1A1A]/5 border-2 border-dashed border-[#1A1A1A] rounded-xl flex flex-col items-center justify-center text-center gap-2">
+                  <div className="aspect-video bg-[#1A1A1A]/5 border border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-center gap-2">
                     <span className="material-symbols-outlined text-3xl text-[#1A1A1A]/30">
                       image_not_supported
                     </span>
-                    <span className="text-[10px] font-bold text-[#1A1A1A]/40">NO PHOTO LOGGED</span>
+                    <span className="text-[10px] font-medium text-[#1A1A1A]/40">NO PHOTO LOGGED</span>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     disabled
-                    className="flex items-center justify-center gap-2 py-3 border-2 border-gray-300 font-black uppercase text-[10px] rounded-lg opacity-50 cursor-not-allowed bg-gray-100 text-gray-400"
+                    className="flex items-center justify-center gap-2 py-3 border border-gray-300 font-semibold uppercase text-[10px] rounded-lg opacity-50 cursor-not-allowed bg-gray-100 text-gray-400"
                   >
                     <span className="material-symbols-outlined text-sm">lock</span> Mock Disabled
                   </button>
                   <button
                     disabled
-                    className="flex items-center justify-center gap-2 py-3 border-2 border-gray-300 font-black uppercase text-[10px] rounded-lg opacity-50 cursor-not-allowed bg-gray-100 text-gray-400"
+                    className="flex items-center justify-center gap-2 py-3 border border-gray-300 font-semibold uppercase text-[10px] rounded-lg opacity-50 cursor-not-allowed bg-gray-100 text-gray-400"
                   >
                     <span className="material-symbols-outlined text-sm">lock</span> Camera Disabled
                   </button>
@@ -910,13 +910,13 @@ function AIVerificationScoreContent() {
 
               {/* Notes Input Area */}
               <section className="space-y-2">
-                <h3 className="text-[10px] text-[#1A1A1A]/60 uppercase font-black tracking-widest">
+                <h3 className="text-[10px] text-[#1A1A1A]/60 uppercase font-semibold tracking-widest">
                   Vendor Notes
                 </h3>
                 <textarea
                   value={vendorNote}
                   onChange={(e) => setVendorNote(e.target.value)}
-                  className="w-full p-4 border-2 border-[#1A1A1A] rounded-xl font-body-md focus:border-primary outline-none text-xs"
+                  className="w-full p-4 rounded-xl font-body-md focus:border-primary outline-none text-xs"
                   placeholder="Explain resolution context for verification audit trail..."
                   rows={3}
                 ></textarea>
@@ -924,11 +924,11 @@ function AIVerificationScoreContent() {
             </div>
 
             {/* Footer Actions */}
-            <div className="p-8 border-t-2 border-[#1A1A1A] bg-white space-y-3 shrink-0">
+            <div className="p-8 border-t border-gray-200 bg-white space-y-3 shrink-0">
               <button
                 onClick={handleRunAI}
                 disabled={isProcessingAI}
-                className="w-full py-4 bg-primary text-white font-black uppercase tracking-widest rounded-lg border-2 border-[#1A1A1A] hover:bg-[#1A1A1A] transition-all flex items-center justify-center gap-3 cursor-pointer border-none"
+                className="w-full py-4 bg-primary text-white font-semibold uppercase tracking-widest rounded-lg border border-gray-200 hover:bg-[#1A1A1A] transition-all flex items-center justify-center gap-3 cursor-pointer border-none"
               >
                 <span
                   className={`material-symbols-outlined ${isProcessingAI ? "animate-spin" : ""}`}
@@ -939,7 +939,7 @@ function AIVerificationScoreContent() {
               </button>
               <button
                 onClick={handleCloseReview}
-                className="w-full py-4 bg-white text-[#1A1A1A] font-black uppercase tracking-widest rounded-lg border-2 border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-all cursor-pointer"
+                className="w-full py-4 bg-white text-[#1A1A1A] font-semibold uppercase tracking-widest rounded-lg border border-gray-200 hover:bg-[#1A1A1A] hover:text-white transition-all cursor-pointer"
               >
                 Close Review
               </button>
@@ -953,7 +953,7 @@ function AIVerificationScoreContent() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${t.type === "success" ? "border-green-700" : "border-primary"
+            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${t.type === "success" ? "border-green-700" : "border-primary"
               }`}
           >
             <span
@@ -962,7 +962,7 @@ function AIVerificationScoreContent() {
             >
               check_circle
             </span>
-            <span className="font-black uppercase tracking-widest text-xs">{t.message}</span>
+            <span className="font-semibold uppercase tracking-widest text-xs">{t.message}</span>
           </div>
         ))}
       </div>
@@ -973,10 +973,10 @@ function AIVerificationScoreContent() {
 export default function AIVerificationScorePage() {
   return (
     <Suspense fallback={
-      <div className="flex h-screen w-full items-center justify-center bg-white">
+      <div className="flex h-screen w-full items-center justify-center bg-page">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading...</p>
+          <div className="w-12 h-12 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-medium uppercase tracking-widest text-gray-500">Loading...</p>
         </div>
       </div>
     }>

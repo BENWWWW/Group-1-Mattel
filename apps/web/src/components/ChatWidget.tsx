@@ -932,7 +932,7 @@ export default function ChatWidget() {
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         onClick={handleButtonClick}
-        className={`w-16 h-16 bg-[#D32F2F] text-white rounded-full border-2 border-[#1A1A1A] flex items-center justify-center transition-all cursor-grab active:cursor-grabbing shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 active:scale-95 border-none select-none ${
+        className={`w-16 h-16 bg-[#D32F2F] text-white rounded-full border border-gray-200 flex items-center justify-center transition-all cursor-grab active:cursor-grabbing shadow-lg hover:scale-105 active:scale-95 border-none select-none ${
           isDragging ? "opacity-90 scale-105" : ""
         }`}
         title="Contact Supervisor / Vendor (Drag to move)"
@@ -941,7 +941,7 @@ export default function ChatWidget() {
           {isOpen ? "close" : "forum"}
         </span>
         {!isOpen && unreadMessages.length > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[24px] h-[24px] px-1.5 bg-[#D32F2F] border-2 border-[#1A1A1A] text-white font-extrabold text-[10px] rounded-full flex items-center justify-center pointer-events-none">
+          <span className="absolute -top-1 -right-1 min-w-[24px] h-[24px] px-1.5 bg-[#D32F2F] border border-gray-200 text-white font-semibold text-[10px] rounded-full flex items-center justify-center pointer-events-none">
             {unreadMessages.length}
           </span>
         )}
@@ -955,11 +955,11 @@ export default function ChatWidget() {
          On desktop: fixed panel at bottom-right corner. */}
     {mounted && isOpen && createPortal(
       <div
-        className="fixed z-[99999] animate-in slide-in-from-bottom-5 duration-300 bg-white border-4 border-black rounded-[24px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col overflow-hidden bottom-[90px] left-2 right-2 h-[70vh] max-h-[520px] md:bottom-8 md:right-8 md:left-auto md:w-80 md:h-[480px]"
+        className="fixed z-[99999] animate-in slide-in-from-bottom-5 duration-300 bg-white border border-gray-200 rounded-[24px] shadow-lg flex flex-col overflow-hidden bottom-[90px] left-2 right-2 h-[70vh] max-h-[520px] md:bottom-8 md:right-8 md:left-auto md:w-80 md:h-[480px]"
         style={{ zIndex: 99999 }}
       >
         {/* Header */}
-        <header className="bg-[#1A1A1A] text-white px-4 py-3.5 border-b-2 border-black flex items-center gap-3 shrink-0">
+        <header className="bg-[#1A1A1A] text-white px-4 py-3.5 border-b border-gray-200 flex items-center gap-3 shrink-0">
           {selectedContact ? (
             <>
               <button
@@ -969,10 +969,10 @@ export default function ChatWidget() {
                 <span className="material-symbols-outlined text-lg">arrow_back</span>
               </button>
               <div className="overflow-hidden flex-1">
-                <h4 className="font-extrabold text-xs uppercase tracking-wider truncate text-white leading-none mb-1">
+                <h4 className="font-semibold text-xs uppercase tracking-wider truncate text-white leading-none mb-1">
                   {selectedContact.full_name}
                 </h4>
-                <p className="text-[9px] text-[#D32F2F] font-bold uppercase tracking-widest leading-none">
+                <p className="text-[9px] text-[#D32F2F] font-medium uppercase tracking-widest leading-none">
                   {selectedContact.role}{" "}
                   {selectedContact.department && `• ${selectedContact.department}`}
                 </p>
@@ -980,12 +980,12 @@ export default function ChatWidget() {
             </>
           ) : (
             <>
-              <span className="material-symbols-outlined text-xl text-[#D32F2F]">forum</span>
+              <span className="material-symbols-outlined text-xl text-gray-400">forum</span>
               <div className="overflow-hidden flex-1">
-                <h4 className="font-extrabold text-xs uppercase tracking-wider truncate text-white leading-none">
+                <h4 className="font-semibold text-xs uppercase tracking-wider truncate text-white leading-none">
                   Communication Portal
                 </h4>
-                <p className="text-[8px] text-gray-400 font-extrabold uppercase tracking-wider leading-none mt-0.5">
+                <p className="text-[8px] text-gray-400 font-semibold uppercase tracking-wider leading-none mt-0.5">
                   Connect Vendor & Supervisor
                 </p>
               </div>
@@ -1007,12 +1007,12 @@ export default function ChatWidget() {
                 {loadingMessages ? (
                   <div className="flex flex-col items-center justify-center h-full gap-2">
                     <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase">Loading Chat...</span>
+                    <span className="text-[10px] font-medium text-gray-400 uppercase">Loading Chat...</span>
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center p-4">
                     <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">forum</span>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">No Messages Yet</span>
+                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">No Messages Yet</span>
                     <p className="text-[9px] text-gray-400 mt-1 max-w-[180px] font-medium leading-relaxed">
                       Type a message below to start a conversation.
                     </p>
@@ -1032,21 +1032,21 @@ export default function ChatWidget() {
                         className={`max-w-[85%] rounded-[16px] p-3 text-xs leading-normal font-semibold shadow-sm ${
                           isMe
                             ? "bg-[#1A1A1A] text-white ml-auto rounded-tr-none"
-                            : "bg-white text-black border-2 border-black mr-auto rounded-tl-none"
+                            : "bg-white text-black border border-gray-200 mr-auto rounded-tl-none"
                         }`}
                       >
                         {parsed.taskMention && (
                           <button
                             type="button"
                             onClick={() => handleTaskMentionClick(parsed.taskMention!)}
-                            className={`mb-2 w-full flex items-center gap-1.5 px-2 py-1.5 rounded-[8px] text-[10px] font-black uppercase text-left transition-all cursor-pointer border ${
+                            className={`mb-2 w-full flex items-center gap-1.5 px-2 py-1.5 rounded-[8px] text-[10px] font-semibold uppercase text-left transition-all cursor-pointer border ${
                               isMe
                                 ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
-                                : "bg-[#D32F2F] hover:bg-[#b71c1c] text-white border-black"
+                                : "bg-[#D32F2F] hover:bg-[#b71c1c] text-white border-gray-200"
                             }`}
                             title={`Click to open report preview for ${parsed.taskMention.code}`}
                           >
-                            <span className="material-symbols-outlined text-[11px] font-bold shrink-0">open_in_new</span>
+                            <span className="material-symbols-outlined text-[11px] font-medium shrink-0">open_in_new</span>
                             <span className="truncate flex-1">
                               Regarding {parsed.taskMention.type === "report" ? "Report" : "Task"} [{parsed.taskMention.code}]
                             </span>
@@ -1056,7 +1056,7 @@ export default function ChatWidget() {
                         {isFile ? (
                           isImage ? (
                             <div className="space-y-1">
-                              <p className={`text-[9px] font-bold uppercase truncate max-w-[150px] mb-1 ${isMe ? "text-gray-400" : "text-gray-500"}`}>
+                              <p className={`text-[9px] font-medium uppercase truncate max-w-[150px] mb-1 ${isMe ? "text-gray-400" : "text-gray-500"}`}>
                                 {fileName}
                               </p>
                               <button
@@ -1087,7 +1087,7 @@ export default function ChatWidget() {
                                 title="Click to preview file inline"
                               >
                                 <span className="material-symbols-outlined text-base shrink-0">description</span>
-                                <span className="text-[10px] font-black truncate max-w-[130px]">{fileName}</span>
+                                <span className="text-[10px] font-semibold truncate max-w-[130px]">{fileName}</span>
                               </button>
                               <button
                                 type="button"
@@ -1116,16 +1116,16 @@ export default function ChatWidget() {
                 <div ref={messagesEndRef} />
               </div>
               {mentionedTask && (
-                <div className="mx-3 my-1.5 p-2 bg-red-50 border-2 border-black rounded-[12px] flex items-center justify-between gap-2 shrink-0">
+                <div className="mx-3 my-1.5 p-2 bg-red-50 border border-gray-200 rounded-[12px] flex items-center justify-between gap-2 shrink-0">
                   <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="material-symbols-outlined text-sm text-[#D32F2F]">
+                    <span className="material-symbols-outlined text-sm text-gray-400">
                       {mentionedTask.type === "report" ? "assessment" : "assignment"}
                     </span>
                     <div className="overflow-hidden">
-                      <p className="text-[9px] font-black text-[#D32F2F] uppercase leading-none tracking-wider">
+                      <p className="text-[9px] font-semibold text-[#D32F2F] uppercase leading-none tracking-wider">
                         Mentioned {mentionedTask.type === "report" ? "Report" : "Task"}
                       </p>
-                      <p className="text-[10px] text-black font-extrabold uppercase truncate mt-0.5 leading-none">
+                      <p className="text-[10px] text-black font-semibold uppercase truncate mt-0.5 leading-none">
                         {mentionedTask.code} - {mentionedTask.title}
                       </p>
                     </div>
@@ -1141,18 +1141,18 @@ export default function ChatWidget() {
               )}
 
               {pendingFile && (
-                <div className="mx-3 my-1.5 p-2 bg-gray-100 border-2 border-black rounded-[12px] flex items-center justify-between gap-2 shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="mx-3 my-1.5 p-2 bg-gray-100 border border-gray-200 rounded-[12px] flex items-center justify-between gap-2 shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-200">
                   <div className="flex items-center gap-2 overflow-hidden flex-1">
                     <span className="material-symbols-outlined text-sm text-gray-500 shrink-0">attach_file</span>
                     <div className="overflow-hidden flex-1">
-                      <p className="text-[9px] font-black text-gray-400 uppercase leading-none tracking-wider">Ready to Send Attachment</p>
+                      <p className="text-[9px] font-semibold text-gray-400 uppercase leading-none tracking-wider">Ready to Send Attachment</p>
                       <button
                         type="button"
                         onClick={() => {
                           const fileUrl = URL.createObjectURL(pendingFile);
                           window.open(fileUrl, "_blank");
                         }}
-                        className="text-[10px] text-[#D32F2F] hover:underline font-extrabold truncate mt-0.5 leading-none block border-none bg-transparent p-0 cursor-pointer text-left w-full"
+                        className="text-[10px] text-[#D32F2F] hover:underline font-semibold truncate mt-0.5 leading-none block border-none bg-transparent p-0 cursor-pointer text-left w-full"
                         title="Click to view file in a new tab"
                       >
                         {pendingFile.name} ({Math.round(pendingFile.size / 1024)} KB)
@@ -1173,7 +1173,7 @@ export default function ChatWidget() {
               )}
 
               {speechError && (
-                <div className="mx-3 my-1.5 p-2 bg-red-50 border border-red-500/30 text-[10px] text-red-600 font-extrabold rounded-[12px] flex items-center justify-between gap-2 shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="mx-3 my-1.5 p-2 bg-red-50 border border-red-500/30 text-[10px] text-red-600 font-semibold rounded-[12px] flex items-center justify-between gap-2 shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-200">
                   <div className="flex items-center gap-1.5 overflow-hidden flex-1">
                     <span className="material-symbols-outlined text-sm text-red-500 shrink-0">error</span>
                     <span className="truncate">{speechError}</span>
@@ -1190,7 +1190,7 @@ export default function ChatWidget() {
 
               <form
                 onSubmit={handleSendMessage}
-                className="p-3 border-t-2 border-black bg-white flex gap-2 items-center shrink-0 w-full"
+                className="p-3 border-t border-gray-200 bg-white flex gap-2 items-center shrink-0 w-full"
               >
                 <input
                   type="file"
@@ -1235,7 +1235,7 @@ export default function ChatWidget() {
                   <button
                     type="button"
                     onClick={() => setSpeechLang((prev) => (prev === "id-ID" ? "en-US" : "id-ID"))}
-                    className="text-[8px] font-black border border-black/20 rounded px-1 py-0.5 bg-white text-gray-500 hover:text-black shrink-0 hover:border-black transition-colors cursor-pointer"
+                    className="text-[8px] font-semibold border border-black/20 rounded px-1 py-0.5 bg-white text-gray-500 hover:text-black shrink-0 hover:border-gray-400 transition-colors cursor-pointer"
                     title={`Voice recognition language: ${speechLang === "id-ID" ? "Indonesian" : "English"}. Click to toggle.`}
                   >
                     {speechLang === "id-ID" ? "ID" : "EN"}
@@ -1282,12 +1282,12 @@ export default function ChatWidget() {
                 {loadingContacts ? (
                   <div className="flex flex-col items-center justify-center h-full gap-2">
                     <div className="w-5 h-5 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase">Loading Contacts...</span>
+                    <span className="text-[10px] font-medium text-gray-400 uppercase">Loading Contacts...</span>
                   </div>
                 ) : filteredContacts.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center p-4">
                     <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">person_off</span>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Contact Not Found</span>
+                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Contact Not Found</span>
                   </div>
                 ) : (
                   filteredContacts.map((contact) => {
@@ -1296,19 +1296,19 @@ export default function ChatWidget() {
                       <button
                         key={contact.id}
                         onClick={() => handleSelectContact(contact)}
-                        className="w-full flex items-center gap-3 bg-white hover:bg-gray-100 border-2 border-black/10 rounded-xl p-3 text-left transition-all hover:border-black cursor-pointer bg-transparent"
+                        className="w-full flex items-center gap-3 bg-white hover:bg-gray-100 border border-black/10 rounded-xl p-3 text-left transition-all hover:border-gray-400 cursor-pointer bg-transparent"
                       >
-                        <div className="w-8 h-8 rounded-full bg-[#1A1A1A]/5 border border-black flex items-center justify-center font-bold text-xs uppercase shrink-0 text-black">
+                        <div className="w-8 h-8 rounded-full bg-[#1A1A1A]/5 border border-gray-200 flex items-center justify-center font-medium text-xs uppercase shrink-0 text-black">
                           {contact.full_name.substring(0, 2)}
                         </div>
                         <div className="overflow-hidden flex-1">
-                          <p className="font-extrabold text-xs text-black uppercase leading-none mb-1 truncate flex items-center gap-2">
+                          <p className="font-semibold text-xs text-black uppercase leading-none mb-1 truncate flex items-center gap-2">
                             {contact.full_name}
                             {contactUnread > 0 && (
                               <span className="inline-block w-2.5 h-2.5 bg-[#D32F2F] rounded-full animate-pulse" title={`${contactUnread} new messages`} />
                             )}
                           </p>
-                          <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none">
+                          <p className="text-[9px] text-gray-500 font-medium uppercase tracking-wider leading-none">
                             {contact.role}{" "}{contact.department && `• ${contact.department}`}
                           </p>
                         </div>
@@ -1324,21 +1324,21 @@ export default function ChatWidget() {
 
         {isViewerLoading && (
           <div className="fixed inset-0 z-[210] flex flex-col items-center justify-center bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
-            <div className="bg-white border-4 border-black p-6 rounded-2xl flex flex-col items-center gap-3 max-w-xs shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="w-8 h-8 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-              <p className="text-[10px] font-black text-black uppercase tracking-wider">Preparing document preview...</p>
+            <div className="bg-white p-6 rounded-2xl flex flex-col items-center gap-3 max-w-xs shadow-2xl animate-in zoom-in-95 duration-200 shadow-sm">
+              <div className="w-8 h-8 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+              <p className="text-[10px] font-semibold text-black uppercase tracking-wider">Preparing document preview...</p>
             </div>
           </div>
         )}
 
         {viewerUrl && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative bg-white border-4 border-black p-4 rounded-xl max-w-3xl w-full flex flex-col shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="relative bg-white p-4 rounded-xl max-w-3xl w-full flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 shadow-sm">
               {/* Modal Header */}
-              <div className="flex justify-between items-center pb-2 border-b-2 border-black mb-4">
+              <div className="flex justify-between items-center pb-2 border-b border-gray-200 mb-4">
                 <div className="overflow-hidden">
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider leading-none">File Viewer</p>
-                  <h4 className="text-xs font-black text-black truncate uppercase mt-1 leading-none">{viewerName}</h4>
+                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">File Viewer</p>
+                  <h4 className="text-xs font-semibold text-black truncate uppercase mt-1 leading-none">{viewerName}</h4>
                 </div>
                 <button
                   type="button"
@@ -1378,9 +1378,9 @@ export default function ChatWidget() {
                 ) : /\.(docx?|xlsx?|pptx?)/i.test(viewerName) ? (
                   viewerOriginalUrl.includes("localhost") || viewerOriginalUrl.includes("127.0.0.1") ? (
                     <div className="text-center p-8 space-y-4 animate-in fade-in duration-300">
-                      <span className="material-symbols-outlined text-5xl text-[#D32F2F]">warning</span>
-                      <h4 className="text-xs font-black text-black uppercase">Office Preview Disabled (Local Host)</h4>
-                      <p className="text-[10px] text-gray-500 max-w-sm mx-auto leading-relaxed font-bold">
+                      <span className="material-symbols-outlined text-5xl text-gray-400">warning</span>
+                      <h4 className="text-xs font-semibold text-black uppercase">Office Preview Disabled (Local Host)</h4>
+                      <p className="text-[10px] text-gray-500 max-w-sm mx-auto leading-relaxed font-medium">
                         In local development, Google Docs Viewer cannot access local files.
                         <br />
                         In production, this file renders here automatically. Please click "Download" below to view it locally.
@@ -1397,8 +1397,8 @@ export default function ChatWidget() {
                 ) : (
                   <div className="text-center p-8 space-y-4 animate-in fade-in duration-300">
                     <span className="material-symbols-outlined text-5xl text-gray-400">insert_drive_file</span>
-                    <h4 className="text-xs font-black text-black uppercase">No Preview Available</h4>
-                    <p className="text-[10px] text-gray-500 max-w-sm mx-auto leading-relaxed font-bold">
+                    <h4 className="text-xs font-semibold text-black uppercase">No Preview Available</h4>
+                    <p className="text-[10px] text-gray-500 max-w-sm mx-auto leading-relaxed font-medium">
                       Preview is not supported for this file type ({viewerName.split('.').pop()?.toUpperCase()}).
                       Please click the "Download" button below to view the file locally.
                     </p>
@@ -1408,7 +1408,7 @@ export default function ChatWidget() {
 
               {/* Modal Footer */}
               <div className="mt-4 pt-3 border-t border-black/10 flex justify-between items-center">
-                <span className="text-[10px] text-gray-500 font-bold uppercase">
+                <span className="text-[10px] text-gray-500 font-medium uppercase">
                   Preview Mode
                 </span>
                 <div className="flex gap-2">
@@ -1422,14 +1422,14 @@ export default function ChatWidget() {
                       setViewerOriginalUrl("");
                       setViewerTextContent(null);
                     }}
-                    className="px-4 py-2 border-2 border-black bg-white text-black hover:bg-gray-50 text-xs cursor-pointer font-bold rounded-lg"
+                    className="px-4 py-2 border border-gray-200 bg-white text-black hover:bg-gray-50 text-xs cursor-pointer font-medium rounded-lg"
                   >
                     Close
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDownloadFile(viewerOriginalUrl, viewerName)}
-                    className="bg-[#D32F2F] text-white border-2 border-black hover:bg-[#1A1A1A] px-4 py-2 text-xs cursor-pointer font-bold rounded-lg flex items-center gap-1 transition-colors"
+                    className="bg-[#D32F2F] text-white border border-gray-200 hover:bg-[#1A1A1A] px-4 py-2 text-xs cursor-pointer font-medium rounded-lg flex items-center gap-1 transition-colors"
                   >
                     <span className="material-symbols-outlined text-xs">download</span>
                     Download

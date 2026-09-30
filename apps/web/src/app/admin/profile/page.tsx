@@ -143,27 +143,27 @@ export default function AdminProfilePage() {
   const strength = checkPasswordStrength(newPassword);
 
   return (
-    <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md overflow-hidden relative">
-      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b-2 border-[#1A1A1A] h-20 px-4 lg:px-10 flex justify-between items-center z-40 gap-4">
+    <div className="flex h-screen w-full bg-page text-[#1A1A1A] font-body-md overflow-hidden relative">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] bg-white border-b border-gray-200 h-20 px-4 lg:px-10 flex justify-between items-center z-40 gap-4">
         <div>
-          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Admin Profile</h2>
-          <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-bold">Manage system account & security</p>
+          <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight">Admin Profile</h2>
+          <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider font-medium">Manage system account & security</p>
         </div>
-        <button onClick={()=>router.push("/admin/dashboard")} className="flex items-center gap-2 border-2 border-[#1A1A1A] rounded-full px-4 py-2 font-bold text-xs uppercase hover:bg-gray-100 transition-all cursor-pointer bg-transparent shrink-0">
+        <button onClick={()=>router.push("/admin/dashboard")} className="flex items-center gap-2 border border-gray-200 rounded-full px-4 py-2 font-medium text-xs uppercase hover:bg-gray-100 transition-all cursor-pointer bg-transparent shrink-0">
           <span className="material-symbols-outlined text-[16px]">arrow_back</span><span className="hidden sm:inline">Dashboard</span>
         </button>
       </header>
 
-      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] pb-24 lg:pb-8">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-page w-full lg:w-[calc(100%-220px)] pb-24 lg:pb-8">
         <div className="p-4 lg:p-10 max-w-[1200px] mx-auto space-y-6 lg:space-y-10">
 
           {/* Profile Header */}
-          <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 flex flex-col md:flex-row items-center gap-8">
+          <section className="bg-white rounded-[20px] p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
             {isLoading ? (
               <div className="w-32 h-32 rounded-full bg-gray-100 animate-pulse shrink-0"/>
             ) : (
               <div className="relative group cursor-pointer shrink-0" onClick={()=>fileInputRef.current?.click()}>
-                <div className="w-32 h-32 rounded-full border-4 border-[#D32F2F] overflow-hidden bg-gray-100 flex items-center justify-center">
+                <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
                   {profilePhoto ? (
                     <img src={profilePhoto} alt={fullName} className="w-full h-full object-cover"/>
                   ) : (
@@ -182,14 +182,14 @@ export default function AdminProfilePage() {
               ) : (
                 <>
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                    <h3 className="font-headline-lg text-2xl font-extrabold text-black uppercase">{fullName || "Admin User"}</h3>
-                    <span className="bg-[#D32F2F] text-white px-3 py-1 rounded-full text-[9px] font-extrabold tracking-widest uppercase">Super Admin</span>
+                    <h3 className="font-headline-lg text-2xl font-semibold text-black uppercase">{fullName || "Admin User"}</h3>
+                    <span className="bg-[#D32F2F] text-white px-3 py-1 rounded-full text-[9px] font-semibold tracking-widest uppercase">Super Admin</span>
                   </div>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
                     {department && `Department: ${department} | `}Employee ID: {employeeId || "N/A"}
                   </p>
                   <p className="text-xs text-gray-400">{email}</p>
-                  <button onClick={()=>fileInputRef.current?.click()} className="mt-2 text-xs font-bold text-[#D32F2F] hover:underline bg-transparent border-none cursor-pointer p-0">
+                  <button onClick={()=>fileInputRef.current?.click()} className="mt-2 text-xs font-medium text-[#D32F2F] hover:underline bg-transparent border-none cursor-pointer p-0">
                     Change Profile Portrait
                   </button>
                 </>
@@ -199,10 +199,10 @@ export default function AdminProfilePage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             {/* General Info */}
-            <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
+            <section className="bg-white rounded-[20px] p-8 space-y-6 shadow-sm">
               <div className="pb-4 border-b border-gray-100">
-                <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Account Details</h4>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Update system info fields</p>
+                <h4 className="font-headline-md text-lg text-black font-semibold uppercase tracking-tight">Account Details</h4>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Update system info fields</p>
               </div>
 
               <form onSubmit={handleSaveGeneralInfo} className="space-y-4">
@@ -212,49 +212,49 @@ export default function AdminProfilePage() {
                   { label:"Phone Number", value:phone, set:setPhone, type:"text" },
                 ].map(({label,value,set,type,required})=>(
                   <div key={label}>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">{label}{required&&" *"}</label>
+                    <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">{label}{required&&" *"}</label>
                     <input type={type} value={value} onChange={e=>set(e.target.value)} required={required}
-                      className="w-full bg-white border border-[#1A1A1A] rounded-lg p-2.5 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"/>
+                      className="w-full bg-white border border-gray-200 rounded-lg p-2.5 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"/>
                   </div>
                 ))}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Employee ID (Read Only)</label>
+                    <label className="block text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">Employee ID (Read Only)</label>
                     <input type="text" value={employeeId} disabled className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs font-semibold text-gray-400 cursor-not-allowed"/>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Email (Read Only)</label>
+                    <label className="block text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">Email (Read Only)</label>
                     <input type="text" value={email} disabled className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs font-semibold text-gray-400 cursor-not-allowed"/>
                   </div>
                 </div>
 
-                <button type="submit" disabled={isSaving||isLoading} className="w-full bg-[#D32F2F] text-white border-2 border-[#1A1A1A] rounded-full py-3 font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors cursor-pointer mt-4 disabled:opacity-60 flex items-center justify-center gap-2">
+                <button type="submit" disabled={isSaving||isLoading} className="w-full bg-[#D32F2F] text-white border border-gray-200 rounded-full py-3 font-medium text-xs uppercase tracking-wider hover:bg-black transition-colors cursor-pointer mt-4 disabled:opacity-60 flex items-center justify-center gap-2">
                   {isSaving?<><span className="material-symbols-outlined animate-spin text-base">progress_activity</span>SAVING...</>:"Save General Info"}
                 </button>
               </form>
             </section>
 
             {/* Password Settings */}
-            <section className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8 space-y-6">
+            <section className="bg-white rounded-[20px] p-8 space-y-6 shadow-sm">
               <div className="pb-4 border-b border-gray-100">
-                <h4 className="font-headline-md text-lg text-black font-extrabold uppercase tracking-tight">Security & Authentication</h4>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Update your account login password</p>
+                <h4 className="font-headline-md text-lg text-black font-semibold uppercase tracking-tight">Security & Authentication</h4>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Update your account login password</p>
               </div>
 
               <form onSubmit={handleSavePassword} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">New Password</label>
+                  <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">New Password</label>
                   <div className="relative">
                     <input type={showNew?"text":"password"} value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="••••••••"
-                      className="w-full bg-white border border-[#1A1A1A] rounded-lg p-2.5 pr-10 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"/>
+                      className="w-full bg-white border border-gray-200 rounded-lg p-2.5 pr-10 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"/>
                     <button type="button" onClick={()=>setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
                       <span className="material-symbols-outlined text-[18px]">{showNew?"visibility_off":"visibility"}</span>
                     </button>
                   </div>
                   {newPassword && (
                     <div className="mt-2 space-y-1.5">
-                      <div className="flex justify-between text-[9px] font-bold uppercase">
+                      <div className="flex justify-between text-[9px] font-medium uppercase">
                         <span className="text-gray-500">Strength:</span>
                         <span className={strength.score>=3?"text-green-600":"text-red-500"}>{strength.label}</span>
                       </div>
@@ -265,19 +265,19 @@ export default function AdminProfilePage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">Confirm New Password</label>
+                  <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Confirm New Password</label>
                   <div className="relative">
                     <input type={showConfirm?"text":"password"} value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="••••••••"
-                      className="w-full bg-white border border-[#1A1A1A] rounded-lg p-2.5 pr-10 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"/>
+                      className="w-full bg-white border border-gray-200 rounded-lg p-2.5 pr-10 text-xs font-semibold text-black focus:border-[#D32F2F] outline-none"/>
                     <button type="button" onClick={()=>setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
                       <span className="material-symbols-outlined text-[18px]">{showConfirm?"visibility_off":"visibility"}</span>
                     </button>
                   </div>
                   {confirmPassword && newPassword !== confirmPassword && (
-                    <p className="text-[9px] text-red-500 font-bold mt-1">Passwords do not match.</p>
+                    <p className="text-[9px] text-red-500 font-medium mt-1">Passwords do not match.</p>
                   )}
                 </div>
-                <button type="submit" disabled={isSaving} className="w-full bg-black text-white border-2 border-[#1A1A1A] rounded-full py-3 font-bold text-xs uppercase tracking-wider hover:bg-[#D32F2F] transition-colors cursor-pointer mt-4 disabled:opacity-60 flex items-center justify-center gap-2">
+                <button type="submit" disabled={isSaving} className="w-full bg-black text-white border border-gray-200 rounded-full py-3 font-medium text-xs uppercase tracking-wider hover:bg-[#D32F2F] transition-colors cursor-pointer mt-4 disabled:opacity-60 flex items-center justify-center gap-2">
                   {isSaving?<><span className="material-symbols-outlined animate-spin text-base">progress_activity</span>UPDATING...</>:"Change Password"}
                 </button>
               </form>
@@ -288,9 +288,9 @@ export default function AdminProfilePage() {
 
       <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 pointer-events-none">
         {toasts.map(t=>(
-          <div key={t.id} className="pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 border-[#D32F2F] shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-            <span className="material-symbols-outlined text-[#D32F2F]">{t.type==="success"?"check_circle":t.type==="error"?"error":"info"}</span>
-            <span className="font-black uppercase tracking-widest text-xs">{t.message}</span>
+          <div key={t.id} className="pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border border-[#D32F2F] shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300">
+            <span className="material-symbols-outlined text-gray-400">{t.type==="success"?"check_circle":t.type==="error"?"error":"info"}</span>
+            <span className="font-semibold uppercase tracking-widest text-xs">{t.message}</span>
           </div>
         ))}
       </div>

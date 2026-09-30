@@ -69,10 +69,10 @@ export default function AdminLayout({
   return (
     <>
       {/* Sidebar Component (SideNavBar) - Desktop Only */}
-      <aside className="admin-sidebar hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white shrink-0 border-r-2 border-[#1A1A1A]">
+      <aside className="admin-sidebar hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white shrink-0 border-r border-gray-200">
         <div className="px-6 mb-10">
-          <h1 className="font-headline-md text-2xl font-extrabold text-white tracking-tighter">MAINTAIN</h1>
-          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
+          <h1 className="font-headline-md text-2xl font-semibold text-white tracking-tighter">MAINTAIN</h1>
+          <p className="text-[10px] text-[#D32F2F] font-medium uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           {navItems.map((item) => {
@@ -82,7 +82,7 @@ export default function AdminLayout({
                 key={item.path}
                 onClick={() => router.push(item.path)}
                 className={`w-full px-4 py-3 flex items-center gap-4 text-left font-label-md text-sm uppercase tracking-wider rounded-lg border-none cursor-pointer transition-all duration-300 ease-in-out ${isActive
-                    ? "bg-[#D32F2F] text-white shadow-md font-bold"
+                    ? "bg-[#D32F2F] text-white shadow-md font-medium"
                     : "text-white/70 hover:bg-white/10 bg-transparent hover:text-white"
                   }`}
               >
@@ -104,7 +104,7 @@ export default function AdminLayout({
         <div className="px-4 mt-auto border-t border-white/10 pt-4 pb-2">
           <button
             onClick={handleLogout}
-            className="w-full bg-white text-[#D32F2F] hover:bg-[#D32F2F] hover:text-white transition-all duration-300 py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-xs cursor-pointer border-none mb-4"
+            className="w-full bg-white text-[#D32F2F] hover:bg-[#D32F2F] hover:text-white transition-all duration-300 py-2 px-4 flex items-center justify-center gap-2 rounded-full font-medium text-xs cursor-pointer border-none mb-4"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             <span>Logout</span>
@@ -114,7 +114,7 @@ export default function AdminLayout({
             onClick={() => router.push("/admin/profile")}
             className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
           >
-            <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0 bg-white/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-white/10 flex items-center justify-center">
               {profile?.avatar_url ? (
                 <img
                   className="w-full h-full object-cover"
@@ -126,17 +126,17 @@ export default function AdminLayout({
               )}
             </div>
             <div className="overflow-hidden">
-              <p className="font-label-md text-xs truncate text-white uppercase font-bold tracking-tight leading-none mb-1">
+              <p className="font-label-md text-xs truncate text-white uppercase font-medium tracking-tight leading-none mb-1">
                 {profile?.full_name || "Admin User"}
               </p>
-              <p className="text-[10px] uppercase font-bold text-white/40">Admin Access</p>
+              <p className="text-[10px] uppercase font-medium text-white/40">Admin Access</p>
             </div>
           </button>
         </div>
       </aside>
 
       {/* Bottom Navigation Bar - Mobile & Tablet Only */}
-      <div className="fixed bottom-0 left-0 right-0 h-20 bg-white border-t-2 border-[#1A1A1A] z-[55] lg:hidden shadow-[0_-4px_10px_rgba(0,0,0,0.05)] flex items-center">
+      <div className="fixed bottom-0 left-0 right-0 h-20 bg-white border-t border-gray-200 z-[55] lg:hidden shadow-[0_-4px_10px_rgba(0,0,0,0.05)] flex items-center">
         {/* Each item gets equal width via flex-1 so active state never shifts siblings */}
         {[
           { name: "Dashboard", path: "/admin/dashboard", icon: "dashboard" },
@@ -162,7 +162,7 @@ export default function AdminLayout({
                   >
                     {item.icon}
                   </span>
-                  <span className="text-[8px] font-black uppercase tracking-wider leading-none">{item.name}</span>
+                  <span className="text-[8px] font-semibold uppercase tracking-wider leading-none">{item.name}</span>
                 </div>
               </button>
             </div>
@@ -187,7 +187,7 @@ export default function AdminLayout({
               >
                 apps
               </span>
-              <span className="text-[8px] font-black uppercase tracking-wider leading-none">More</span>
+              <span className="text-[8px] font-semibold uppercase tracking-wider leading-none">More</span>
             </div>
           </button>
         </div>
@@ -203,7 +203,7 @@ export default function AdminLayout({
 
       {/* More Options — bottom sheet drawer */}
       <div
-        className={`fixed bottom-20 left-0 right-0 bg-[#1A1A1A] border-t-4 border-[#D32F2F] rounded-t-[24px] z-[70] lg:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.4)] transition-all duration-300 ease-out ${isMoreOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        className={`fixed bottom-20 left-0 right-0 bg-[#1A1A1A] border-t border-[#D32F2F] rounded-t-[24px] z-[70] lg:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.4)] transition-all duration-300 ease-out ${isMoreOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           }`}
         style={{ transform: isMoreOpen ? "translateY(0)" : "translateY(calc(100% + 80px))" }}
       >
@@ -216,8 +216,8 @@ export default function AdminLayout({
           {/* Header */}
           <div className="flex justify-between items-center mb-5">
             <div>
-              <h3 className="text-white text-xs font-black uppercase tracking-[0.15em]">Admin Console</h3>
-              <p className="text-[9px] text-[#D32F2F] font-bold uppercase tracking-widest mt-0.5">Quick Navigation</p>
+              <h3 className="text-white text-xs font-semibold uppercase tracking-[0.15em]">Admin Console</h3>
+              <p className="text-[9px] text-[#D32F2F] font-medium uppercase tracking-widest mt-0.5">Quick Navigation</p>
             </div>
             <button
               onClick={() => setIsMoreOpen(false)}
@@ -240,7 +240,7 @@ export default function AdminLayout({
                 <button
                   key={path}
                   onClick={() => { router.push(path); setIsMoreOpen(false); }}
-                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 font-bold text-[10px] uppercase tracking-wide cursor-pointer transition-all ${isActive
+                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border font-medium text-[10px] uppercase tracking-wide cursor-pointer transition-all ${isActive
                       ? "bg-[#D32F2F] border-[#D32F2F] text-white"
                       : "bg-white/5 border-white/10 text-white hover:bg-white/10"
                     }`}
@@ -257,7 +257,7 @@ export default function AdminLayout({
           {/* Logout */}
           <button
             onClick={() => { handleLogout(); setIsMoreOpen(false); }}
-            className="w-full flex items-center justify-center gap-2 p-3.5 bg-[#D32F2F] hover:bg-red-700 rounded-2xl text-white font-black text-xs uppercase tracking-widest border-none cursor-pointer transition-all active:scale-95"
+            className="w-full flex items-center justify-center gap-2 p-3.5 bg-[#D32F2F] hover:bg-red-700 rounded-2xl text-white font-semibold text-xs uppercase tracking-widest border-none cursor-pointer transition-all active:scale-95"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             Sign Out

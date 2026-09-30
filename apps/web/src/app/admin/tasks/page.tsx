@@ -132,25 +132,25 @@ export default function CreatePMAssignmentPage() {
   const statusStyle = (s:string) => ({approved:"text-green-700 bg-green-50 border-green-300",submitted:"text-blue-700 bg-blue-50 border-blue-300",in_progress:"text-yellow-700 bg-yellow-50 border-yellow-300",rejected:"text-red-700 bg-red-50 border-red-300"}[s]||"text-gray-600 bg-gray-50 border-gray-300");
 
   return (
-    <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md overflow-hidden relative">
-      <header className="fixed top-0 right-0 left-0 lg:left-[220px] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-4 lg:px-10 z-10 gap-4">
-        <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] tracking-tight font-extrabold uppercase">CREATE PM ASSIGNMENT</h2>      </header>
+    <div className="flex h-screen w-full bg-page text-[#1A1A1A] font-body-md overflow-hidden relative">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] border-b border-gray-200 bg-white flex justify-between items-center h-20 px-4 lg:px-10 z-10 gap-4">
+        <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] tracking-tight font-semibold uppercase">CREATE PM ASSIGNMENT</h2>      </header>
 
-      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] pb-24 lg:pb-8">
+      <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-page w-full lg:w-[calc(100%-220px)] pb-24 lg:pb-8">
         <div className="max-w-[1400px] mx-auto p-4 lg:p-10">
           <div className="grid grid-cols-12 gap-6 items-start">
             {/* Form */}
             <div className="col-span-12 lg:col-span-7">
-              <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-8">
-                <h3 className="font-headline-md text-2xl font-extrabold uppercase mb-8">Assignment Details</h3>
+              <div className="bg-white rounded-[20px] p-8 shadow-sm">
+                <h3 className="font-headline-md text-2xl font-semibold uppercase mb-8">Assignment Details</h3>
                 {isLoading ? (
                   <div className="space-y-4">{[1,2,3,4].map(i=><div key={i} className="h-14 bg-gray-100 rounded-[20px] animate-pulse"/>)}</div>
                 ) : (
                   <form onSubmit={handleAssignPM} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase block">Asset *</label>
-                        <select value={selectedAsset} onChange={e=>setSelectedAsset(e.target.value)} className="w-full h-14 pl-4 bg-white border-2 border-[#1A1A1A] rounded-[20px] focus:outline-none focus:border-[#D32F2F] font-bold text-sm cursor-pointer">
+                        <label className="text-xs font-medium uppercase block">Asset *</label>
+                        <select value={selectedAsset} onChange={e=>setSelectedAsset(e.target.value)} className="w-full h-14 pl-4 bg-white border border-gray-200 rounded-[20px] focus:outline-none focus:border-[#D32F2F] font-medium text-sm cursor-pointer">
                           {assets.length===0?(
                             <option value="">No eligible assets (under maintenance/decommissioned)</option>
                           ):(
@@ -163,8 +163,8 @@ export default function CreatePMAssignmentPage() {
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase block">Template</label>
-                        <select value={selectedTemplate} onChange={e=>setSelectedTemplate(e.target.value)} className="w-full h-14 pl-4 bg-white border-2 border-[#1A1A1A] rounded-[20px] focus:outline-none focus:border-[#D32F2F] font-bold text-sm cursor-pointer">
+                        <label className="text-xs font-medium uppercase block">Template</label>
+                        <select value={selectedTemplate} onChange={e=>setSelectedTemplate(e.target.value)} className="w-full h-14 pl-4 bg-white border border-gray-200 rounded-[20px] focus:outline-none focus:border-[#D32F2F] font-medium text-sm cursor-pointer">
                           <option value="">— None —</option>
                           {filteredTemplates.map(t=><option key={t.id} value={t.id}>{t.title} {t.category ? `(${t.category})` : ""}</option>)}
                         </select>
@@ -172,41 +172,41 @@ export default function CreatePMAssignmentPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase block">Vendor *</label>
-                        <select value={selectedVendor} onChange={e=>setSelectedVendor(e.target.value)} className="w-full h-14 pl-4 bg-white border-2 border-[#1A1A1A] rounded-[20px] focus:outline-none focus:border-[#D32F2F] font-bold text-sm cursor-pointer">
+                        <label className="text-xs font-medium uppercase block">Vendor *</label>
+                        <select value={selectedVendor} onChange={e=>setSelectedVendor(e.target.value)} className="w-full h-14 pl-4 bg-white border border-gray-200 rounded-[20px] focus:outline-none focus:border-[#D32F2F] font-medium text-sm cursor-pointer">
                           {vendors.length===0?<option value="">No vendors</option>:vendors.map(v=><option key={v.id} value={v.id}>{v.full_name}</option>)}
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase block">Supervisor *</label>
-                        <select value={selectedSupervisor} onChange={e=>setSelectedSupervisor(e.target.value)} className="w-full h-14 pl-4 bg-white border-2 border-[#1A1A1A] rounded-[20px] focus:outline-none focus:border-[#D32F2F] font-bold text-sm cursor-pointer">
+                        <label className="text-xs font-medium uppercase block">Supervisor *</label>
+                        <select value={selectedSupervisor} onChange={e=>setSelectedSupervisor(e.target.value)} className="w-full h-14 pl-4 bg-white border border-gray-200 rounded-[20px] focus:outline-none focus:border-[#D32F2F] font-medium text-sm cursor-pointer">
                           {supervisors.length===0?<option value="">No supervisors</option>:supervisors.map(s=><option key={s.id} value={s.id}>{s.full_name}</option>)}
                         </select>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase block">Scheduled Date</label>
-                        <input type="date" value={scheduleDate} onChange={e=>setScheduleDate(e.target.value)} className="w-full h-14 px-4 bg-white border-2 border-[#1A1A1A] rounded-[20px] focus:outline-none font-bold text-sm"/>
+                        <label className="text-xs font-medium uppercase block">Scheduled Date</label>
+                        <input type="date" value={scheduleDate} onChange={e=>setScheduleDate(e.target.value)} className="w-full h-14 px-4 bg-white border border-gray-200 rounded-[20px] focus:outline-none font-medium text-sm"/>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase block">Due Date *</label>
-                        <input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)} className="w-full h-14 px-4 bg-white border-2 border-[#1A1A1A] rounded-[20px] focus:outline-none font-bold text-sm"/>
+                        <label className="text-xs font-medium uppercase block">Due Date *</label>
+                        <input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)} className="w-full h-14 px-4 bg-white border border-gray-200 rounded-[20px] focus:outline-none font-medium text-sm"/>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase block">Priority</label>
+                      <label className="text-xs font-medium uppercase block">Priority</label>
                       <div className="flex gap-3">
                         {(["low","medium","high","critical"] as const).map(p=>(
-                          <button key={p} type="button" onClick={()=>setPriority(p)} className={`flex-1 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-xs uppercase transition-all cursor-pointer ${priority===p?"bg-[#D32F2F] text-white":"bg-white hover:bg-gray-50"}`}>{p}</button>
+                          <button key={p} type="button" onClick={()=>setPriority(p)} className={`flex-1 py-3 rounded-[20px] border border-gray-200 font-medium text-xs uppercase transition-all cursor-pointer ${priority===p?"bg-[#D32F2F] text-white":"bg-white hover:bg-gray-50"}`}>{p}</button>
                         ))}
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase block">Notes</label>
-                      <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3} placeholder="Additional instructions..." className="w-full px-4 py-3 bg-white border-2 border-[#1A1A1A] rounded-[20px] focus:outline-none font-bold text-sm resize-none"/>
+                      <label className="text-xs font-medium uppercase block">Notes</label>
+                      <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3} placeholder="Additional instructions..." className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[20px] focus:outline-none font-medium text-sm resize-none"/>
                     </div>
-                    <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-[#D32F2F] text-white rounded-[20px] font-extrabold text-lg border-2 border-[#1A1A1A] hover:bg-[#1A1A1A] transition-all uppercase cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+                    <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-[#D32F2F] text-white rounded-[20px] font-semibold text-lg border border-gray-200 hover:bg-[#1A1A1A] transition-all uppercase cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
                       {isSubmitting?<><span className="material-symbols-outlined animate-spin">progress_activity</span>ASSIGNING...</>:"ASSIGN PM"}
                     </button>
                   </form>
@@ -216,28 +216,28 @@ export default function CreatePMAssignmentPage() {
 
             {/* Task List */}
             <div className="col-span-12 lg:col-span-5 space-y-4">
-              <h3 className="font-headline-md text-xl font-extrabold uppercase px-2">Recent Assignments</h3>
+              <h3 className="font-headline-md text-xl font-semibold uppercase px-2">Recent Assignments</h3>
               {isLoading?(
                 <div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-24 bg-gray-100 rounded-[20px] animate-pulse"/>)}</div>
               ):tasks.length===0?(
-                <div className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-10 text-center text-gray-400 font-bold uppercase text-sm">
+                <div className="bg-white rounded-[20px] p-10 text-center text-gray-400 font-medium uppercase text-sm shadow-sm">
                   <span className="material-symbols-outlined text-4xl block mb-2 opacity-30">assignment</span>No tasks yet.
                 </div>
               ):(
                 <div className="space-y-4">
                   {tasks.map(task=>(
-                    <div key={task.id} onClick={()=>setSelectedTask(task)} className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 hover:bg-gray-50 transition-all group relative overflow-hidden cursor-pointer">
+                    <div key={task.id} onClick={()=>setSelectedTask(task)} className="bg-white rounded-[20px] p-6 hover:bg-gray-50 transition-all group relative overflow-hidden cursor-pointer shadow-sm">
                       <div className={`absolute right-0 top-0 w-3 h-full ${task.status==="pending"?"bg-gray-300":"bg-[#D32F2F]"}`}/>
                       <div className="flex justify-between items-start mb-3 pr-4">
                         <div>
-                          <h4 className="font-bold text-sm uppercase">{task.asset_name}</h4>
-                          <p className="text-[10px] text-[#D32F2F] font-bold uppercase mt-0.5">{task.task_code}</p>
-                          <p className="text-[10px] text-gray-500 font-bold uppercase mt-0.5">Due: {new Date(task.due_date).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</p>
+                          <h4 className="font-medium text-sm uppercase">{task.asset_name}</h4>
+                          <p className="text-[10px] text-[#D32F2F] font-medium uppercase mt-0.5">{task.task_code}</p>
+                          <p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5">Due: {new Date(task.due_date).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</p>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold border uppercase ${statusStyle(task.status)}`}>{task.status.replace("_"," ")}</span>
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-semibold border uppercase ${statusStyle(task.status)}`}>{task.status.replace("_"," ")}</span>
                       </div>
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <span className="text-xs font-bold flex items-center gap-2"><span className="material-symbols-outlined text-[18px]">person</span>{task.supervisor_name}</span>
+                        <span className="text-xs font-medium flex items-center gap-2"><span className="material-symbols-outlined text-[18px]">person</span>{task.supervisor_name}</span>
                         <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform hover:text-[#D32F2F]">chevron_right</span>
                       </div>
                     </div>
@@ -252,36 +252,36 @@ export default function CreatePMAssignmentPage() {
       {selectedTask&&(
         <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
           <div className="absolute inset-0 cursor-pointer" onClick={closeDetails}/>
-          <div className="relative bg-white border-4 border-[#1A1A1A] p-8 rounded-[20px] max-w-lg w-full z-10 animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-start mb-6 border-b-2 border-[#1A1A1A] pb-4">
+          <div className="relative bg-white p-8 rounded-[20px] max-w-lg w-full z-10 animate-in fade-in zoom-in duration-200 shadow-sm">
+            <div className="flex justify-between items-start mb-6 border-b border-gray-200 pb-4">
               <div>
-                <span className="text-[10px] bg-[#D32F2F] text-white px-3 py-1 rounded-full font-bold">{selectedTask.task_code}</span>
-                <h3 className="text-2xl font-extrabold uppercase mt-2">{selectedTask.asset_name}</h3>
+                <span className="text-[10px] bg-[#D32F2F] text-white px-3 py-1 rounded-full font-medium">{selectedTask.task_code}</span>
+                <h3 className="text-2xl font-semibold uppercase mt-2">{selectedTask.asset_name}</h3>
               </div>
-              <button className="w-10 h-10 flex items-center justify-center border-2 border-[#1A1A1A] rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer" onClick={closeDetails}>
+              <button className="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer" onClick={closeDetails}>
                 <span className="material-symbols-outlined text-sm">close</span>
               </button>
             </div>
-            <div className="space-y-3 text-xs font-bold uppercase">
+            <div className="space-y-3 text-xs font-medium uppercase">
               {[{l:"Vendor",v:selectedTask.vendor_name},{l:"Supervisor",v:selectedTask.supervisor_name},{l:"Due Date",v:new Date(selectedTask.due_date).toLocaleDateString()},{l:"Priority",v:selectedTask.priority},{l:"Status",v:selectedTask.status.replace("_"," ")}].map(({l,v})=>(
                 <div key={l} className="flex justify-between py-2 border-b border-gray-100"><span className="opacity-50">{l}</span><span>{v}</span></div>
               ))}
             </div>
 
             {showConfirmDelete ? (
-              <div className="mt-6 p-4 border-2 border-[#D32F2F] rounded-[20px] bg-red-50 text-center animate-in fade-in slide-in-from-top-2 duration-200">
-                <p className="text-xs font-extrabold text-[#D32F2F] uppercase mb-3">Are you sure you want to delete this task?</p>
+              <div className="mt-6 p-4 border-[#D32F2F] rounded-[20px] bg-red-50 text-center animate-in fade-in slide-in-from-top-2 duration-200">
+                <p className="text-xs font-semibold text-[#D32F2F] uppercase mb-3">Are you sure you want to delete this task?</p>
                 <div className="flex gap-2">
                   <button 
                     disabled={isDeleting}
-                    className="flex-1 py-2 bg-[#D32F2F] text-white font-extrabold uppercase rounded-[10px] border-2 border-[#1A1A1A] hover:bg-[#1A1A1A] transition-all cursor-pointer text-xs disabled:opacity-60"
+                    className="flex-1 py-2 bg-[#D32F2F] text-white font-semibold uppercase rounded-[10px] border border-gray-200 hover:bg-[#1A1A1A] transition-all cursor-pointer text-xs disabled:opacity-60"
                     onClick={() => handleDeleteTask(selectedTask.id)}
                   >
                     {isDeleting ? "Deleting..." : "Yes, Delete"}
                   </button>
                   <button 
                     disabled={isDeleting}
-                    className="flex-1 py-2 bg-white text-[#1A1A1A] font-extrabold uppercase rounded-[10px] border-2 border-[#1A1A1A] hover:bg-gray-100 transition-all cursor-pointer text-xs disabled:opacity-60"
+                    className="flex-1 py-2 bg-white text-[#1A1A1A] font-semibold uppercase rounded-[10px] border border-gray-200 hover:bg-gray-100 transition-all cursor-pointer text-xs disabled:opacity-60"
                     onClick={() => setShowConfirmDelete(false)}
                   >
                     Cancel
@@ -291,13 +291,13 @@ export default function CreatePMAssignmentPage() {
             ) : (
               <div className="mt-6 flex gap-2">
                 <button 
-                  className="flex-1 py-3 bg-white text-[#1A1A1A] font-extrabold uppercase border-2 border-[#1A1A1A] rounded-[12px] hover:bg-gray-100 cursor-pointer text-xs transition-all text-center"
+                  className="flex-1 py-3 bg-white text-[#1A1A1A] font-semibold uppercase border border-gray-200 rounded-[12px] hover:bg-gray-100 cursor-pointer text-xs transition-all text-center"
                   onClick={closeDetails}
                 >
                   Close
                 </button>
                 <button 
-                  className="flex-1 py-3 bg-[#D32F2F] text-white font-extrabold uppercase border-2 border-[#1A1A1A] rounded-[12px] hover:bg-black cursor-pointer text-xs transition-all text-center"
+                  className="flex-1 py-3 bg-[#D32F2F] text-white font-semibold uppercase border border-gray-200 rounded-[12px] hover:bg-black cursor-pointer text-xs transition-all text-center"
                   onClick={() => setShowConfirmDelete(true)}
                 >
                   Delete Task
@@ -310,7 +310,7 @@ export default function CreatePMAssignmentPage() {
 
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 pointer-events-none">
         {toasts.map(t=>(
-          <div key={t.id} className="pointer-events-auto bg-[#1a1c1c] text-white text-center rounded-[20px] px-8 py-4 font-bold uppercase tracking-wider border-2 border-[#D32F2F] shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 text-xs">{t.message}</div>
+          <div key={t.id} className="pointer-events-auto bg-[#1a1c1c] text-white text-center rounded-[20px] px-8 py-4 font-medium uppercase tracking-wider border border-[#D32F2F] shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 text-xs">{t.message}</div>
         ))}
       </div>
     </div>

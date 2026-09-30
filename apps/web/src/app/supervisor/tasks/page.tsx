@@ -586,17 +586,17 @@ export default function ReviewDetailPage() {
 
   if (loading && tasks.length === 0) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-white">
+      <div className="flex h-screen w-full items-center justify-center bg-page">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading Tasks...</p>
+          <div className="w-12 h-12 border-2 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-medium uppercase tracking-widest text-gray-500">Loading Tasks...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md select-none relative overflow-hidden">
+    <div className="flex h-screen w-full bg-page text-[#1A1A1A] font-body-md select-none relative overflow-hidden">
       {/* Scroll fix CSS */}
       <style jsx global>{`
         ::-webkit-scrollbar { width: 8px; }
@@ -607,10 +607,10 @@ export default function ReviewDetailPage() {
       `}</style>
 
       {/* Side Navigation Bar */}
-      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r-2 border-[#1A1A1A]">
+      <aside className="hidden lg:flex fixed h-screen left-0 top-0 w-[220px] bg-[#1A1A1A] flex flex-col py-4 z-50 text-white border-r border-gray-200">
         <div className="px-6 mb-10">
-          <h1 className="font-headline-md text-xl font-extrabold text-white leading-tight">MAINTAIN</h1>
-          <p className="text-[10px] text-[#D32F2F] font-bold uppercase tracking-[0.2em] mt-1">PM Verification</p>
+          <h1 className="font-headline-md text-xl font-semibold text-white leading-tight">MAINTAIN</h1>
+          <p className="text-[10px] text-[#D32F2F] font-medium uppercase tracking-[0.2em] mt-1">PM Verification</p>
         </div>
         <nav className="flex-1 space-y-2 px-2">
           <button
@@ -646,7 +646,7 @@ export default function ReviewDetailPage() {
               await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
-            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-bold text-xs cursor-pointer border-none mb-4"
+            className="w-full bg-white text-[#D32F2F] hover:bg-white/90 transition-colors py-2 px-4 flex items-center justify-center gap-2 rounded-full font-medium text-xs cursor-pointer border-none mb-4"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             <span>Logout</span>
@@ -656,19 +656,19 @@ export default function ReviewDetailPage() {
             onClick={() => router.push("/supervisor/profile")}
             className="flex items-center gap-3 text-left w-full hover:bg-white/5 p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
           >
-            <div className="w-10 h-10 border-2 border-[#D32F2F] rounded-full overflow-hidden shrink-0">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               <img className="w-full h-full object-cover" alt="Supervisor Portrait" src={avatarSrc} />
             </div>
             <div className="overflow-hidden">
-              <p className="font-bold text-xs truncate text-white uppercase">{currentUser?.full_name || "Supervisor"}</p>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold font-bold">{currentUser?.department || "Auditor"}</p>
+              <p className="font-medium text-xs truncate text-white uppercase">{currentUser?.full_name || "Supervisor"}</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-medium font-medium">{currentUser?.department || "Auditor"}</p>
             </div>
           </button>
         </div>
       </aside>
 
       {/* Main Top Navigation Header */}
-      <header className="fixed top-0 right-0 left-0 lg:left-[220px] w-full lg:w-[calc(100%-220px)] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-6 lg:px-10 z-40">
+      <header className="fixed top-0 right-0 left-0 lg:left-[220px] w-full lg:w-[calc(100%-220px)] border-b border-gray-200 bg-white flex justify-between items-center h-20 px-6 lg:px-10 z-40">
         <div className="flex items-center gap-4">
           {selectedTaskId !== null && (
             <button
@@ -682,32 +682,32 @@ export default function ReviewDetailPage() {
           {selectedTask ? (
             <div>
               <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
-                <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight whitespace-nowrap">{selectedTask.task_code}</h2>
-                <span className={`px-2 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[8px] sm:text-[10px] font-bold text-white uppercase tracking-wider ${selectedTask.status === "approved" ? "bg-green-600" : selectedTask.status === "rejected" ? "bg-black" : "bg-[#D32F2F]"
+                <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight whitespace-nowrap">{selectedTask.task_code}</h2>
+                <span className={`px-2 py-0.5 border border-gray-200 rounded-full text-[8px] sm:text-[10px] font-medium text-white uppercase tracking-wider ${selectedTask.status === "approved" ? "bg-green-600" : selectedTask.status === "rejected" ? "bg-black" : "bg-[#D32F2F]"
                   }`}>
                   {selectedTask.status.replace("_", " ")}
                 </span>
               </div>
-              <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-wide truncate max-w-[150px] sm:max-w-none">Reviewing: {selectedTask.asset}</p>
+              <p className="text-[9px] sm:text-xs text-gray-500 font-medium uppercase tracking-wide truncate max-w-[150px] sm:max-w-none">Reviewing: {selectedTask.asset}</p>
             </div>
           ) : (
             <div>
-              <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Tasks Review Portal</h2>
-              <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-wide">Queue Review Supervisor</p>
+              <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight">Tasks Review Portal</h2>
+              <p className="text-[9px] sm:text-xs text-gray-500 font-medium uppercase tracking-wide">Queue Review Supervisor</p>
             </div>
           )}
         </div>
         <div className="flex items-center gap-4">
           <button
             onClick={() => setIsAssetLookupOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 border-2 border-[#1A1A1A] rounded-[20px] bg-white text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-all cursor-pointer text-[10px] font-black uppercase tracking-wider"
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-[20px] bg-white text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-all cursor-pointer text-[10px] font-semibold uppercase tracking-wider"
             title="Browse Asset Catalog"
           >
             <span className="material-symbols-outlined text-[18px]">precision_manufacturing</span>
             <span className="hidden sm:inline">Assets</span>
           </button>
           <NotificationBell />
-          <div className="w-10 h-10 rounded-full border-2 border-[#D32F2F] overflow-hidden shrink-0">
+          <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
             <img className="w-full h-full object-cover" src={avatarSrc} alt="User Profile" />
           </div>
         </div>
@@ -716,40 +716,40 @@ export default function ReviewDetailPage() {
       {/* Main Content Layout */}
       {selectedTask ? (
         /* ================== DETAILED REVIEW VIEW ================== */
-        <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+        <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-page w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
           <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto animate-in fade-in duration-300">
             <div className="grid grid-cols-12 gap-8">
 
               {/* Column 1: Checklist Results */}
               <section className="col-span-12 lg:col-span-6 flex flex-col gap-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-headline-md text-lg font-extrabold border-l-[6px] border-[#D32F2F] pl-4 uppercase tracking-tighter text-[#1A1A1A]">
+                  <h3 className="font-headline-md text-lg font-semibold border-l-[6px] border-[#D32F2F] pl-4 uppercase tracking-tighter text-[#1A1A1A]">
                     Checklist Results
                   </h3>
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-widest">
                     {selectedTask.checklist.filter(item => item.status === "Pass" || (item.type === "optional" && item.status === "Awaiting")).length} / {selectedTask.checklist.length} COMPLETED
                   </span>
                 </div>
 
                 {selectedTask.checklist.length === 0 ? (
-                  <div className="p-8 text-center bg-gray-50 border-2 border-[#1A1A1A] rounded-xl font-bold uppercase tracking-wider text-xs text-gray-400">
+                  <div className="p-8 text-center bg-gray-50 rounded-xl font-medium uppercase tracking-wider text-xs text-gray-400">
                     No checklist items in the report
                   </div>
                 ) : (
                   selectedTask.checklist.map((item, idx) => (
-                    <div key={item.item_id || idx} className="bg-white border-2 border-[#1A1A1A] rounded-xl p-5 flex flex-col gap-4">
+                    <div key={item.item_id || idx} className="bg-white rounded-xl p-5 flex flex-col gap-4 shadow-sm">
                       <div className="flex justify-between items-start">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ITEM {idx + 1}</span>
-                          <h4 className="font-headline-md text-base font-extrabold text-black leading-tight">{item.label}</h4>
+                          <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">ITEM {idx + 1}</span>
+                          <h4 className="font-headline-md text-base font-semibold text-black leading-tight">{item.label}</h4>
                           <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${item.type === "required"
-                                  ? "bg-black text-white border-black"
+                            <span className={`px-2 py-0.5 text-[8px] font-semibold rounded uppercase tracking-wider border ${item.type === "required"
+                                  ? "bg-black text-white border-gray-200"
                                   : "bg-gray-100 text-gray-500 border-gray-200"
                               }`}>
                               {item.type || "optional"}
                             </span>
-                            <span className="text-[8px] font-black rounded uppercase tracking-wider bg-gray-50 text-gray-400 border border-gray-200 px-2 py-0.5">
+                            <span className="text-[8px] font-semibold rounded uppercase tracking-wider bg-gray-50 text-gray-400 border border-gray-200 px-2 py-0.5">
                               {item.requireImage ? "Photo Req." : "No Photo"}
                             </span>
                           </div>
@@ -772,11 +772,11 @@ export default function ReviewDetailPage() {
                             icon = "hourglass_empty";
                           }
                           return (
-                            <div className={`flex items-center gap-1 text-white px-3 py-1 border-2 border-[#1A1A1A] rounded-full ${bgColor}`}>
-                              <span className="material-symbols-outlined text-sm font-extrabold" style={{ fontWeight: 900 }}>
+                            <div className={`flex items-center gap-1 text-white px-3 py-1 border border-gray-200 rounded-full ${bgColor}`}>
+                              <span className="material-symbols-outlined text-sm font-semibold" style={{ fontWeight: 900 }}>
                                 {icon}
                               </span>
-                              <span className="text-[10px] font-extrabold uppercase tracking-widest">
+                              <span className="text-[10px] font-semibold uppercase tracking-widest">
                                 {status}
                               </span>
                             </div>
@@ -785,7 +785,7 @@ export default function ReviewDetailPage() {
                       </div>
 
                       {item.notes && (
-                        <div className="bg-black/5 p-4 rounded-lg border-2 border-black italic text-xs text-gray-700">
+                        <div className="bg-black/5 p-4 rounded-lg border border-gray-200 italic text-xs text-gray-700">
                           "{item.notes}"
                         </div>
                       )}
@@ -793,11 +793,11 @@ export default function ReviewDetailPage() {
                       {/* Main Item Photo Evidence */}
                       {item.image && (
                         <div className="flex flex-col gap-1">
-                          <span className="text-[9px] font-black text-gray-500 uppercase tracking-wider">📷 Main Photo Evidence</span>
-                          <div className="w-full h-56 border-2 border-[#1A1A1A] rounded-lg overflow-hidden relative group">
+                          <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">📷 Main Photo Evidence</span>
+                          <div className="w-full h-56 border border-gray-200 rounded-lg overflow-hidden relative group">
                             <img className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" src={item.image} alt={`Evidence for ${item.label}`} />
                             <div className="absolute inset-0 bg-[#D32F2F]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <button onClick={() => setExpandedImage(item.image || null)} className="bg-white border-2 border-[#1A1A1A] px-4 py-2 text-xs uppercase font-extrabold cursor-pointer hover:bg-gray-100">
+                              <button onClick={() => setExpandedImage(item.image || null)} className="bg-white border border-gray-200 px-4 py-2 text-xs uppercase font-semibold cursor-pointer hover:bg-gray-100">
                                 Expand
                               </button>
                             </div>
@@ -808,8 +808,8 @@ export default function ReviewDetailPage() {
                       {/* Main Item Video Evidence */}
                       {item.video && (
                         <div className="flex flex-col gap-1 mt-2">
-                          <span className="text-[9px] font-black text-purple-700 uppercase tracking-wider">🎥 Main Video Evidence</span>
-                          <div className="w-full h-56 border-2 border-purple-900 rounded-lg overflow-hidden bg-black">
+                          <span className="text-[9px] font-semibold text-purple-700 uppercase tracking-wider">🎥 Main Video Evidence</span>
+                          <div className="w-full h-56 border border-purple-900 rounded-lg overflow-hidden bg-black">
                             <video src={item.video} controls className="w-full h-full object-cover" />
                           </div>
                         </div>
@@ -817,16 +817,16 @@ export default function ReviewDetailPage() {
 
                       {/* Subtasks Evidence Section */}
                       {item.subtasks && item.subtasks.length > 0 && (
-                        <div className="mt-3 pt-3 border-t-2 border-dashed border-gray-200 flex flex-col gap-2">
-                          <span className="text-[10px] font-black uppercase text-gray-700 tracking-wider">
+                        <div className="mt-3 pt-3 border-t border-dashed border-gray-200 flex flex-col gap-2">
+                          <span className="text-[10px] font-semibold uppercase text-gray-700 tracking-wider">
                             Subtasks ({item.subtasks.filter((s: any) => s.completed || s.image || s.video).length} / {item.subtasks.length} Completed)
                           </span>
                           <div className="flex flex-col gap-2.5">
                             {item.subtasks.map((sub: any, subIdx: number) => (
                               <div key={sub.id || subIdx} className="bg-gray-50 border border-black/20 rounded-lg p-3 flex flex-col gap-2">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-xs font-extrabold text-black">{subIdx + 1}. {sub.text}</span>
-                                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${sub.completed ? "bg-green-100 text-green-800 border-green-300" : "bg-yellow-100 text-yellow-800 border-yellow-300"}`}>
+                                  <span className="text-xs font-semibold text-black">{subIdx + 1}. {sub.text}</span>
+                                  <span className={`text-[8px] font-semibold uppercase px-2 py-0.5 rounded border ${sub.completed ? "bg-green-100 text-green-800 border-green-300" : "bg-yellow-100 text-yellow-800 border-yellow-300"}`}>
                                     {sub.completed ? "COMPLETED" : "PENDING"}
                                   </span>
                                 </div>
@@ -836,16 +836,16 @@ export default function ReviewDetailPage() {
                                   <div className="flex flex-wrap gap-3 mt-1 pt-1">
                                     {sub.image && (
                                       <div className="flex flex-col gap-0.5">
-                                        <span className="text-[8px] font-black text-gray-500 uppercase">📷 Photo</span>
-                                        <div className="w-20 h-20 border-2 border-black rounded-lg overflow-hidden">
+                                        <span className="text-[8px] font-semibold text-gray-500 uppercase">📷 Photo</span>
+                                        <div className="w-20 h-20 border border-gray-200 rounded-lg overflow-hidden">
                                           <img src={sub.image} alt={sub.text} className="w-full h-full object-cover cursor-pointer" onClick={() => setExpandedImage(sub.image)} />
                                         </div>
                                       </div>
                                     )}
                                     {sub.video && (
                                       <div className="flex flex-col gap-0.5">
-                                        <span className="text-[8px] font-black text-purple-700 uppercase">🎥 Video</span>
-                                        <div className="w-28 h-20 border-2 border-purple-900 rounded-lg overflow-hidden bg-black">
+                                        <span className="text-[8px] font-semibold text-purple-700 uppercase">🎥 Video</span>
+                                        <div className="w-28 h-20 border border-purple-900 rounded-lg overflow-hidden bg-black">
                                           <video src={sub.video} controls className="w-full h-full object-cover" />
                                         </div>
                                       </div>
@@ -865,16 +865,16 @@ export default function ReviewDetailPage() {
               {/* Column 2: Actions */}
               <section className="col-span-12 lg:col-span-6 flex flex-col gap-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-headline-md text-lg font-extrabold border-l-[6px] border-[#D32F2F] pl-4 uppercase tracking-tighter text-[#1A1A1A]">
+                  <h3 className="font-headline-md text-lg font-semibold border-l-[6px] border-[#D32F2F] pl-4 uppercase tracking-tighter text-[#1A1A1A]">
                     Review Process
                   </h3>
                 </div>
 
-                <div className="bg-white border-2 border-[#1A1A1A] rounded-xl p-6 flex flex-col gap-6">
+                <div className="bg-white rounded-xl p-6 flex flex-col gap-6 shadow-sm">
                   {selectedTask.adminNotes && (
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] text-black font-black uppercase">Admin Additional Notes</label>
-                      <div className="border-2 border-[#1A1A1A] rounded-xl p-4 font-body-md text-xs bg-black/5 text-gray-700 min-h-[60px] font-semibold whitespace-pre-wrap">
+                      <label className="text-[10px] text-black font-semibold uppercase">Admin Additional Notes</label>
+                      <div className="rounded-xl p-4 font-body-md text-xs bg-black/5 text-gray-700 min-h-[60px] font-semibold whitespace-pre-wrap">
                         {selectedTask.adminNotes}
                       </div>
                     </div>
@@ -882,31 +882,31 @@ export default function ReviewDetailPage() {
 
                   {selectedTask.techNotes && (
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] text-black font-black uppercase">Vendor / Technician Notes</label>
-                      <div className="border-2 border-[#1A1A1A] rounded-xl p-4 font-body-md text-xs bg-gray-50 text-gray-700 min-h-[60px] font-semibold whitespace-pre-wrap">
+                      <label className="text-[10px] text-black font-semibold uppercase">Vendor / Technician Notes</label>
+                      <div className="rounded-xl p-4 font-body-md text-xs bg-gray-50 text-gray-700 min-h-[60px] font-semibold whitespace-pre-wrap">
                         {selectedTask.techNotes}
                       </div>
                     </div>
                   )}
 
                   {selectedTask.aiConfidenceScore !== undefined && (
-                    <div className="bg-amber-50 border-2 border-[#1A1A1A] rounded-xl p-4 flex items-center justify-between">
+                    <div className="bg-amber-50 rounded-xl p-4 flex items-center justify-between">
                       <div>
-                        <p className="text-[9px] font-black uppercase text-amber-800">Checklist Items Passed</p>
+                        <p className="text-[9px] font-semibold uppercase text-amber-800">Checklist Items Passed</p>
                         <p className="text-xs text-gray-600 font-medium">Share of checklist items marked pass</p>
                       </div>
                       <div className="text-right">
-                        <span className="font-black text-2xl text-amber-700">{selectedTask.aiConfidenceScore}%</span>
+                        <span className="font-semibold text-2xl text-amber-700">{selectedTask.aiConfidenceScore}%</span>
                       </div>
                     </div>
                   )}
 
                   <div className="flex flex-col gap-2">
-                    <label className="text-[10px] text-black font-black uppercase">Supervisor Notes</label>
+                    <label className="text-[10px] text-black font-semibold uppercase">Supervisor Notes</label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      className="border-2 border-[#1A1A1A] rounded-xl p-4 font-body-md text-xs min-h-[140px] focus:ring-0 focus:border-[#D32F2F] transition-all resize-none bg-black/5"
+                      className="rounded-xl p-4 font-body-md text-xs min-h-[140px] focus:ring-0 focus:border-[#D32F2F] transition-all resize-none bg-black/5"
                       placeholder={selectedTask.supervisorNotes || "Write verification notes here..."}
                     />
                   </div>
@@ -916,13 +916,13 @@ export default function ReviewDetailPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <button
                           onClick={() => setIsRejectModalOpen(true)}
-                          className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-[#D32F2F] text-white hover:bg-black hover:border-black active:scale-95 transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                          className="py-3 border border-gray-200 rounded-xl font-semibold text-xs uppercase tracking-widest bg-[#D32F2F] text-white hover:bg-black hover:border-gray-400 active:scale-95 transition-all cursor-pointer shadow-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                         >
                           REJECT
                         </button>
                         <button
                           onClick={() => setIsApproveModalOpen(true)}
-                          className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-[#2E7D32] text-white hover:bg-black hover:border-black active:scale-95 transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                          className="py-3 border border-gray-200 rounded-xl font-semibold text-xs uppercase tracking-widest bg-[#2E7D32] text-white hover:bg-black hover:border-gray-400 active:scale-95 transition-all cursor-pointer shadow-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                         >
                           APPROVE
                         </button>
@@ -931,7 +931,7 @@ export default function ReviewDetailPage() {
                     {(selectedTask.status === "approved" || selectedTask.status === "rejected") && (
                       <button
                         onClick={() => window.open(`/supervisor/tasks/report-preview?taskId=${selectedTask.id}`, "_blank")}
-                        className="py-4 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-[#D32F2F] text-white hover:bg-black transition-all cursor-pointer flex items-center justify-center gap-2"
+                        className="py-4 border border-gray-200 rounded-xl font-semibold text-xs uppercase tracking-widest bg-[#D32F2F] text-white hover:bg-black transition-all cursor-pointer flex items-center justify-center gap-2"
                       >
                         <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
                         OPEN / DOWNLOAD OFFICIAL PDF REPORT
@@ -939,9 +939,9 @@ export default function ReviewDetailPage() {
                     )}
                   </div>
 
-                  <div className="mt-4 pt-6 border-t-2 border-black">
+                  <div className="mt-4 pt-6 border-t border-gray-200">
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-[10px] font-black uppercase">System Audit Log</span>
+                      <span className="text-[10px] font-semibold uppercase">System Audit Log</span>
                       <span className="material-symbols-outlined text-black text-base">receipt_long</span>
                     </div>
                     <ul className="space-y-4">
@@ -949,7 +949,7 @@ export default function ReviewDetailPage() {
                         <li key={idx} className="flex items-start gap-4">
                           <div className="w-2 h-2 rounded-full bg-[#D32F2F] mt-1.5 flex-shrink-0" />
                           <p className="text-[11px] font-medium leading-relaxed">
-                            <span className="font-black">{log.time}:</span> {log.message}
+                            <span className="font-semibold">{log.time}:</span> {log.message}
                           </p>
                         </li>
                       ))}
@@ -962,41 +962,41 @@ export default function ReviewDetailPage() {
         </main>
       ) : (
         /* ================== TASKS LIST VIEW ================== */
-        <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
+        <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-page w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
           <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10 animate-in fade-in duration-300">
 
             {/* Stats Overview Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-[#D32F2F]">
+              <div className="bg-white p-6 rounded-[20px] flex flex-col justify-between shadow-sm">
                 <div className="flex justify-between items-start">
-                  <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">Reports Awaiting Review</span>
-                  <span className="material-symbols-outlined text-[#D32F2F]">pending_actions</span>
+                  <span className="font-label-md text-xs font-medium text-gray-500 uppercase tracking-wider">Reports Awaiting Review</span>
+                  <span className="material-symbols-outlined text-gray-400">pending_actions</span>
                 </div>
                 <div className="mt-4">
-                  <p className="font-headline-xl text-5xl font-extrabold text-[#D32F2F] tracking-tighter">{belumDiReviewCount}</p>
-                  <p className="text-xs text-red-600 font-bold uppercase mt-1">Requires supervisor verification</p>
+                  <p className="font-headline-xl text-5xl font-semibold text-gray-900 tracking-tighter">{belumDiReviewCount}</p>
+                  <p className="text-xs text-red-600 font-medium uppercase mt-1">Requires supervisor verification</p>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between border-l-8 border-l-green-600">
+              <div className="bg-white p-6 rounded-[20px] flex flex-col justify-between shadow-sm">
                 <div className="flex justify-between items-start">
-                  <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">Total Completed Evaluations</span>
+                  <span className="font-label-md text-xs font-medium text-gray-500 uppercase tracking-wider">Total Completed Evaluations</span>
                   <span className="material-symbols-outlined text-green-600">verified</span>
                 </div>
                 <div className="mt-4">
-                  <p className="font-headline-xl text-5xl font-extrabold text-green-600 tracking-tighter">{sudahDiReviewCount}</p>
-                  <p className="text-xs text-green-700 font-bold uppercase mt-1">Approved / rejected</p>
+                  <p className="font-headline-xl text-5xl font-semibold text-green-600 tracking-tighter">{sudahDiReviewCount}</p>
+                  <p className="text-xs text-green-700 font-medium uppercase mt-1">Approved / rejected</p>
                 </div>
               </div>
             </div>
 
             {/* Filter and Control Panel */}
-            <div className="flex flex-wrap justify-between items-end gap-6 bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A]">
+            <div className="flex flex-wrap justify-between items-end gap-6 bg-white p-6 rounded-[20px] shadow-sm">
               <div className="flex flex-wrap gap-4 flex-grow lg:flex-nowrap">
 
                 {/* Search */}
                 <div className="flex-1 min-w-[240px]">
-                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Search Tasks</label>
+                  <label className="block font-label-sm text-xs font-medium mb-2 uppercase opacity-60 tracking-wider">Search Tasks</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400">search</span>
                     <input
@@ -1004,18 +1004,18 @@ export default function ReviewDetailPage() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search Code, Asset, Vendor..."
-                      className="w-full pl-10 pr-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm text-[#1A1A1A] focus:ring-[#D32F2F] focus:border-[#D32F2F] outline-none bg-white font-body-md"
+                      className="w-full pl-10 pr-4 py-3 rounded-[20px] border border-gray-200 font-medium text-sm text-[#1A1A1A] focus:ring-[#D32F2F] focus:border-[#D32F2F] outline-none bg-white font-body-md"
                     />
                   </div>
                 </div>
 
                 {/* Category Filter */}
                 <div className="flex-1 min-w-[200px]">
-                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Category</label>
+                  <label className="block font-label-sm text-xs font-medium mb-2 uppercase opacity-60 tracking-wider">Category</label>
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm text-[#1A1A1A] focus:ring-[#D32F2F] outline-none appearance-none bg-white cursor-pointer"
+                    className="w-full px-4 py-3 rounded-[20px] border border-gray-200 font-medium text-sm text-[#1A1A1A] focus:ring-[#D32F2F] outline-none appearance-none bg-white cursor-pointer"
                   >
                     <option value="All Categories">All Categories</option>
                     <option value="MECHANICAL">Mechanical</option>
@@ -1026,11 +1026,11 @@ export default function ReviewDetailPage() {
 
                 {/* Status Filter */}
                 <div className="flex-1 min-w-[200px]">
-                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Task Status</label>
+                  <label className="block font-label-sm text-xs font-medium mb-2 uppercase opacity-60 tracking-wider">Task Status</label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm text-[#1A1A1A] focus:ring-[#D32F2F] outline-none appearance-none bg-white cursor-pointer"
+                    className="w-full px-4 py-3 rounded-[20px] border border-gray-200 font-medium text-sm text-[#1A1A1A] focus:ring-[#D32F2F] outline-none appearance-none bg-white cursor-pointer"
                   >
                     <option value="All Statuses">All Statuses</option>
                     <option value="Submitted">Submitted (Review)</option>
@@ -1043,23 +1043,23 @@ export default function ReviewDetailPage() {
 
                 {/* Date Filter: Start Date */}
                 <div className="flex-1 min-w-[160px]">
-                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Start Date</label>
+                  <label className="block font-label-sm text-xs font-medium mb-2 uppercase opacity-60 tracking-wider">Start Date</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm text-[#1A1A1A] focus:ring-[#D32F2F] outline-none bg-white cursor-pointer font-body-md"
+                    className="w-full px-4 py-3 rounded-[20px] border border-gray-200 font-medium text-sm text-[#1A1A1A] focus:ring-[#D32F2F] outline-none bg-white cursor-pointer font-body-md"
                   />
                 </div>
 
                 {/* Date Filter: End Date */}
                 <div className="flex-1 min-w-[160px]">
-                  <label className="block font-label-sm text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">End Date</label>
+                  <label className="block font-label-sm text-xs font-medium mb-2 uppercase opacity-60 tracking-wider">End Date</label>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm text-[#1A1A1A] focus:ring-[#D32F2F] outline-none bg-white cursor-pointer font-body-md"
+                    className="w-full px-4 py-3 rounded-[20px] border border-gray-200 font-medium text-sm text-[#1A1A1A] focus:ring-[#D32F2F] outline-none bg-white cursor-pointer font-body-md"
                   />
                 </div>
               </div>
@@ -1068,51 +1068,51 @@ export default function ReviewDetailPage() {
             {/* Tasks Ledger Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               {paginatedTasks.length === 0 ? (
-                <div className="col-span-full py-16 text-center border-2 border-dashed border-gray-300 rounded-[20px]">
+                <div className="col-span-full py-16 text-center border border-dashed border-gray-300 rounded-[20px]">
                   <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">find_in_page</span>
-                  <p className="font-extrabold uppercase text-gray-500 tracking-wider text-xs">No tasks match the filter</p>
+                  <p className="font-semibold uppercase text-gray-500 tracking-wider text-xs">No tasks match the filter</p>
                 </div>
               ) : (
                 paginatedTasks.map((task) => (
-                  <div key={task.id} className="bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 hover:border-[#D32F2F] transition-all duration-200 flex flex-col justify-between gap-6 relative">
+                  <div key={task.id} className="bg-white rounded-[20px] p-6 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-6 relative shadow-sm">
                     <div className="flex justify-between items-start gap-4">
                       <div className="flex flex-wrap gap-2">
-                        <span className="border-2 border-[#D32F2F] text-[#D32F2F] px-3 py-0.5 rounded-full text-[9px] font-black tracking-widest uppercase">
+                        <span className="border border-[#D32F2F] text-[#D32F2F] px-3 py-0.5 rounded-full text-[9px] font-semibold tracking-widest uppercase">
                           {task.category}
                         </span>
                         {task.priority && (
-                          <span className="bg-[#1A1A1A]/5 text-gray-500 border border-gray-300 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider">
+                          <span className="bg-[#1A1A1A]/5 text-gray-500 border border-gray-300 px-2 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-wider">
                             {task.priority.toUpperCase()}
                           </span>
                         )}
                       </div>
 
-                      <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${task.status === "approved" ? "bg-green-600" : task.status === "rejected" ? "bg-black" : "bg-[#D32F2F]"
+                      <span className={`px-3 py-0.5 border border-gray-200 rounded-full text-[9px] font-semibold uppercase tracking-wider text-white ${task.status === "approved" ? "bg-green-600" : task.status === "rejected" ? "bg-black" : "bg-[#D32F2F]"
                         }`}>
                         {task.status.replace("_", " ")}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">{task.task_code}</span>
-                      <h4 className="font-headline-md text-xl font-extrabold text-black leading-tight uppercase mt-1">{task.title}</h4>
-                      <p className="text-gray-500 font-bold text-xs mt-2 uppercase tracking-wide">
+                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">{task.task_code}</span>
+                      <h4 className="font-headline-md text-xl font-semibold text-black leading-tight uppercase mt-1">{task.title}</h4>
+                      <p className="text-gray-500 font-medium text-xs mt-2 uppercase tracking-wide">
                         Asset: <span className="text-black">{task.asset}</span>
                       </p>
                       <p className="text-gray-500 text-xs mt-1 font-semibold uppercase tracking-wide">
-                        Vendor / Tech: <span className="text-black font-bold">{task.tech}</span> • {task.location}
+                        Vendor / Tech: <span className="text-black font-medium">{task.tech}</span> • {task.location}
                       </p>
                     </div>
 
                     <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-2">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase flex items-center gap-1">
+                      <span className="text-[10px] text-gray-400 font-medium uppercase flex items-center gap-1">
                         <span className="material-symbols-outlined text-xs">calendar_today</span>
                         Due: {task.date}
                       </span>
                       <button
                         onClick={() => setSelectedTaskId(task.id)}
-                        className={`px-5 py-2 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer ${task.status === "submitted"
-                            ? "bg-[#D32F2F] text-white hover:bg-black hover:border-black"
+                        className={`px-5 py-2 border border-gray-200 rounded-xl font-semibold text-xs uppercase tracking-widest transition-all cursor-pointer ${task.status === "submitted"
+                            ? "bg-[#D32F2F] text-white hover:bg-black hover:border-gray-400"
                             : "bg-white text-black hover:bg-black/5"
                           }`}
                       >
@@ -1126,15 +1126,15 @@ export default function ReviewDetailPage() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <footer className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] shadow-none">
-                <p className="text-xs font-bold text-gray-500 uppercase">
+              <footer className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[20px] shadow-none shadow-sm">
+                <p className="text-xs font-medium text-gray-500 uppercase">
                   Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredTasks.length)} of {filteredTasks.length} tasks
                 </p>
                 <div className="flex items-center gap-2">
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((prev) => prev - 1)}
-                    className="w-10 h-10 rounded-lg border-2 border-[#1A1A1A] flex items-center justify-center hover:bg-gray-100 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <span className="material-symbols-outlined">chevron_left</span>
                   </button>
@@ -1144,7 +1144,7 @@ export default function ReviewDetailPage() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-10 h-10 rounded-lg font-bold text-xs uppercase transition-all cursor-pointer ${currentPage === page ? "bg-[#D32F2F] text-white border-2 border-[#D32F2F]" : "border-2 border-[#1A1A1A] hover:bg-gray-100 text-black"
+                        className={`w-10 h-10 rounded-lg font-medium text-xs uppercase transition-all cursor-pointer ${currentPage === page ? "bg-[#D32F2F] text-white border border-[#D32F2F]" : "border border-gray-200 hover:bg-gray-100 text-black"
                           }`}
                       >
                         {page}
@@ -1155,7 +1155,7 @@ export default function ReviewDetailPage() {
                   <button
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((prev) => prev + 1)}
-                    className="w-10 h-10 rounded-lg border-2 border-[#1A1A1A] flex items-center justify-center hover:bg-gray-100 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <span className="material-symbols-outlined">chevron_right</span>
                   </button>
@@ -1171,9 +1171,9 @@ export default function ReviewDetailPage() {
       {expandedImage && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setExpandedImage(null)} />
-          <div className="relative max-w-4xl max-h-[85vh] bg-white border-2 border-black rounded-xl p-2 z-10 animate-in zoom-in-95 duration-200">
+          <div className="relative max-w-4xl max-h-[85vh] bg-white border border-gray-200 rounded-xl p-2 z-10 animate-in zoom-in-95 duration-200">
             <img className="max-w-full max-h-[80vh] rounded-lg object-contain" src={expandedImage} alt="Expanded Inspection Asset" />
-            <button onClick={() => setExpandedImage(null)} className="absolute top-4 right-4 bg-white border-2 border-black w-8 h-8 rounded-full flex items-center justify-center font-bold cursor-pointer hover:bg-gray-100">
+            <button onClick={() => setExpandedImage(null)} className="absolute top-4 right-4 bg-white border border-gray-200 w-8 h-8 rounded-full flex items-center justify-center font-medium cursor-pointer hover:bg-gray-100">
               ×
             </button>
           </div>
@@ -1184,7 +1184,7 @@ export default function ReviewDetailPage() {
       {isApproveModalOpen && selectedTask && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsApproveModalOpen(false)} />
-          <div className="relative bg-white border-2 border-[#1A1A1A] w-full max-w-lg p-8 rounded-[20px] space-y-6 z-10 animate-in zoom-in-95 duration-200">
+          <div className="relative bg-white w-full max-w-lg p-8 rounded-[20px] space-y-6 z-10 animate-in zoom-in-95 duration-200 shadow-sm">
             <div className="flex flex-col items-center gap-4 text-center">
               <div className="w-20 h-20 bg-green-500/10 text-green-600 rounded-full flex items-center justify-center">
                 <span className="material-symbols-outlined text-[48px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 700" }}>
@@ -1192,33 +1192,33 @@ export default function ReviewDetailPage() {
                 </span>
               </div>
               <div>
-                <h3 className="font-headline-lg text-xl font-extrabold uppercase tracking-tighter">Approve PM Report?</h3>
+                <h3 className="font-headline-lg text-xl font-semibold uppercase tracking-tighter">Approve PM Report?</h3>
                 <p className="text-xs text-gray-500">The task will be verified and posted to the ledger log.</p>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase text-black">Reviewer Notes (Optional)</label>
+              <label className="text-[10px] font-semibold uppercase text-black">Reviewer Notes (Optional)</label>
               <textarea
                 value={approveNotes}
                 onChange={(e) => setApproveNotes(e.target.value)}
-                className="border-2 border-black/10 rounded-xl p-3 font-body-md text-xs min-h-[80px] focus:ring-0 focus:border-[#D32F2F] transition-all resize-none bg-black/5"
+                className="border border-black/10 rounded-xl p-3 font-body-md text-xs min-h-[80px] focus:ring-0 focus:border-[#D32F2F] transition-all resize-none bg-black/5"
                 placeholder="Add additional notes..."
               />
             </div>
 
             {/* Signature Area */}
-            <div className="flex flex-col gap-4 border-t-2 border-black pt-4">
+            <div className="flex flex-col gap-4 border-t border-gray-200 pt-4">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-black uppercase text-black">Supervisor Signature</label>
-                <button onClick={() => clearSignature(approveCanvasRef.current, setApproveSigned)} className="text-[9px] font-extrabold uppercase text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent">
+                <label className="text-[10px] font-semibold uppercase text-black">Supervisor Signature</label>
+                <button onClick={() => clearSignature(approveCanvasRef.current, setApproveSigned)} className="text-[9px] font-semibold uppercase text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent">
                   Clear Signature
                 </button>
               </div>
 
-              <div className="w-full h-32 bg-black/5 border-2 border-black rounded-xl flex items-center justify-center relative overflow-hidden">
+              <div className="w-full h-32 bg-black/5 border border-gray-200 rounded-xl flex items-center justify-center relative overflow-hidden">
                 {!approveSigned && (
-                  <span className="absolute text-gray-400 text-[10px] font-bold uppercase tracking-widest pointer-events-none">
+                  <span className="absolute text-gray-400 text-[10px] font-medium uppercase tracking-widest pointer-events-none">
                     Draw your signature here
                   </span>
                 )}
@@ -1239,13 +1239,13 @@ export default function ReviewDetailPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2">
-              <button onClick={() => setIsApproveModalOpen(false)} className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-white text-black hover:bg-black/5 transition-all cursor-pointer">
+              <button onClick={() => setIsApproveModalOpen(false)} className="py-3 border border-gray-200 rounded-xl font-semibold text-xs uppercase tracking-widest bg-white text-black hover:bg-black/5 transition-all cursor-pointer">
                 Cancel
               </button>
               <button
                 onClick={handleConfirmApproval}
                 disabled={!approveSigned}
-                className={`py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all cursor-pointer ${approveSigned ? "bg-[#D32F2F] hover:bg-black" : "bg-gray-300 opacity-50 cursor-not-allowed"
+                className={`py-3 border border-gray-200 rounded-xl font-semibold text-xs uppercase tracking-widest text-white transition-all cursor-pointer ${approveSigned ? "bg-[#D32F2F] hover:bg-black" : "bg-gray-300 opacity-50 cursor-not-allowed"
                   }`}
               >
                 Confirm Approval
@@ -1259,7 +1259,7 @@ export default function ReviewDetailPage() {
       {isRejectModalOpen && selectedTask && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsRejectModalOpen(false)} />
-          <div className="relative bg-white border-2 border-[#1A1A1A] w-full max-w-lg p-8 rounded-[20px] space-y-6 z-10 animate-in zoom-in-95 duration-200">
+          <div className="relative bg-white w-full max-w-lg p-8 rounded-[20px] space-y-6 z-10 animate-in zoom-in-95 duration-200 shadow-sm">
             <div className="flex flex-col items-center gap-4 text-center">
               <div className="w-20 h-20 bg-red-500/10 text-[#D32F2F] rounded-full flex items-center justify-center">
                 <span className="material-symbols-outlined text-[48px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 700" }}>
@@ -1267,34 +1267,34 @@ export default function ReviewDetailPage() {
                 </span>
               </div>
               <div>
-                <h3 className="font-headline-lg text-xl font-extrabold uppercase tracking-tighter">Reject PM Report?</h3>
+                <h3 className="font-headline-lg text-xl font-semibold uppercase tracking-tighter">Reject PM Report?</h3>
                 <p className="text-xs text-gray-500">Return the task to vendor for revision.</p>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase text-black">Rejection Reason (Required)</label>
+              <label className="text-[10px] font-semibold uppercase text-black">Rejection Reason (Required)</label>
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                className="border-2 border-[#D32F2F] rounded-xl p-3 font-body-md text-xs min-h-[80px] focus:ring-0 focus:border-[#D32F2F] transition-all resize-none bg-black/5"
+                className="border border-[#D32F2F] rounded-xl p-3 font-body-md text-xs min-h-[80px] focus:ring-0 focus:border-[#D32F2F] transition-all resize-none bg-black/5"
                 placeholder="Explain reason for rejection..."
                 required
               />
             </div>
 
             {/* Signature Area */}
-            <div className="flex flex-col gap-4 border-t-2 border-black pt-4">
+            <div className="flex flex-col gap-4 border-t border-gray-200 pt-4">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-black uppercase text-black">Supervisor Signature</label>
-                <button onClick={() => clearSignature(rejectCanvasRef.current, setRejectSigned)} className="text-[9px] font-extrabold uppercase text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent">
+                <label className="text-[10px] font-semibold uppercase text-black">Supervisor Signature</label>
+                <button onClick={() => clearSignature(rejectCanvasRef.current, setRejectSigned)} className="text-[9px] font-semibold uppercase text-[#D32F2F] hover:underline cursor-pointer border-none bg-transparent">
                   Clear Signature
                 </button>
               </div>
 
-              <div className="w-full h-32 bg-black/5 border-2 border-black rounded-xl flex items-center justify-center relative overflow-hidden">
+              <div className="w-full h-32 bg-black/5 border border-gray-200 rounded-xl flex items-center justify-center relative overflow-hidden">
                 {!rejectSigned && (
-                  <span className="absolute text-gray-400 text-[10px] font-bold uppercase tracking-widest pointer-events-none">
+                  <span className="absolute text-gray-400 text-[10px] font-medium uppercase tracking-widest pointer-events-none">
                     Draw your signature here
                   </span>
                 )}
@@ -1315,13 +1315,13 @@ export default function ReviewDetailPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2">
-              <button onClick={() => setIsRejectModalOpen(false)} className="py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest bg-white text-black hover:bg-black/5 transition-all cursor-pointer">
+              <button onClick={() => setIsRejectModalOpen(false)} className="py-3 border border-gray-200 rounded-xl font-semibold text-xs uppercase tracking-widest bg-white text-black hover:bg-black/5 transition-all cursor-pointer">
                 Cancel
               </button>
               <button
                 onClick={handleConfirmRejection}
                 disabled={!rejectSigned || !rejectReason.trim()}
-                className={`py-3 border-2 border-black rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all cursor-pointer ${rejectSigned && rejectReason.trim() ? "bg-black hover:bg-[#D32F2F]" : "bg-gray-300 opacity-50 cursor-not-allowed"
+                className={`py-3 border border-gray-200 rounded-xl font-semibold text-xs uppercase tracking-widest text-white transition-all cursor-pointer ${rejectSigned && rejectReason.trim() ? "bg-black hover:bg-[#D32F2F]" : "bg-gray-300 opacity-50 cursor-not-allowed"
                   }`}
               >
                 Confirm Rejection
@@ -1336,13 +1336,13 @@ export default function ReviewDetailPage() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${t.type === "success" ? "border-green-700" : t.type === "error" ? "border-[#D32F2F]" : "border-blue-700"
+            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${t.type === "success" ? "border-green-700" : t.type === "error" ? "border-[#D32F2F]" : "border-blue-700"
               }`}
           >
             <span className={`material-symbols-outlined ${t.type === "success" ? "text-green-600" : t.type === "error" ? "text-[#D32F2F]" : "text-blue-500"}`}>
               {t.type === "success" ? "check_circle" : t.type === "error" ? "cancel" : "info"}
             </span>
-            <span className="font-black uppercase tracking-widest text-xs">{t.message}</span>
+            <span className="font-semibold uppercase tracking-widest text-xs">{t.message}</span>
           </div>
         ))}
       </div>

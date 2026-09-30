@@ -235,8 +235,8 @@ function ReportPreviewContent() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-white text-[#1A1A1A] font-bold uppercase tracking-widest gap-3">
-        <span className="w-5 h-5 rounded-full border-4 border-t-transparent border-[#D32F2F] animate-spin inline-block"></span>
+      <div className="flex h-screen items-center justify-center bg-page text-[#1A1A1A] font-medium uppercase tracking-widest gap-3">
+        <span className="w-5 h-5 rounded-full border-2 border-t-transparent border-[#D32F2F] animate-spin inline-block"></span>
         Loading Report Document...
       </div>
     );
@@ -244,7 +244,7 @@ function ReportPreviewContent() {
 
   if (!reportInfo) {
     return (
-      <div className="flex h-screen items-center justify-center bg-white text-sm font-bold text-gray-500">
+      <div className="flex h-screen items-center justify-center bg-page text-sm font-medium text-gray-500">
         Report not found.
       </div>
     );
@@ -309,23 +309,23 @@ function ReportPreviewContent() {
       {/* Dynamic Action Bar (no-print) */}
       <header className="no-print sticky top-0 left-0 right-0 w-full bg-[#1A1A1A] text-white py-4 px-8 flex justify-between items-center z-50 shadow-md">
         <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-[#D32F2F] text-2xl font-bold">picture_as_pdf</span>
+          <span className="material-symbols-outlined text-gray-400 text-2xl font-medium">picture_as_pdf</span>
           <div className="text-left">
-            <h1 className="font-headline-md text-sm font-extrabold tracking-widest leading-none">MAINTAIN</h1>
-            <p className="text-[9px] opacity-60 uppercase font-black tracking-wider mt-1">PM VERIFICATION</p>
+            <h1 className="font-headline-md text-sm font-semibold tracking-widest leading-none">MAINTAIN</h1>
+            <p className="text-[9px] opacity-60 uppercase font-semibold tracking-wider mt-1">PM VERIFICATION</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
           <button
             onClick={handlePrint}
-            className="bg-[#D32F2F] text-white hover:bg-[#b71c1c] transition-colors font-bold px-5 py-2 border-2 border-black rounded-lg text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer"
+            className="bg-[#D32F2F] text-white hover:bg-[#b71c1c] transition-colors font-medium px-5 py-2 border border-gray-200 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">print</span>
             Print / Save PDF
           </button>
           <button
             onClick={() => window.close()}
-            className="bg-white/10 hover:bg-white/20 transition-colors text-white font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wider flex items-center gap-1 cursor-pointer border border-white/20"
+            className="bg-white/10 hover:bg-white/20 transition-colors text-white font-medium px-4 py-2 rounded-lg text-xs uppercase tracking-wider flex items-center gap-1 cursor-pointer border border-white/20"
           >
             <span className="material-symbols-outlined text-sm">close</span>
             Close Page
@@ -337,16 +337,16 @@ function ReportPreviewContent() {
       <main className="content-area-main w-full max-w-[850px] px-4 md:px-0 py-8 flex flex-col items-center relative">
 
         {/* The PDF Page Simulation Card */}
-        <div className="paper-card bg-white border-2 border-[#1A1A1A] max-w-[850px] w-full min-h-[1100px] relative overflow-hidden flex flex-col mb-10 rounded-xl shadow-none shrink-0">
+        <div className="paper-card bg-white border border-gray-200 max-w-[850px] w-full min-h-[1100px] relative overflow-hidden flex flex-col mb-10 rounded-xl shadow-none shrink-0">
 
           {/* Top Band */}
-          <div className="bg-[#D32F2F] text-white flex justify-between items-center px-8 py-6 border-b-2 border-[#1A1A1A]">
-            <span className="font-headline-md text-xl font-extrabold uppercase tracking-widest">
+          <div className="bg-[#D32F2F] text-white flex justify-between items-center px-8 py-6 border-b border-gray-200">
+            <span className="font-headline-md text-xl font-semibold uppercase tracking-widest">
               MAINTAIN
             </span>
             <div className="text-right">
-              <p className="text-[10px] font-label-sm opacity-90 uppercase font-bold tracking-wider">Report Document</p>
-              <p className="font-headline-md text-lg font-bold tracking-tighter">REPORT ID: {reportInfo.taskCode}</p>
+              <p className="text-[10px] font-label-sm opacity-90 uppercase font-medium tracking-wider">Report Document</p>
+              <p className="font-headline-md text-lg font-medium tracking-tighter">REPORT ID: {reportInfo.taskCode}</p>
             </div>
           </div>
 
@@ -354,28 +354,28 @@ function ReportPreviewContent() {
 
             {/* PM Information Section */}
             <section className="space-y-4">
-              <h3 className="border-b-2 border-[#1A1A1A] pb-2 font-label-md text-xs font-black text-[#1A1A1A] uppercase mb-6 flex items-center gap-2">
+              <h3 className="border-b border-gray-200 pb-2 font-label-md text-xs font-semibold text-[#1A1A1A] uppercase mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-base">info</span>
                 Preventative Maintenance Information
               </h3>
               <div className="grid grid-cols-2 gap-y-6 gap-x-12">
-                <div className="border-l-4 border-[#D32F2F] pl-4">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Asset Name & Code</p>
-                  <p className="text-base font-bold text-[#1A1A1A] uppercase">
+                <div className="border-l border-[#D32F2F] pl-4">
+                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-medium">Asset Name & Code</p>
+                  <p className="text-base font-medium text-[#1A1A1A] uppercase">
                     {reportInfo.assetName} ({reportInfo.assetCode})
                   </p>
                 </div>
-                <div className="border-l-4 border-[#D32F2F] pl-4">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Lead Technician</p>
-                  <p className="text-base font-bold text-[#1A1A1A] uppercase">{reportInfo.techName}</p>
+                <div className="border-l border-[#D32F2F] pl-4">
+                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-medium">Lead Technician</p>
+                  <p className="text-base font-medium text-[#1A1A1A] uppercase">{reportInfo.techName}</p>
                 </div>
-                <div className="border-l-4 border-[#D32F2F] pl-4">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Date of Inspection</p>
-                  <p className="text-base font-bold text-[#1A1A1A] uppercase">{reportInfo.date}</p>
+                <div className="border-l border-[#D32F2F] pl-4">
+                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-medium">Date of Inspection</p>
+                  <p className="text-base font-medium text-[#1A1A1A] uppercase">{reportInfo.date}</p>
                 </div>
-                <div className="border-l-4 border-[#D32F2F] pl-4">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Asset Location & Category</p>
-                  <p className="text-base font-bold text-[#1A1A1A] uppercase">
+                <div className="border-l border-[#D32F2F] pl-4">
+                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-medium">Asset Location & Category</p>
+                  <p className="text-base font-medium text-[#1A1A1A] uppercase">
                     {reportInfo.location} • {reportInfo.category}
                   </p>
                 </div>
@@ -385,11 +385,11 @@ function ReportPreviewContent() {
             {/* General Technician Notes Section */}
             {reportInfo.techNotes && (
               <section className="space-y-4">
-                <h3 className="border-b-2 border-[#1A1A1A] pb-2 font-label-md text-xs font-black text-[#1A1A1A] uppercase mb-4 flex items-center gap-2">
+                <h3 className="border-b border-gray-200 pb-2 font-label-md text-xs font-semibold text-[#1A1A1A] uppercase mb-4 flex items-center gap-2">
                   <span className="material-symbols-outlined text-base">edit_note</span>
                   General Technician Notes
                 </h3>
-                <div className="border-2 border-[#1A1A1A] rounded-xl p-4 bg-gray-50 text-xs italic font-medium text-gray-700 whitespace-pre-wrap">
+                <div className="rounded-xl p-4 bg-gray-50 text-xs italic font-medium text-gray-700 whitespace-pre-wrap">
                   "{reportInfo.techNotes}"
                 </div>
               </section>
@@ -397,32 +397,32 @@ function ReportPreviewContent() {
 
             {/* Checklist Results Section */}
             <section className="space-y-4">
-              <h3 className="border-b-2 border-[#1A1A1A] pb-2 font-label-md text-xs font-black text-[#1A1A1A] uppercase mb-6 flex items-center gap-2">
+              <h3 className="border-b border-gray-200 pb-2 font-label-md text-xs font-semibold text-[#1A1A1A] uppercase mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-base">fact_check</span>
                 Detailed Checklist Results
               </h3>
-              <div className="border-2 border-[#1A1A1A] overflow-hidden rounded-xl">
+              <div className="border border-gray-200 overflow-hidden rounded-xl">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-[#1A1A1A] text-white">
-                      <th className="px-4 py-3 font-label-md text-xs font-extrabold uppercase border-r border-white/20">Requirement & Evidence</th>
-                      <th className="px-4 py-3 font-label-md text-xs font-extrabold uppercase w-32 text-center border-r border-white/20">Status</th>
-                      <th className="px-4 py-3 font-label-md text-xs font-extrabold uppercase">Field Notes</th>
+                      <th className="px-4 py-3 font-label-md text-xs font-semibold uppercase border-r border-white/20">Requirement & Evidence</th>
+                      <th className="px-4 py-3 font-label-md text-xs font-semibold uppercase w-32 text-center border-r border-white/20">Status</th>
+                      <th className="px-4 py-3 font-label-md text-xs font-semibold uppercase">Field Notes</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1A1A1A] text-xs font-bold uppercase">
+                  <tbody className="divide-y divide-[#1A1A1A] text-xs font-medium uppercase">
                     {reportInfo.checklist.map((item, idx) => (
                       <tr key={item.item_id || idx} className="hover:bg-black/5 transition-colors">
-                        <td className="px-4 py-4 border-r border-[#1A1A1A] max-w-[280px]">
+                        <td className="px-4 py-4 border-r border-gray-200 max-w-[280px]">
                           <p>{item.label}</p>
-                          <div className="flex flex-wrap items-center gap-2 mt-1.5 normal-case font-bold">
-                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${item.type === "required"
-                                ? "bg-black text-white border-black"
+                          <div className="flex flex-wrap items-center gap-2 mt-1.5 normal-case font-medium">
+                            <span className={`px-2 py-0.5 text-[8px] font-semibold rounded uppercase tracking-wider border ${item.type === "required"
+                                ? "bg-black text-white border-gray-200"
                                 : "bg-gray-100 text-gray-500 border-gray-200"
                               }`}>
                               {item.type || "optional"}
                             </span>
-                            <span className="text-[8px] font-black rounded uppercase tracking-wider bg-gray-50 text-gray-400 border border-gray-200 px-2 py-0.5">
+                            <span className="text-[8px] font-semibold rounded uppercase tracking-wider bg-gray-50 text-gray-400 border border-gray-200 px-2 py-0.5">
                               {item.requireImage ? "Photo Req." : "No Photo"}
                             </span>
                           </div>
@@ -432,7 +432,7 @@ function ReportPreviewContent() {
                             </div>
                           )}
                         </td>
-                        <td className="px-4 py-4 text-center border-r border-[#1A1A1A]">
+                        <td className="px-4 py-4 text-center border-r border-gray-200">
                           {(() => {
                             const status = item.status || (item.checked ? "Pass" : "Awaiting");
                             let bgColor = "bg-gray-500";
@@ -451,7 +451,7 @@ function ReportPreviewContent() {
                               icon = "hourglass_empty";
                             }
                             return (
-                              <span className={`inline-flex items-center gap-1 text-white px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border-2 border-black ${bgColor}`}>
+                              <span className={`inline-flex items-center gap-1 text-white px-3 py-1 rounded-full text-[10px] font-semibold uppercase border border-gray-200 ${bgColor}`}>
                                 <span className="material-symbols-outlined text-[10px]" style={{ fontWeight: 900 }}>
                                   {icon}
                                 </span>
@@ -472,21 +472,21 @@ function ReportPreviewContent() {
 
             {/* Result Summary */}
             <section className="space-y-4">
-              <h3 className="border-b-2 border-[#1A1A1A] pb-2 font-label-md text-xs font-black text-[#1A1A1A] uppercase mb-6">
+              <h3 className="border-b border-gray-200 pb-2 font-label-md text-xs font-semibold text-[#1A1A1A] uppercase mb-6">
                 Result
               </h3>
-              <p className="text-3xl font-extrabold text-[#1A1A1A]">
+              <p className="text-3xl font-semibold text-[#1A1A1A]">
                 {reportInfo.aiConfidence != null ? `${reportInfo.aiConfidence}%` : "—"}
-                <span className="ml-2 text-xs font-bold uppercase text-gray-500">checklist items passed</span>
+                <span className="ml-2 text-xs font-medium uppercase text-gray-500">checklist items passed</span>
               </p>
             </section>
 
             {/* Approval / Rejection Section */}
-            <section className="relative pt-8 pb-12 border-t-2 border-[#1A1A1A] flex flex-col gap-8">
+            <section className="relative pt-8 pb-12 border-t border-gray-200 flex flex-col gap-8">
 
               {/* Approved/Rejected/Pending Stamp Watermark */}
               <div
-                className={`absolute right-20 top-2 p-4 text-center border-8 select-none tracking-widest font-black uppercase rounded-lg ${reportInfo.status === "rejected"
+                className={`absolute right-20 top-2 p-4 text-center border select-none tracking-widest font-semibold uppercase rounded-lg ${reportInfo.status === "rejected"
                   ? "border-red-600 text-red-600 rotate-[15deg] opacity-15"
                   : reportInfo.status === "approved"
                     ? "border-green-600 text-green-600 -rotate-[15deg] opacity-15"
@@ -504,8 +504,8 @@ function ReportPreviewContent() {
               <div className="space-y-6">
                 {reportInfo.supervisorNotes && (
                   <div className="flex flex-col max-w-2xl">
-                    <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Supervisor Review Notes</p>
-                    <p className="text-xs italic bg-black/5 p-3 rounded-lg border border-black mt-2 font-medium">
+                    <p className="text-[10px] font-label-sm uppercase opacity-60 font-medium">Supervisor Review Notes</p>
+                    <p className="text-xs italic bg-black/5 p-3 rounded-lg border border-gray-200 mt-2 font-medium">
                       "{reportInfo.supervisorNotes}"
                     </p>
                   </div>
@@ -515,8 +515,8 @@ function ReportPreviewContent() {
               {/* Dynamic Double Signatures Section */}
               <div className="grid grid-cols-2 gap-12 mt-6">
                 {/* Vendor Signature */}
-                <div className="flex flex-col items-center text-center p-4 border-2 border-dashed border-[#1A1A1A]/20 rounded-xl bg-gray-50/50">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold mb-4">Vendor Signature</p>
+                <div className="flex flex-col items-center text-center p-4 border-dashed border-[#1A1A1A]/20 rounded-xl bg-gray-50/50">
+                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-medium mb-4">Vendor Signature</p>
                   <div className="h-20 flex items-center justify-center mb-2">
                     {reportInfo.vendorSignature?.startsWith("data:image") ? (
                       <img
@@ -525,22 +525,22 @@ function ReportPreviewContent() {
                         className="max-h-16 max-w-[180px] object-contain"
                       />
                     ) : reportInfo.vendorSignature ? (
-                      <span className="font-serif italic text-lg text-[#1D4ED8] tracking-widest border-b-2 border-double border-[#1D4ED8] px-4 py-1">
+                      <span className="font-serif italic text-lg text-[#1D4ED8] tracking-widest border-b border-double border-[#1D4ED8] px-4 py-1">
                         {reportInfo.vendorSignature.replace("digital:", "")}
                       </span>
                     ) : (
                       <span className="text-[10px] font-mono opacity-40 uppercase">No signature capture</span>
                     )}
                   </div>
-                  <p className="text-xs font-black uppercase text-[#1A1A1A] border-t border-[#1A1A1A] pt-1 w-48">
+                  <p className="text-xs font-semibold uppercase text-[#1A1A1A] border-t border-gray-200 pt-1 w-48">
                     {reportInfo.techName}
                   </p>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase mt-0.5">Authorized Operator</p>
+                  <p className="text-[9px] font-medium text-gray-400 uppercase mt-0.5">Authorized Operator</p>
                 </div>
 
                 {/* Supervisor Signature */}
-                <div className="flex flex-col items-center text-center p-4 border-2 border-dashed border-[#1A1A1A]/20 rounded-xl bg-gray-50/50">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold mb-4">Supervisor Signature</p>
+                <div className="flex flex-col items-center text-center p-4 border-dashed border-[#1A1A1A]/20 rounded-xl bg-gray-50/50">
+                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-medium mb-4">Supervisor Signature</p>
                   <div className="h-20 flex items-center justify-center mb-2">
                     {reportInfo.supervisorSignature?.startsWith("data:image") ? (
                       <img
@@ -549,24 +549,24 @@ function ReportPreviewContent() {
                         className="max-h-16 max-w-[180px] object-contain"
                       />
                     ) : reportInfo.supervisorSignature ? (
-                      <span className="font-serif italic text-lg text-[#1D4ED8] tracking-widest border-b-2 border-double border-[#1D4ED8] px-4 py-1">
+                      <span className="font-serif italic text-lg text-[#1D4ED8] tracking-widest border-b border-double border-[#1D4ED8] px-4 py-1">
                         {reportInfo.supervisorSignature.replace("digital:", "")}
                       </span>
                     ) : (
                       <span className="text-[10px] font-mono opacity-40 uppercase">No signature capture</span>
                     )}
                   </div>
-                  <p className="text-xs font-black uppercase text-[#1A1A1A] border-t border-[#1A1A1A] pt-1 w-48">
+                  <p className="text-xs font-semibold uppercase text-[#1A1A1A] border-t border-gray-200 pt-1 w-48">
                     {reportInfo.supervisorName}
                   </p>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase mt-0.5">Lead Auditor / Inspector</p>
+                  <p className="text-[9px] font-medium text-gray-400 uppercase mt-0.5">Lead Auditor / Inspector</p>
                 </div>
               </div>
             </section>
           </div>
 
-          <footer className="bg-gray-100 py-3 text-center border-t border-[#1A1A1A] mt-auto">
-            <p className="text-[9px] font-label-sm uppercase tracking-widest text-[#1A1A1A] opacity-60 italic font-black">
+          <footer className="bg-gray-100 py-3 text-center border-t border-gray-200 mt-auto">
+            <p className="text-[9px] font-label-sm uppercase tracking-widest text-[#1A1A1A] opacity-60 italic font-semibold">
               Generated by Maintain
             </p>
           </footer>
@@ -576,12 +576,12 @@ function ReportPreviewContent() {
         <div className="no-print max-w-[850px] w-full shrink-0">
           <button
             onClick={handlePrint}
-            className="w-full bg-[#D32F2F] text-white py-5 rounded-xl border-2 border-[#1A1A1A] font-headline-md text-base font-extrabold uppercase tracking-widest hover:bg-black hover:text-white transition-all flex items-center justify-center gap-4 cursor-pointer active:scale-[0.98] group"
+            className="w-full bg-[#D32F2F] text-white py-5 rounded-xl border border-gray-200 font-headline-md text-base font-semibold uppercase tracking-widest hover:bg-black hover:text-white transition-all flex items-center justify-center gap-4 cursor-pointer active:scale-[0.98] group"
           >
             <span className="material-symbols-outlined text-2xl">download</span>
             ↓ Download PDF Report ↓
           </button>
-          <p className="text-center mt-6 text-[#1A1A1A] text-[10px] uppercase font-bold tracking-wider opacity-70">
+          <p className="text-center mt-6 text-[#1A1A1A] text-[10px] uppercase font-medium tracking-wider opacity-70">
             Document verified by supervisor.
           </p>
         </div>
@@ -592,7 +592,7 @@ function ReportPreviewContent() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border-2 shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${t.type === "success" ? "border-green-700" : t.type === "error" ? "border-primary" : "border-blue-700"
+            className={`pointer-events-auto flex items-center gap-4 bg-[#1A1A1A] text-white px-8 py-4 rounded-lg border shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${t.type === "success" ? "border-green-700" : t.type === "error" ? "border-primary" : "border-blue-700"
               }`}
           >
             <span
@@ -601,7 +601,7 @@ function ReportPreviewContent() {
             >
               {t.type === "success" ? "check_circle" : t.type === "error" ? "cancel" : "info"}
             </span>
-            <span className="font-black uppercase tracking-widest text-xs">{t.message}</span>
+            <span className="font-semibold uppercase tracking-widest text-xs">{t.message}</span>
           </div>
         ))}
       </div>
@@ -612,8 +612,8 @@ function ReportPreviewContent() {
 export default function ReportPreviewPage() {
   return (
     <Suspense fallback={
-      <div className="flex h-screen items-center justify-center bg-white text-[#1A1A1A] font-bold uppercase tracking-widest gap-3">
-        <span className="w-5 h-5 rounded-full border-4 border-t-transparent border-[#D32F2F] animate-spin inline-block"></span>
+      <div className="flex h-screen items-center justify-center bg-page text-[#1A1A1A] font-medium uppercase tracking-widest gap-3">
+        <span className="w-5 h-5 rounded-full border-2 border-t-transparent border-[#D32F2F] animate-spin inline-block"></span>
         Loading Report Print System...
       </div>
     }>

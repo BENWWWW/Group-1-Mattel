@@ -269,7 +269,7 @@ export default function ReportsPage() {
     };
     const dot: Record<string, string> = { approved: "bg-green-600", submitted: "bg-amber-500", rejected: "bg-red-600" };
     return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-bold text-xs border-[1.5px] border-[#1A1A1A] ${map[status]||"bg-gray-100 text-gray-700 border-gray-300"}`}>
+      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-medium text-xs border-[1.5px] border-gray-200 ${map[status]||"bg-gray-100 text-gray-700 border-gray-300"}`}>
         <span className={`w-1.5 h-1.5 rounded-full ${dot[status]||"bg-gray-400"}`}/>
         {status.charAt(0).toUpperCase()+status.slice(1)}
       </span>
@@ -277,24 +277,24 @@ export default function ReportsPage() {
   };
 
   const getScoreColor = (score: number | null) => {
-    if (score === null) return "text-gray-400 font-bold";
-    if (score >= 90) return "text-green-700 font-extrabold";
-    if (score >= 70) return "text-amber-600 font-extrabold";
-    return "text-[#D32F2F] font-extrabold";
+    if (score === null) return "text-gray-400 font-medium";
+    if (score >= 90) return "text-green-700 font-semibold";
+    if (score >= 70) return "text-amber-600 font-semibold";
+    return "text-[#D32F2F] font-semibold";
   };
 
   return (
     <div className="flex h-screen w-full bg-[#fff8f7] text-[#1A1A1A] font-body-md overflow-hidden">
       <main className="lg:ml-[220px] w-full lg:w-[calc(100%-220px)] h-screen flex flex-col overflow-hidden bg-[#fff8f7] relative pb-24 lg:pb-0">
         {/* TopNavBar */}
-        <header className="min-h-20 bg-[#fff8f7] border-b-2 border-[#1A1A1A] flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 sticky top-0 z-40">
+        <header className="min-h-20 bg-[#fff8f7] border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 sticky top-0 z-40">
           <div>
-            <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">Reports</h2>
-            <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase font-bold">PM Submission &amp; Audit Trail</p>
+            <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight">Reports</h2>
+            <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase font-medium">PM Submission &amp; Audit Trail</p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-[#1A1A1A] w-full sm:w-auto">
-            <span className="material-symbols-outlined text-[#D32F2F] text-xl">search</span>
-            <input type="text" value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search reports..." className="bg-transparent border-none focus:ring-0 text-xs w-full sm:w-48 outline-none font-bold uppercase"/>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-200 w-full sm:w-auto">
+            <span className="material-symbols-outlined text-gray-400 text-xl">search</span>
+            <input type="text" value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search reports..." className="bg-transparent border-none focus:ring-0 text-xs w-full sm:w-48 outline-none font-medium uppercase"/>
           </div>
         </header>
 
@@ -303,28 +303,28 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
             {[
               { label: "Total Reports", value: stats.total, icon: "description", color: "text-[#D32F2F]" },
-              { label: "Approved", value: stats.approved, icon: "check_circle", color: "text-green-600", accent: "border-l-8 border-l-green-600" },
-              { label: "Pending", value: stats.pending, icon: "hourglass_empty", color: "text-amber-500", accent: "border-l-8 border-l-amber-500" },
-              { label: "Rejected", value: stats.rejected, icon: "cancel", color: "text-[#D32F2F]", accent: "border-l-8 border-l-[#D32F2F]" },
+              { label: "Approved", value: stats.approved, icon: "check_circle", color: "text-green-600", accent: "" },
+              { label: "Pending", value: stats.pending, icon: "hourglass_empty", color: "text-amber-500", accent: "" },
+              { label: "Rejected", value: stats.rejected, icon: "cancel", color: "text-[#D32F2F]", accent: "" },
             ].map(card => (
-              <div key={card.label} className={`bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A] flex flex-col justify-between ${card.accent||""}`}>
+              <div key={card.label} className={`bg-white p-6 rounded-[20px] border border-gray-200 flex flex-col justify-between ${card.accent||""}`}>
                 <div className="flex justify-between items-start">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{card.label}</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{card.label}</span>
                   <span className={`material-symbols-outlined ${card.color}`}>{card.icon}</span>
                 </div>
                 <div className="mt-4">
-                  {isLoading ? <div className="h-12 w-16 bg-gray-100 rounded animate-pulse"/> : <p className="text-5xl font-extrabold text-[#D32F2F] tracking-tighter">{card.value.toLocaleString()}</p>}
+                  {isLoading ? <div className="h-12 w-16 bg-gray-100 rounded animate-pulse"/> : <p className="text-5xl font-semibold text-gray-900 tracking-tighter">{card.value.toLocaleString()}</p>}
                 </div>
               </div>
             ))}
           </div>
 
           {/* Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 bg-white p-6 rounded-[20px] border-2 border-[#1A1A1A]">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 bg-white p-6 rounded-[20px] shadow-sm">
             <div className="flex gap-4 flex-wrap">
               <div className="flex-1 min-w-[200px]">
-                <label className="block text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Status Filter</label>
-                <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} className="w-full px-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm outline-none appearance-none bg-white cursor-pointer">
+                <label className="block text-xs font-medium mb-2 uppercase opacity-60 tracking-wider">Status Filter</label>
+                <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} className="w-full px-4 py-3 rounded-[20px] border border-gray-200 font-medium text-sm outline-none appearance-none bg-white cursor-pointer">
                   <option value="any">Any Status</option>
                   <option value="approved">Approved</option>
                   <option value="submitted">Submitted (Pending)</option>
@@ -337,11 +337,11 @@ export default function ReportsPage() {
               <button
                 onClick={handleDownloadCSV}
                 disabled={isExportingCSV}
-                className="px-6 py-3 rounded-full border-2 border-[#1A1A1A] bg-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="px-6 py-3 rounded-full border border-gray-200 bg-white font-medium text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isExportingCSV ? (
                   <>
-                    <span className="w-4 h-4 border-2 border-[#1A1A1A] border-t-transparent rounded-full animate-spin"/>
+                    <span className="w-4 h-4 border-2 border-gray-200 border-t-transparent rounded-full animate-spin"/>
                     Exporting...
                   </>
                 ) : (
@@ -355,28 +355,28 @@ export default function ReportsPage() {
           </div>
 
           {/* Table */}
-          <div className="border-2 border-[#1A1A1A] rounded-[20px] overflow-hidden bg-white overflow-x-auto">
+          <div className="border border-gray-200 rounded-[20px] overflow-hidden bg-white overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#1A1A1A] text-white uppercase text-xs tracking-wider">
                   {["Task Code","Asset","Location","Vendor","Supervisor","Date","AI Score","Status","Actions"].map(h=>(
-                    <th key={h} className="px-6 py-4 font-extrabold border-r border-white/10 last:border-r-0">{h}</th>
+                    <th key={h} className="px-6 py-4 font-semibold border-r border-white/10 last:border-r-0">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="text-sm font-bold uppercase">
+              <tbody className="text-sm font-medium uppercase">
                 {isLoading ? (
                   Array.from({length:5}).map((_,i)=>(
                     <tr key={i}><td colSpan={9} className="px-6 py-4"><div className="h-6 bg-gray-100 rounded animate-pulse"/></td></tr>
                   ))
                 ) : filteredReports.length === 0 ? (
-                  <tr><td colSpan={9} className="px-6 py-12 text-center text-gray-400 font-black">
+                  <tr><td colSpan={9} className="px-6 py-12 text-center text-gray-400 font-semibold">
                     <span className="material-symbols-outlined text-4xl block mb-2 opacity-30">description</span>
                     No reports found.
                   </td></tr>
                 ) : filteredReports.map(report => (
                   <tr key={report.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-black border-r border-b border-gray-100 text-[#D32F2F]">{report.report_code}</td>
+                    <td className="px-6 py-4 font-semibold border-r border-b border-gray-100 text-[#D32F2F]">{report.report_code}</td>
                     <td className="px-6 py-4 border-r border-b border-gray-100">{report.asset_name}</td>
                     <td className="px-6 py-4 border-r border-b border-gray-100 text-gray-500">{report.asset_location}</td>
                     <td className="px-6 py-4 border-r border-b border-gray-100">{report.vendor_name}</td>
@@ -393,7 +393,7 @@ export default function ReportsPage() {
                         {/* Download PDF — opens same report-preview used by vendor & supervisor */}
                         <button
                            onClick={() => handleDownloadPDF(report)}
-                          className="p-1.5 rounded-lg border border-[#1A1A1A] hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer"
+                          className="p-1.5 rounded-lg border border-gray-200 hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer"
                           title="Download PDF"
                         >
                           <span className="material-symbols-outlined text-base">picture_as_pdf</span>
@@ -408,18 +408,18 @@ export default function ReportsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <footer className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 lg:p-6 rounded-[20px] border-2 border-[#1A1A1A] gap-4">
-              <p className="text-xs font-bold text-gray-500 uppercase opacity-60">
+            <footer className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 lg:p-6 rounded-[20px] gap-4 shadow-sm">
+              <p className="text-xs font-medium text-gray-500 uppercase opacity-60">
                 Showing {(currentPage-1)*PAGE_SIZE+1}–{Math.min(currentPage*PAGE_SIZE,totalCount)} of {totalCount.toLocaleString()} reports
               </p>
               <div className="flex items-center gap-2">
-                <button disabled={currentPage===1} onClick={()=>setCurrentPage(p=>p-1)} className="w-10 h-10 rounded-lg border-2 border-[#1A1A1A] flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-30 cursor-pointer">
+                <button disabled={currentPage===1} onClick={()=>setCurrentPage(p=>p-1)} className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-30 cursor-pointer">
                   <span className="material-symbols-outlined">chevron_left</span>
                 </button>
                 {Array.from({length:Math.min(5,totalPages)},(_,i)=>i+1).map(page=>(
-                  <button key={page} onClick={()=>setCurrentPage(page)} className={`w-10 h-10 rounded-lg font-bold text-xs transition-all cursor-pointer ${currentPage===page?"bg-[#D32F2F] text-white border-2 border-[#D32F2F]":"border-2 border-[#1A1A1A] hover:bg-gray-50"}`}>{page}</button>
+                  <button key={page} onClick={()=>setCurrentPage(page)} className={`w-10 h-10 rounded-lg font-medium text-xs transition-all cursor-pointer ${currentPage===page?"bg-[#D32F2F] text-white border border-[#D32F2F]":"border border-gray-200 hover:bg-gray-50"}`}>{page}</button>
                 ))}
-                <button disabled={currentPage===totalPages} onClick={()=>setCurrentPage(p=>p+1)} className="w-10 h-10 rounded-lg border-2 border-[#1A1A1A] flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-30 cursor-pointer">
+                <button disabled={currentPage===totalPages} onClick={()=>setCurrentPage(p=>p+1)} className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-30 cursor-pointer">
                   <span className="material-symbols-outlined">chevron_right</span>
                 </button>
               </div>
@@ -430,11 +430,11 @@ export default function ReportsPage() {
         {/* Toasts */}
         <div className="fixed top-6 right-6 z-[100] flex flex-col items-end gap-2 pointer-events-none">
           {toasts.map(toast=>(
-            <div key={toast.id} className="pointer-events-auto bg-[#1a1c1c] text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 border-2 border-[#D32F2F] animate-in fade-in slide-in-from-top-5 duration-300">
+            <div key={toast.id} className="pointer-events-auto bg-[#1a1c1c] text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 border border-[#D32F2F] animate-in fade-in slide-in-from-top-5 duration-300">
               <span className={`material-symbols-outlined text-sm ${toast.type==="success"?"text-green-400":toast.type==="error"?"text-[#D32F2F]":"text-blue-400"}`}>
                 {toast.type==="success"?"check_circle":toast.type==="error"?"error":"info"}
               </span>
-              <span className="font-bold text-xs uppercase tracking-wider">{toast.message}</span>
+              <span className="font-medium text-xs uppercase tracking-wider">{toast.message}</span>
             </div>
           ))}
         </div>

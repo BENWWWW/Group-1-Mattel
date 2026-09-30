@@ -38,7 +38,7 @@ export default function BottomNavBar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white border-t-2 border-[#1A1A1A] flex items-center justify-around z-[100] lg:hidden shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+    <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white border-t border-gray-200 flex items-center justify-around z-[100] lg:hidden shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
       {navItems.map((item) => {
         const isActive = checkActive(item.path);
         return (
@@ -60,7 +60,7 @@ export default function BottomNavBar() {
                 >
                   {item.icon}
                 </span>
-                <span className="text-[8px] font-black uppercase tracking-wider leading-none">
+                <span className="text-[8px] font-semibold uppercase tracking-wider leading-none">
                   {item.name}
                 </span>
               </div>
