@@ -14,7 +14,7 @@ interface FlaggedItem {
   issueColor: string;
   subColor: string;
   icon: string;
-  confidence: number;
+  confidence: number | null;
   location: string;
   assetId: string;
   date: string;
@@ -64,10 +64,8 @@ function AIVerificationScoreContent() {
   }, []);
 
   // Stats State
-  const [totalCount, setTotalCount] = useState(0);
-  const [validCount, setValidCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
-  const [confidence, setConfidence] = useState(95);
+  const [confidence, setConfidence] = useState(0);
 
   // Selected item for the review drawer panel
   const [selectedItem, setSelectedItem] = useState<FlaggedItem | null>(null);
@@ -256,15 +254,15 @@ function AIVerificationScoreContent() {
                 title: `${t.assets?.name || "PM Task"} - ${item.title || "Checklist"}`,
                 issueType: !item.requireImage
                   ? (item.status === "Error" ? "Failed Inspection" : "Not Checked")
-                  : item.status === "Error" ? "Image Clarity Failure" : item.status === "Awaiting" ? "Missing Photo Evidence" : "Low Confidence (64)",
+                  : item.status === "Error" ? "Image Clarity Failure" : item.status === "Awaiting" ? "Missing Photo Evidence" : "AI Check Pending",
                 issueColor: item.status === "Error" ? "bg-[#D32F2F]" : "bg-[#1A1A1A]",
                 subColor: item.status === "Error" ? "text-[#D32F2F]" : "text-[#1A1A1A]",
                 icon: item.status === "Error" ? "image_not_supported" : "warning",
-                confidence: 64,
-                location: t.assets?.location || "Central Wing",
-                assetId: t.assets?.asset_code || "SN-NOMINAL",
+                confidence: item.aiConfidence ?? null,
+                location: t.assets?.location || "—",
+                assetId: t.assets?.asset_code || "—",
                 date: t.due_date ? new Date(t.due_date).toLocaleDateString() : "N/A",
-                explanation: item.errorMessage || "Verification scan requires high definition photographic confirmation of repair adjustments.",
+                explanation: item.errorMessage || "No details provided.",
                 hasPhoto: !!item.image,
                 photoUrl: item.image || undefined,
                 notes: item.notes || ""
@@ -275,12 +273,10 @@ function AIVerificationScoreContent() {
       });
 
       setFlaggedItems(itemsList);
-      setTotalCount(totalChkCount || 10);
-      setValidCount(validChkCount || 8);
       setReviewCount(itemsList.length);
 
       // Compute aggregate confidence
-      const calcConfidence = totalChkCount > 0 ? Math.round((validChkCount / totalChkCount) * 100) : 95;
+      const calcConfidence = totalChkCount > 0 ? Math.round((validChkCount / totalChkCount) * 100) : 0;
       setConfidence(calcConfidence);
 
     } catch (e: any) {
@@ -490,8 +486,7 @@ function AIVerificationScoreContent() {
               .insert({
                 task_id: t.id,
                 submitted_by: currentUser.id,
-                findings: t.description || "Resolved anomalies. Precision score nominal.",
-                recommendations: "Nominal operational rating status verified. Maintenance cycle repeated per standard schedules.",
+                findings: t.description || null,
                 status: "submitted",
                 ai_confidence_score: confidence,
                 photos_urls: photosArray,
@@ -521,9 +516,6 @@ function AIVerificationScoreContent() {
     }
   };
 
-  // Circular progress calculations (Radius = 110, strokeDasharray = 691)
-  const offset = 691 - (691 * confidence) / 100;
-
   const avatarSrc = currentUser?.avatar_url ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || "V")}&background=D32F2F&color=fff&size=200`;
 
@@ -532,7 +524,7 @@ function AIVerificationScoreContent() {
       <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D32F2F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Processing AI Telemetry...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading...</p>
         </div>
       </div>
     );
@@ -586,7 +578,7 @@ function AIVerificationScoreContent() {
         <div className="px-4 mt-auto border-t border-white/20 pt-4 pb-2">
           <button
             onClick={async () => {
-              triggerToast("CLOSING VENDOR TERMINAL...", "info");
+              triggerToast("Logging out...", "info");
               await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
@@ -608,7 +600,7 @@ function AIVerificationScoreContent() {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Apex Services"}</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Vendor"}</p>
               <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
@@ -627,7 +619,7 @@ function AIVerificationScoreContent() {
               <span className="material-symbols-outlined text-[#1A1A1A]">arrow_back</span>
             </button>
             <h2 className="font-headline-md text-xl text-[#1A1A1A] font-extrabold uppercase tracking-tight">
-              AI Verification Score
+              Review & Sign
             </h2>
           </div>
         </header>
@@ -859,16 +851,12 @@ function AIVerificationScoreContent() {
                     </span>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-white/50 mb-1">AI Result</p>
-                    <p className="font-bold text-xs text-primary">Low Confidence</p>
-                  </div>
-                  <div>
                     <p className="text-[9px] uppercase font-bold text-white/50 mb-1">Issue Type</p>
                     <p className="font-bold text-xs">{selectedItem.issueType}</p>
                   </div>
                   <div>
                     <p className="text-[9px] uppercase font-bold text-white/50 mb-1">AI Score</p>
-                    <p className="text-xl font-black text-primary">{selectedItem.confidence}</p>
+                    <p className="text-xl font-black text-primary">{selectedItem.confidence ?? "—"}</p>
                   </div>
                 </div>
               </section>
@@ -876,7 +864,7 @@ function AIVerificationScoreContent() {
               {/* AI Explanation Text */}
               <section className="space-y-2">
                 <h3 className="text-[10px] text-[#1A1A1A]/60 uppercase font-black tracking-widest">
-                  AI Explanation
+                  Details
                 </h3>
                 <p className="text-xs font-bold leading-relaxed text-[#1A1A1A] bg-primary/5 p-4 border-l-4 border-primary rounded-r">
                   {selectedItem.explanation}

@@ -77,7 +77,7 @@ export default function VendorProfilePage() {
       setCurrentUser(profile);
       setFullName(profile.full_name || "");
       setDepartment(profile.department || "Electrical & HVAC Operations");
-      setCompany(profile.company || "Apex Services Ltd.");
+      setCompany(profile.company || "");
       setFacility(profile.facility || "Factory Complex - All Wings");
       setEmail(user.email || "");
       setPhone(profile.phone || "");
@@ -319,7 +319,7 @@ export default function VendorProfilePage() {
 
   // Run Logout simulation
   const handleLogout = async () => {
-    triggerToast("CLOSING VENDOR TERMINAL...", "info");
+    triggerToast("Logging out...", "info");
     await supabase.auth.signOut();
     setTimeout(() => {
       router.push("/");
@@ -424,7 +424,7 @@ export default function VendorProfilePage() {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{fullName || "Apex Services"}</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{fullName || "Vendor"}</p>
               <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>

@@ -21,14 +21,6 @@ interface ChecklistItem {
   subtasks?: any[];
 }
 
-interface POI {
-  poi: string;
-  name: string;
-  confidence: number;
-  status: "OPTIMAL" | "WARNING" | "CRITICAL";
-  details: string;
-}
-
 interface AuditLog {
   time: string;
   message: string;
@@ -47,7 +39,6 @@ interface Task {
   status: "pending" | "in_progress" | "submitted" | "approved" | "rejected";
   priority: "low" | "medium" | "high" | "critical";
   checklist: ChecklistItem[];
-  aiAnalysis: POI[];
   auditLog: AuditLog[];
   supervisorNotes?: string;
   techNotes?: string;
@@ -213,18 +204,6 @@ export default function ReviewDetailPage() {
           subtasks: Array.isArray(c.subtasks) ? c.subtasks : []
         }));
 
-        // Dummy POIs for AI Analysis visual layout based on score
-        const confidence = report?.ai_confidence_score || 85;
-        const aiAnalysis: POI[] = [
-          {
-            poi: "POI-1",
-            name: "Vibration Signature",
-            confidence: confidence,
-            status: confidence > 80 ? "OPTIMAL" : confidence > 60 ? "WARNING" : "CRITICAL",
-            details: `MATCH: ${confidence}%`
-          }
-        ];
-
         // Audit Logs list
         const auditLog: AuditLog[] = [
           { time: new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), message: "Task initialized in scheduler." }
@@ -252,7 +231,6 @@ export default function ReviewDetailPage() {
           status: t.status,
           priority: t.priority,
           checklist: checklistItems,
-          aiAnalysis: aiAnalysis,
           auditLog: auditLog,
           supervisorNotes: report?.review_notes || "",
           techNotes: report?.findings || "",
@@ -916,8 +894,8 @@ export default function ReviewDetailPage() {
                   {selectedTask.aiConfidenceScore !== undefined && (
                     <div className="bg-amber-50 border-2 border-[#1A1A1A] rounded-xl p-4 flex items-center justify-between">
                       <div>
-                        <p className="text-[9px] font-black uppercase text-amber-800">AI Confidence Score</p>
-                        <p className="text-xs text-gray-600 font-medium">System validation for model reliability</p>
+                        <p className="text-[9px] font-black uppercase text-amber-800">Checklist Items Passed</p>
+                        <p className="text-xs text-gray-600 font-medium">Share of checklist items marked pass</p>
                       </div>
                       <div className="text-right">
                         <span className="font-black text-2xl text-amber-700">{selectedTask.aiConfidenceScore}%</span>

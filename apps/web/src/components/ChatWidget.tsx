@@ -941,7 +941,7 @@ export default function ChatWidget() {
           {isOpen ? "close" : "forum"}
         </span>
         {!isOpen && unreadMessages.length > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[24px] h-[24px] px-1.5 bg-[#D32F2F] border-2 border-[#1A1A1A] text-white font-extrabold text-[10px] rounded-full flex items-center justify-center animate-bounce shadow-md pointer-events-none">
+          <span className="absolute -top-1 -right-1 min-w-[24px] h-[24px] px-1.5 bg-[#D32F2F] border-2 border-[#1A1A1A] text-white font-extrabold text-[10px] rounded-full flex items-center justify-center pointer-events-none">
             {unreadMessages.length}
           </span>
         )}
@@ -1014,7 +1014,7 @@ export default function ChatWidget() {
                     <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">forum</span>
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">No Messages Yet</span>
                     <p className="text-[9px] text-gray-400 mt-1 max-w-[180px] font-medium leading-relaxed">
-                      Type a message below to start a secure conversation.
+                      Type a message below to start a conversation.
                     </p>
                   </div>
                 ) : (
@@ -1378,7 +1378,7 @@ export default function ChatWidget() {
                 ) : /\.(docx?|xlsx?|pptx?)/i.test(viewerName) ? (
                   viewerOriginalUrl.includes("localhost") || viewerOriginalUrl.includes("127.0.0.1") ? (
                     <div className="text-center p-8 space-y-4 animate-in fade-in duration-300">
-                      <span className="material-symbols-outlined text-5xl text-[#D32F2F] animate-bounce">warning</span>
+                      <span className="material-symbols-outlined text-5xl text-[#D32F2F]">warning</span>
                       <h4 className="text-xs font-black text-black uppercase">Office Preview Disabled (Local Host)</h4>
                       <p className="text-[10px] text-gray-500 max-w-sm mx-auto leading-relaxed font-bold">
                         In local development, Google Docs Viewer cannot access local files.

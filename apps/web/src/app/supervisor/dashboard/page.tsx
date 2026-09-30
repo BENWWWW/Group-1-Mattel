@@ -490,7 +490,7 @@ export default function ReviewQueuePage() {
       <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] pb-20 lg:pb-0">
         <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10">
 
-          {/* Section Header with Global Period Selector & Live Sync Indicator */}
+          {/* Section Header with Global Period Selector */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-gray-100">
             <div>
               <div className="flex items-center gap-2">
@@ -499,7 +499,7 @@ export default function ReviewQueuePage() {
                 </h3>
               </div>
               <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-0.5">
-                Realtime supervisor review queue &amp; quality metrics synchronized for {stats.monthShort} {selectedYear}
+                {stats.monthShort} {selectedYear}
               </p>
             </div>
 
@@ -624,12 +624,6 @@ export default function ReviewQueuePage() {
                   </>
                 )}
               </div>
-
-              {/* Glowing Live Realtime Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border-2 border-green-600 rounded-full text-green-800 text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_0px_#166534] self-start sm:self-auto">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                <span>Live • Auto Data Sync</span>
-              </div>
             </div>
           </div>
 
@@ -641,16 +635,12 @@ export default function ReviewQueuePage() {
                 value: stats.pending,
                 icon: "rate_review",
                 delta: `${stats.pendingInCycle} submitted in ${stats.monthShort} • Awaiting inspection signoff`,
-                badge: "Review Queue",
-                badgeColor: "text-amber-700 bg-amber-50 border-amber-300",
               },
               {
                 label: "Supervised PMs",
                 value: stats.supervisedInCycle,
                 icon: "assignment",
                 delta: `${stats.approvedInCycle} approved • Total ${stats.supervisedAllTime} all-time`,
-                badge: `${stats.monthShort} ${selectedYear}`,
-                badgeColor: "text-blue-700 bg-blue-50 border-blue-300",
               },
               {
                 label: "Approved & Verified",
@@ -659,8 +649,6 @@ export default function ReviewQueuePage() {
                 delta: stats.approvedInCycle > 0
                   ? `${stats.passRateInCycle}% first-time pass rate in ${stats.monthShort}`
                   : `0% pass rate • No reports verified yet in ${stats.monthShort}`,
-                badge: "Verified Done",
-                badgeColor: "text-green-700 bg-green-50 border-green-300",
               },
               {
                 label: "Requires Action",
@@ -669,8 +657,6 @@ export default function ReviewQueuePage() {
                 delta: stats.needActionInCycle > 0 
                   ? `${stats.needActionInCycle} in ${stats.monthShort} cycle • Immediate inspection`
                   : "Rejected reports or SLA overdue tasks",
-                badge: "Immediate Action",
-                badgeColor: "text-red-700 bg-red-50 border-red-300",
               },
             ].map((stat) => (
               <div
@@ -681,10 +667,6 @@ export default function ReviewQueuePage() {
                   <div>
                     <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider block">
                       {stat.label}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase border px-2 py-0.5 rounded-full mt-1 ${stat.badgeColor}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                      {stat.badge}
                     </span>
                   </div>
                   <span className="material-symbols-outlined text-[#D32F2F] group-hover:scale-110 transition-transform">

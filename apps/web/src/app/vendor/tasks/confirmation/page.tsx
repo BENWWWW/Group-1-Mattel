@@ -151,19 +151,7 @@ function ConfirmationContent() {
 
   return (
     <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md select-none relative overflow-hidden">
-      {/* CSS Animations style tag */}
       <style jsx global>{`
-        @keyframes orbit-spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        .orbit-spin-class {
-          animation: orbit-spin 10s linear infinite;
-        }
         * {
           box-shadow: none !important;
         }
@@ -214,7 +202,7 @@ function ConfirmationContent() {
         <div className="px-4 mt-auto border-t border-white/20 pt-4 pb-2">
           <button
             onClick={async () => {
-              triggerToast("CLOSING VENDOR TERMINAL...", "info");
+              triggerToast("Logging out...", "info");
               await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
@@ -236,7 +224,7 @@ function ConfirmationContent() {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Apex Services"}</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Vendor"}</p>
               <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
@@ -258,58 +246,40 @@ function ConfirmationContent() {
         <div className="min-h-[calc(100vh-80px)] flex flex-col justify-center items-center p-4 sm:p-12">
           {/* Success Confirmation Card */}
           <div className="relative z-10 w-full max-w-3xl bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 sm:p-12 flex flex-col items-center text-center">
-            {/* Animated Success Icon Container */}
-            <div className="mb-8 relative">
-              <div id="success-icon" className="w-32 h-32 rounded-full bg-primary flex items-center justify-center text-white">
-                <span className="material-symbols-outlined text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  check_circle
-                </span>
-              </div>
-              {/* Decorative Orbit (Flat Industrial) */}
-              <div className="absolute inset-0 -m-4 border-2 border-[#1A1A1A] rounded-full orbit-spin-class">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rounded-full"></div>
-              </div>
+            <div className="mb-8 w-24 h-24 rounded-full bg-primary flex items-center justify-center text-white">
+              <span className="material-symbols-outlined text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                check_circle
+              </span>
             </div>
 
             <h1 className="text-3xl text-[#1A1A1A] mb-2 uppercase font-extrabold tracking-tight">
-              PM Report Submitted!
+              PM Report Submitted
             </h1>
             <p className="text-sm font-medium text-[#1A1A1A]/80 max-w-lg mb-10 leading-relaxed">
-              Your preventive maintenance assessment for the regional industrial cluster has been successfully processed by the AI Core.
+              Your report has been sent to your supervisor for review.
             </p>
 
             {/* Submission Summary Card */}
             <div className="w-full bg-white border-2 border-[#1A1A1A] rounded-[20px] p-6 sm:p-8 mb-10 text-left grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
-              <div className="col-span-1 sm:col-span-2 pb-4 border-b-2 border-[#1A1A1A] flex justify-between items-center">
-                <span className="text-xs uppercase tracking-wider text-[#1A1A1A] font-bold">
-                  System Analysis
-                </span>
-                <div className="flex items-center gap-2 px-3 py-1 bg-white border-2 border-[#1A1A1A] rounded-full">
-                  <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#1A1A1A]">
-                    Status Verified
-                  </span>
-                </div>
-              </div>
               <div>
                 <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
-                  AI Precision Score
+                  Items Passed
                 </p>
                 <p className="text-2xl font-extrabold text-primary">
-                  {reportData?.ai_confidence_score !== undefined ? `${reportData.ai_confidence_score}/100` : "98/100"}
+                  {reportData?.ai_confidence_score != null ? `${reportData.ai_confidence_score}%` : "—"}
                 </p>
               </div>
               <div>
                 <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
-                  Asset Reference
+                  Asset
                 </p>
                 <p className="text-sm font-bold text-[#1A1A1A]">
-                  {taskData?.assets?.name || "HVAC Unit 4B"}
+                  {taskData?.assets?.name || "—"}
                 </p>
               </div>
               <div>
                 <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
-                  Process ID
+                  Task Code
                 </p>
                 <p className="text-sm font-bold text-[#1A1A1A]">
                   {taskData?.task_code || "N/A"}
@@ -317,7 +287,7 @@ function ConfirmationContent() {
               </div>
               <div>
                 <p className="text-[10px] text-[#1A1A1A] opacity-60 mb-1 uppercase font-bold">
-                  Timestamp
+                  Submitted At
                 </p>
                 <p className="text-sm font-bold text-[#1A1A1A]">{timestamp}</p>
               </div>
@@ -343,20 +313,6 @@ function ConfirmationContent() {
               >
                 Back to Dashboard
               </button>
-            </div>
-
-            {/* Verification Metadata */}
-            <div className="mt-8 pt-8 border-t-2 border-[#1A1A1A] w-full flex justify-center items-center gap-8 opacity-70">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">shield_with_heart</span>
-                <span className="text-[9px] font-bold uppercase tracking-widest">ISO 9001 Certified</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">lock</span>
-                <span className="text-[9px] font-bold uppercase tracking-widest">
-                  End-to-End Encrypted
-                </span>
-              </div>
             </div>
           </div>
         </div>

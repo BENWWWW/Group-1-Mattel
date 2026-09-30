@@ -86,7 +86,7 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    triggerToast("INITIALIZING SECURE SESSION...", "info");
+    triggerToast("Signing in...", "info");
 
     try {
       // 1. Look up the profile by employee_id to find role, registered email, and active status

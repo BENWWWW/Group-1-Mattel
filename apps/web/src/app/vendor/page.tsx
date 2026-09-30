@@ -19,7 +19,6 @@ interface Task {
   location: string;
   due: string;
   category: "Mechanical" | "Electrical" | "Safety" | "HVAC" | "Facilities";
-  confidence: "HIGH CONFIDENCE" | "MEDIUM CONFIDENCE" | "LOW CONFIDENCE";
   techs: string[];
   time: string;
   icon: string;
@@ -138,12 +137,6 @@ export default function VendorDashboardPage() {
 
       // Transform data
       const list: Task[] = (tasksData || []).map((t: any) => {
-        const reportsList = t.pm_reports;
-        const firstReport = Array.isArray(reportsList) && reportsList.length > 0 ? reportsList[0] : null;
-        const score = firstReport?.ai_confidence_score || 90;
-        let confStr: "HIGH CONFIDENCE" | "MEDIUM CONFIDENCE" | "LOW CONFIDENCE" = "HIGH CONFIDENCE";
-        if (score < 50) confStr = "LOW CONFIDENCE";
-        else if (score < 80) confStr = "MEDIUM CONFIDENCE";
 
         let statusStr: "Active" | "Pending" | "Completed" = "Active";
         if (t.status === "submitted") {
@@ -166,7 +159,6 @@ export default function VendorDashboardPage() {
           location: t.assets?.location || "Main Plant",
           due: t.due_date ? new Date(t.due_date).toLocaleDateString() : "No Due Date",
           category: categoryMapped,
-          confidence: confStr,
           techs: [profile?.full_name || "Vendor Tech"],
           time: new Date(t.created_at).toLocaleDateString(),
           icon: categoryMapped === "Electrical" ? "bolt" : categoryMapped === "HVAC" ? "air" : "settings"
@@ -371,7 +363,7 @@ export default function VendorDashboardPage() {
   }, []);
 
   const handleLogout = async () => {
-    triggerToast("CLOSING VENDOR TERMINAL...", "info");
+    triggerToast("Logging out...", "info");
     await supabase.auth.signOut();
     setTimeout(() => {
       router.push("/");
@@ -381,7 +373,7 @@ export default function VendorDashboardPage() {
   const awaitingStartTasks = tasks.filter(t => t.dbStatus === "pending");
 
   const avatarSrc = currentUser?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || "Apex Services")}&background=D32F2F&color=fff&size=200`;
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || "V")}&background=D32F2F&color=fff&size=200`;
 
   if (loading && tasks.length === 0) {
     return (
@@ -480,7 +472,7 @@ export default function VendorDashboardPage() {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Apex Services"}</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Vendor"}</p>
               <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
@@ -516,7 +508,7 @@ export default function VendorDashboardPage() {
       <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
         <div className="p-4 lg:p-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10">
 
-          {/* Section Header with Global Period Selector & Live Sync Indicator */}
+          {/* Section Header with Global Period Selector */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-gray-100">
             <div>
               <div className="flex items-center gap-2">
@@ -525,7 +517,7 @@ export default function VendorDashboardPage() {
                 </h3>
               </div>
               <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-0.5">
-                Live operational metrics &amp; assignment tracking from database
+                {stats.monthShort} {selectedYear}
               </p>
             </div>
 
@@ -650,12 +642,6 @@ export default function VendorDashboardPage() {
                   </>
                 )}
               </div>
-
-              {/* Glowing Live Realtime Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border-2 border-green-600 rounded-full text-green-800 text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_0px_#166534] self-start sm:self-auto">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                <span>Live • Auto Data Sync</span>
-              </div>
             </div>
           </div>
 
@@ -669,32 +655,24 @@ export default function VendorDashboardPage() {
                 delta: stats.activeCarryover > 0 
                   ? `${stats.activeInCycle} in ${stats.monthShort} • ${stats.activeCarryover} carryover`
                   : `${stats.awaitingStartCount} tasks awaiting start`,
-                badge: "Active Queue",
-                badgeColor: "text-green-700 bg-green-50 border-green-300",
               },
               {
                 label: "Pending Review",
                 value: stats.pendingCount,
                 icon: "schedule",
                 delta: `${stats.pendingInCycle} submitted in ${stats.monthShort}`,
-                badge: "Under Review",
-                badgeColor: "text-amber-700 bg-amber-50 border-amber-300",
               },
               {
                 label: "Completed Tasks",
                 value: stats.completedCount,
                 icon: "check_circle",
                 delta: `${stats.monthShort} done (${stats.completedAllTime} all-time)`,
-                badge: `${stats.monthShort} ${selectedYear}`,
-                badgeColor: "text-blue-700 bg-blue-50 border-blue-300",
               },
               {
                 label: "Compliance Score",
                 value: stats.complianceScore,
                 icon: "verified",
                 delta: `${stats.monthShort} rating (${stats.complianceScoreAllTime} all-time)`,
-                badge: "Quality Score",
-                badgeColor: "text-purple-700 bg-purple-50 border-purple-300",
               },
             ].map((stat) => (
               <div
@@ -705,10 +683,6 @@ export default function VendorDashboardPage() {
                   <div>
                     <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider block">
                       {stat.label}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase border px-2 py-0.5 rounded-full mt-1 ${stat.badgeColor}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                      {stat.badge}
                     </span>
                   </div>
                   <span className="material-symbols-outlined text-[#D32F2F] group-hover:scale-110 transition-transform">
@@ -783,7 +757,7 @@ export default function VendorDashboardPage() {
                       </div>
 
                       {task.priority === "High" && (
-                        <span className="text-[9px] font-extrabold uppercase px-2.5 py-0.5 bg-[#D32F2F] text-white rounded-[12px] border-none animate-pulse">
+                        <span className="text-[9px] font-extrabold uppercase px-2.5 py-0.5 bg-[#D32F2F] text-white rounded-[12px] border-none">
                           HIGH PRIORITY
                         </span>
                       )}

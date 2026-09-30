@@ -47,7 +47,6 @@ interface Task {
   due: string;
   date: string;
   location: string;
-  confidence: "HIGH CONFIDENCE" | "MEDIUM CONFIDENCE" | "LOW CONFIDENCE";
   time: string;
   techs: string[];
   checklist: ChecklistItem[];
@@ -95,8 +94,6 @@ export default function PMChecklistPage() {
   // Active checklist note
   const [techNotes, setTechNotes] = useState("");
 
-  // Simulated Time
-  const [timeStr, setTimeStr] = useState("14:22 PM");
 
   // Notification Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -362,12 +359,11 @@ export default function PMChecklistPage() {
           due: t.due_date ? new Date(t.due_date).toLocaleDateString() : "No Due Date",
           date: t.due_date ? t.due_date.substring(0, 10) : "",
           location: t.assets?.location || "Central Plant",
-          confidence: "HIGH CONFIDENCE",
           time: new Date(t.created_at).toLocaleDateString(),
           techs: [profile?.full_name || "Vendor Tech"],
           supervisor: supervisorName,
           assigned_supervisor_id: t.profiles?.id || undefined,
-          serialNumber: t.assets?.asset_code || "SN-NOMINAL-1002",
+          serialNumber: t.assets?.asset_code || undefined,
           checklist: checklistMapped,
           techNotes: t.description || "",
           adminNotes: t.notes || "",
@@ -417,16 +413,6 @@ export default function PMChecklistPage() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTimeStr(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true }));
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
@@ -812,7 +798,7 @@ export default function PMChecklistPage() {
 
 
   const handleLogout = async () => {
-    triggerToast("CLOSING VENDOR TERMINAL...", "info");
+    triggerToast("Logging out...", "info");
     await supabase.auth.signOut();
     setTimeout(() => {
       router.push("/");
@@ -973,7 +959,7 @@ export default function PMChecklistPage() {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Apex Services"}</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Vendor"}</p>
               <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
@@ -1143,9 +1129,6 @@ export default function PMChecklistPage() {
                                   Delete
                                 </button>
                               </div>
-                            )}
-                            {isProcessing && (
-                              <div className="scanning-line absolute top-0 left-0 w-full h-1.5 z-10 bg-[#D32F2F]"></div>
                             )}
                           </div>
                         ) : item.video ? (
@@ -1485,12 +1468,9 @@ export default function PMChecklistPage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <span className="material-symbols-outlined text-green-600 text-xl font-bold">verified_user</span>
-                      <p className="text-xs font-bold text-black uppercase tracking-wider">
-                        Digital Signature: OPERATOR #{currentUser?.id?.substring(0, 4).toUpperCase() || "702"} [Shift Verified]
-                      </p>
-                    </div>
+                    <p className="text-xs font-semibold text-gray-500">
+                      Next: review flagged items and sign the report.
+                    </p>
 
                     <button
                       onClick={handleSubmitReport}
@@ -1674,9 +1654,6 @@ export default function PMChecklistPage() {
                         <div className="flex flex-wrap gap-2">
                           <span className="border-2 border-[#D32F2F] text-[#D32F2F] px-3 py-0.5 rounded-full text-[9px] font-black tracking-widest uppercase">
                             {task.category}
-                          </span>
-                          <span className="bg-[#1A1A1A]/5 text-gray-500 border border-gray-300 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider">
-                            {task.confidence}
                           </span>
                         </div>
 

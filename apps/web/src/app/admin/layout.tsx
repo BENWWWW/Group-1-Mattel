@@ -61,7 +61,7 @@ export default function AdminLayout({
     { name: "Dashboard", path: "/admin/dashboard", icon: "dashboard" },
     { name: "Tasks", path: "/admin/tasks", icon: "assignment" },
     { name: "Assets", path: "/admin/assets", icon: "precision_manufacturing" },
-    { name: "PM Tools", path: "/admin/pm", icon: "settings_applications" },
+    { name: "PM Template", path: "/admin/pm", icon: "settings_applications" },
     { name: "Users", path: "/admin/users", icon: "group" },
     { name: "Reports", path: "/admin/reports", icon: "assessment" },
   ];

@@ -249,7 +249,7 @@ export default function NotificationBell() {
           notifications
         </span>
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-1 bg-[#D32F2F] border border-white text-white text-[9px] font-black rounded-full flex items-center justify-center animate-bounce shadow">
+          <span className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-1 bg-[#D32F2F] border border-white text-white text-[9px] font-black rounded-full flex items-center justify-center">
             {unreadCount}
           </span>
         )}
@@ -322,7 +322,7 @@ export default function NotificationBell() {
                       {notif.message}
                     </p>
                     {!notif.is_read && (
-                      <span className="inline-block w-2.5 h-2.5 bg-[#D32F2F] rounded-full mt-1.5 animate-pulse" />
+                      <span className="inline-block w-2.5 h-2.5 bg-[#D32F2F] rounded-full mt-1.5" />
                     )}
                   </div>
                 </button>

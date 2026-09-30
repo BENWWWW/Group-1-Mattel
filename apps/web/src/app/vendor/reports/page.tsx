@@ -19,7 +19,6 @@ interface Report {
   avatar_url: string;
   supervisor: string;
   supervisorId?: string;
-  audio_url: string;
   photos: string[];
 }
 
@@ -51,7 +50,6 @@ export default function VendorReportsPage() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   // Audio Playback simulation
-  const [isPlaying, setIsPlaying] = useState(false);
 
   // Notification Toasts
   const [toasts, setToasts] = useState<ToastType[]>([]);
@@ -131,14 +129,13 @@ export default function VendorReportsPage() {
           taskTitle: rep.pm_tasks?.assets?.name || "PM Checklist Verification",
           category: rep.pm_tasks?.assets?.category || "Mechanical",
           status: statusStr,
-          confidence: rep.ai_confidence_score || 95,
+          confidence: rep.ai_confidence_score ?? 0,
           date: rep.submitted_at ? new Date(rep.submitted_at).toLocaleDateString() : "N/A",
           findings: rep.findings || "No critical discrepancies logged.",
           recommendations: rep.recommendations || "Routine check schedule standard.",
           avatar_url: supervisorProfile?.avatar_url || "https://ui-avatars.com/api/?name=Supervisor&background=000&color=fff",
           supervisor: supervisorProfile?.full_name || "Lead Supervisor",
           supervisorId: rep.pm_tasks?.assigned_supervisor_id || undefined,
-          audio_url: "",
           photos: rep.photos_urls || []
         };
       });
@@ -208,15 +205,6 @@ export default function VendorReportsPage() {
 
   const handleCloseDrawer = () => {
     setIsPanelOpen(false);
-  };
-
-  const handlePlayAudio = () => {
-    setIsPlaying(true);
-    triggerToast("Playing audio summary log...", "info");
-    setTimeout(() => {
-      setIsPlaying(false);
-      triggerToast("Audio playback finished.", "success");
-    }, 4000);
   };
 
   const handleDownloadPDF = () => {
@@ -311,7 +299,7 @@ export default function VendorReportsPage() {
         <div className="px-4 mt-auto border-t border-white/10 pt-4 pb-2">
           <button
             onClick={async () => {
-              triggerToast("CLOSING VENDOR TERMINAL...", "info");
+              triggerToast("Logging out...", "info");
               await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
@@ -333,7 +321,7 @@ export default function VendorReportsPage() {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Apex Services"}</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Vendor"}</p>
               <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
@@ -349,7 +337,7 @@ export default function VendorReportsPage() {
               Task Reports
             </h2>
             <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
-              Archived Telemetry logs & Assessments
+              Past PM reports
             </p>
           </div>
         </header>
@@ -599,25 +587,6 @@ export default function VendorReportsPage() {
                   {selectedReport.recommendations}
                 </p>
               </div>
-
-              {/* Audio playback summary */}
-              {selectedReport.audio_url && (
-                <div className="bg-white border-2 border-[#1A1A1A] p-4 rounded-xl flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-[#D32F2F] text-3xl">mic</span>
-                    <div>
-                      <h4 className="text-xs font-black uppercase tracking-tight text-black">Voice Transcribe Summary</h4>
-                      <p className="text-[9px] font-semibold text-gray-500 uppercase">AI Audio Log Telemetry</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handlePlayAudio}
-                    className="px-4 py-2 border-2 border-black rounded-lg text-xs font-bold uppercase hover:bg-black hover:text-white transition-colors cursor-pointer bg-white text-black"
-                  >
-                    {isPlaying ? "Playing..." : "Play Summary"}
-                  </button>
-                </div>
-              )}
 
               {/* Photos Gallery */}
               {selectedReport.photos && selectedReport.photos.length > 0 && (

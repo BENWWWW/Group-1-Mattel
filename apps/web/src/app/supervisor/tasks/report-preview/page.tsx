@@ -22,7 +22,6 @@ interface ReportInfo {
   techNotes: string;
   adminNotes: string;
   date: string;
-  hash: string;
   taskCode: string;
   taskTitle: string;
   assetName: string;
@@ -30,7 +29,7 @@ interface ReportInfo {
   location: string;
   category: string;
   techName: string;
-  aiConfidence: number;
+  aiConfidence: number | null;
   checklist: ChecklistItem[];
   vendorSignature: string;
   supervisorSignature: string;
@@ -45,30 +44,7 @@ function ReportPreviewContent() {
   const supabase = createClient();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [reportInfo, setReportInfo] = useState<ReportInfo>({
-    status: "approved",
-    supervisorName: "Karl Heinz-Berger",
-    supervisorNotes: "Inspection approved under standard regulations.",
-    techNotes: "All systems calibrated successfully.",
-    adminNotes: "",
-    date: "25 OCT 2023",
-    hash: "SHA-256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    taskCode: "TASK-2023-AI",
-    taskTitle: "Turbine Alignment & Pressure Calibration",
-    assetName: "Turbine Assembly Gen-IV (T-800)",
-    assetCode: "T-800",
-    location: "Sector 7G - Power Plant",
-    category: "Mechanical",
-    techName: "Marcus Vance",
-    aiConfidence: 98,
-    checklist: [
-      { item_id: "1", label: "Hydraulic Pressure Calibration", checked: true, notes: "Optimal operating range maintained." },
-      { item_id: "2", label: "Lubrication Viscosity Test", checked: true, notes: "Sample clean, no metallic debris found." },
-      { item_id: "3", label: "Emergency Cut-off Verification", checked: true, notes: "Response time < 0.5s. All clear." }
-    ],
-    vendorSignature: "",
-    supervisorSignature: ""
-  });
+  const [reportInfo, setReportInfo] = useState<ReportInfo | null>(null);
 
   const [toasts, setToasts] = useState<{ id: string; message: string; type: string }[]>([]);
 
@@ -216,20 +192,13 @@ function ReportPreviewContent() {
             year: "numeric"
           }).toUpperCase();
 
-          // Generate dynamic deterministic hash based on report/task ID
-          const hashSeed = reportData?.id || taskData.id;
-          const reportHash = "SHA-256: " + Array.from({ length: 64 }, (_, i) =>
-            ((hashSeed.charCodeAt(i % hashSeed.length) * (i + 1)) % 16).toString(16)
-          ).join("");
-
           setReportInfo({
             status: (reportData?.status || taskData.status || "pending") as any,
             supervisorName: superName,
             supervisorNotes: reportData?.review_notes || "No notes filed by reviewer.",
-            techNotes: reportData?.findings || taskData.description || "Resolved anomalies. Precision score nominal.",
+            techNotes: reportData?.findings || taskData.description || "",
             adminNotes: taskData.notes || "",
             date: formattedDate,
-            hash: reportHash,
             taskCode: taskData.task_code,
             taskTitle: taskData.title,
             assetName: taskData.assets?.name || "Equipment Asset",
@@ -237,7 +206,7 @@ function ReportPreviewContent() {
             location: taskData.assets?.location || "N/A",
             category: taskData.assets?.category || "Industrial",
             techName: vendorName,
-            aiConfidence: reportData?.ai_confidence_score || 95,
+            aiConfidence: reportData?.ai_confidence_score ?? null,
             checklist: checklistItems,
             vendorSignature: vendorSig,
             supervisorSignature: superSig
@@ -269,6 +238,14 @@ function ReportPreviewContent() {
       <div className="flex h-screen items-center justify-center bg-white text-[#1A1A1A] font-bold uppercase tracking-widest gap-3">
         <span className="w-5 h-5 rounded-full border-4 border-t-transparent border-[#D32F2F] animate-spin inline-block"></span>
         Loading Report Document...
+      </div>
+    );
+  }
+
+  if (!reportInfo) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-white text-sm font-bold text-gray-500">
+        Report not found.
       </div>
     );
   }
@@ -495,63 +472,15 @@ function ReportPreviewContent() {
               </div>
             </section>
 
-            {/* AI Verification Section */}
+            {/* Result Summary */}
             <section className="space-y-4">
-              <h3 className="border-b-2 border-[#1A1A1A] pb-2 font-label-md text-xs font-black text-[#1A1A1A] uppercase mb-6 flex items-center gap-2">
-                <span className="material-symbols-outlined text-base">psychology</span>
-                AI Verification Matrix
+              <h3 className="border-b-2 border-[#1A1A1A] pb-2 font-label-md text-xs font-black text-[#1A1A1A] uppercase mb-6">
+                Result
               </h3>
-              <div className="grid grid-cols-5 gap-8">
-                <div className="col-span-2 flex flex-col items-center justify-center p-6 bg-white border-2 border-[#1A1A1A] rounded-xl">
-                  <div className="relative w-32 h-32 flex items-center justify-center">
-                    <svg className="w-full h-full -rotate-90">
-                      <circle cx="64" cy="64" fill="transparent" r="58" stroke="#F5F5F5" strokeWidth="12"></circle>
-                      <circle
-                        cx="64"
-                        cy="64"
-                        fill="transparent"
-                        r="58"
-                        stroke="#D32F2F"
-                        strokeDasharray="364.4"
-                        strokeDashoffset={364.4 - (364.4 * reportInfo.aiConfidence) / 100}
-                        strokeWidth="12"
-                        strokeLinecap="round"
-                      ></circle>
-                    </svg>
-                    <div className="absolute flex flex-col items-center">
-                      <span className="text-3xl font-extrabold text-[#1A1A1A]">{reportInfo.aiConfidence}%</span>
-                      <span className="text-[9px] font-black uppercase text-[#1A1A1A] tracking-wider">SCORE</span>
-                    </div>
-                  </div>
-                  <p className="mt-4 font-label-sm text-xs font-bold uppercase text-center opacity-60">Confidence Rating</p>
-                </div>
-                <div className="col-span-3 grid grid-cols-2 gap-4 text-xs font-bold uppercase">
-                  <div className="flex items-center gap-3 p-3 bg-white border-2 border-[#1A1A1A] rounded-xl hover:border-[#D32F2F] transition-all">
-                    <span className="material-symbols-outlined text-[#D32F2F]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      shield_with_heart
-                    </span>
-                    <span className="tracking-wide">Safety Seals</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-white border-2 border-[#1A1A1A] rounded-xl hover:border-[#D32F2F] transition-all">
-                    <span className="material-symbols-outlined text-[#D32F2F]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      qr_code_2
-                    </span>
-                    <span className="tracking-wide">Part Serial</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-white border-2 border-[#1A1A1A] rounded-xl hover:border-[#D32F2F] transition-all">
-                    <span className="material-symbols-outlined text-[#D32F2F]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      view_in_ar
-                    </span>
-                    <span className="tracking-wide">Work Zone</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-white border-2 border-[#1A1A1A] rounded-xl hover:border-[#D32F2F] transition-all">
-                    <span className="material-symbols-outlined text-[#D32F2F]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      sync
-                    </span>
-                    <span className="tracking-wide">PPE Sync</span>
-                  </div>
-                </div>
-              </div>
+              <p className="text-3xl font-extrabold text-[#1A1A1A]">
+                {reportInfo.aiConfidence != null ? `${reportInfo.aiConfidence}%` : "—"}
+                <span className="ml-2 text-xs font-bold uppercase text-gray-500">checklist items passed</span>
+              </p>
             </section>
 
             {/* Approval / Rejection Section */}
@@ -583,12 +512,6 @@ function ReportPreviewContent() {
                     </p>
                   </div>
                 )}
-                <div className="flex flex-col">
-                  <p className="text-[10px] font-label-sm uppercase opacity-60 font-bold">Digital Signature Hash</p>
-                  <p className="font-mono text-[9px] opacity-60 mt-1 uppercase truncate w-80">
-                    {reportInfo.hash}
-                  </p>
-                </div>
               </div>
 
               {/* Dynamic Double Signatures Section */}
@@ -657,7 +580,7 @@ function ReportPreviewContent() {
             onClick={handlePrint}
             className="w-full bg-[#D32F2F] text-white py-5 rounded-xl border-2 border-[#1A1A1A] font-headline-md text-base font-extrabold uppercase tracking-widest hover:bg-black hover:text-white transition-all flex items-center justify-center gap-4 cursor-pointer active:scale-[0.98] group"
           >
-            <span className="material-symbols-outlined text-2xl group-hover:animate-bounce">download</span>
+            <span className="material-symbols-outlined text-2xl">download</span>
             ↓ Download PDF Report ↓
           </button>
           <p className="text-center mt-6 text-[#1A1A1A] text-[10px] uppercase font-bold tracking-wider opacity-70">

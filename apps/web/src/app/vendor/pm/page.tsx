@@ -9,7 +9,7 @@ interface PMRecord {
   reportId?: string;
   name: string;
   category: "Mechanical" | "Electrical" | "Safety" | "HVAC" | "Facilities";
-  status: "Nominal" | "Warning" | "Critical";
+  status: "OK" | "Warning" | "Critical";
   date: string;
   supervisor: string;
   supervisor_avatar: string;
@@ -17,7 +17,6 @@ interface PMRecord {
   location: string;
   details: string;
   recommendation: string;
-  audio_url: string;
   photos: string[];
 }
 
@@ -107,11 +106,11 @@ export default function VPMHistoryPage() {
 
       // Transform to PMRecord format
       const list: PMRecord[] = (reportsData || []).map((rep: any) => {
-        // Map confidence score to a nominal status label
-        const score = rep.ai_confidence_score || 95;
-        let nominalStatus: "Nominal" | "Warning" | "Critical" = "Nominal";
-        if (score < 60) nominalStatus = "Critical";
-        else if (score < 80) nominalStatus = "Warning";
+        // Map score to a status label
+        const score = rep.ai_confidence_score ?? 0;
+        let recordStatus: "OK" | "Warning" | "Critical" = "OK";
+        if (score < 60) recordStatus = "Critical";
+        else if (score < 80) recordStatus = "Warning";
 
         const supervisorProfile: any = rep.pm_tasks?.profiles;
 
@@ -120,7 +119,7 @@ export default function VPMHistoryPage() {
           reportId: rep.id,
           name: rep.pm_tasks?.assets?.name || "PM Verification Run",
           category: rep.pm_tasks?.assets?.category || "Mechanical",
-          status: nominalStatus,
+          status: recordStatus,
           date: rep.submitted_at ? new Date(rep.submitted_at).toLocaleDateString() : "N/A",
           supervisor: supervisorProfile?.full_name || "Lead Supervisor",
           supervisor_avatar: supervisorProfile?.avatar_url || "https://ui-avatars.com/api/?name=Supervisor&background=000&color=fff",
@@ -128,7 +127,6 @@ export default function VPMHistoryPage() {
           location: rep.pm_tasks?.assets?.location || "Main Complex",
           details: rep.findings || "Routine maintenance complete. No defects detected.",
           recommendation: rep.recommendations || "Repeat cycle per schedule.",
-          audio_url: "",
           photos: rep.photos_urls || []
         };
       });
@@ -190,7 +188,7 @@ export default function VPMHistoryPage() {
     if (selectedRecord?.reportId) {
       window.open(`/supervisor/tasks/report-preview?reportId=${selectedRecord.reportId}`, "_blank");
     } else {
-      triggerToast("Telemetry report download started.", "info");
+      triggerToast("Report download started.", "info");
     }
   };
 
@@ -276,7 +274,7 @@ export default function VPMHistoryPage() {
         <div className="px-4 mt-auto border-t border-white/10 pt-4 pb-2">
           <button
             onClick={async () => {
-              triggerToast("CLOSING VENDOR TERMINAL...", "info");
+              triggerToast("Logging out...", "info");
               await supabase.auth.signOut();
               setTimeout(() => router.push("/"), 1000);
             }}
@@ -298,7 +296,7 @@ export default function VPMHistoryPage() {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Apex Services"}</p>
+              <p className="text-xs font-bold truncate text-white uppercase leading-none mb-1">{currentUser?.full_name || "Vendor"}</p>
               <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Vendor ID: #{currentUser?.id?.substring(0, 4).toUpperCase() || "N/A"}</p>
             </div>
           </button>
@@ -353,14 +351,14 @@ export default function VPMHistoryPage() {
               </div>
 
               <div className="w-[180px]">
-                <label className="block text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Nominal Status</label>
+                <label className="block text-xs font-bold mb-2 uppercase opacity-60 tracking-wider">Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="w-full px-4 py-3 rounded-[20px] border-2 border-[#1A1A1A] font-bold text-sm outline-none cursor-pointer bg-white"
                 >
                   <option value="All Statuses">All Statuses</option>
-                  <option value="Nominal">Nominal</option>
+                  <option value="OK">OK</option>
                   <option value="Warning">Warning</option>
                   <option value="Critical">Critical</option>
                 </select>
@@ -395,7 +393,7 @@ export default function VPMHistoryPage() {
                     <span className="border-2 border-[#D32F2F] text-[#D32F2F] px-3 py-0.5 rounded-full text-[9px] font-black tracking-widest uppercase">
                       {rec.category}
                     </span>
-                    <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${rec.status === "Nominal" ? "bg-green-600" : rec.status === "Warning" ? "bg-black" : "bg-[#D32F2F]"
+                    <span className={`px-3 py-0.5 border-2 border-[#1A1A1A] rounded-full text-[9px] font-black uppercase tracking-wider text-white ${rec.status === "OK" ? "bg-green-600" : rec.status === "Warning" ? "bg-black" : "bg-[#D32F2F]"
                       }`}>
                       {rec.status}
                     </span>
@@ -446,7 +444,7 @@ export default function VPMHistoryPage() {
             <div className="p-6 border-b-2 border-[#1A1A1A] flex justify-between items-center bg-[#1A1A1A] text-white shrink-0">
               <h2 className="text-sm uppercase font-black tracking-widest flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#D32F2F]">analytics</span>
-                PM Telemetry Detail: {selectedRecord.id}
+                PM Record: {selectedRecord.id}
               </h2>
               <button onClick={handleCloseDrawer} className="p-1 hover:bg-white/10 rounded cursor-pointer text-white border-none bg-transparent">
                 <span className="material-symbols-outlined text-white">close</span>
@@ -463,8 +461,8 @@ export default function VPMHistoryPage() {
               {/* Status and Confidence */}
               <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 border border-black/10 rounded-xl">
                 <div>
-                  <p className="text-[9px] uppercase font-bold text-gray-400">Telemetry Status</p>
-                  <span className={`mt-1 inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase text-white ${selectedRecord.status === "Nominal" ? "bg-green-600" : "bg-[#D32F2F]"
+                  <p className="text-[9px] uppercase font-bold text-gray-400">Status</p>
+                  <span className={`mt-1 inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase text-white ${selectedRecord.status === "OK" ? "bg-green-600" : "bg-[#D32F2F]"
                     }`}>
                     {selectedRecord.status}
                   </span>
@@ -488,25 +486,6 @@ export default function VPMHistoryPage() {
                   {selectedRecord.recommendation}
                 </p>
               </div>
-
-              {/* Audio transcribe summary */}
-              {selectedRecord.audio_url && (
-                <div className="bg-white border-2 border-[#1A1A1A] p-4 rounded-xl flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-[#D32F2F] text-3xl">mic</span>
-                    <div>
-                      <h4 className="text-xs font-black uppercase tracking-tight text-black">Voice Transcribe Summary</h4>
-                      <p className="text-[9px] font-semibold text-gray-500 uppercase">AI Audio Log Telemetry</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => triggerToast("Playing audio telemetry...", "info")}
-                    className="px-4 py-2 border-2 border-black rounded-lg text-xs font-bold uppercase hover:bg-black hover:text-white transition-colors cursor-pointer bg-white text-black"
-                  >
-                    Play Summary
-                  </button>
-                </div>
-              )}
 
               {/* Photos Gallery */}
               {selectedRecord.photos && selectedRecord.photos.length > 0 && (

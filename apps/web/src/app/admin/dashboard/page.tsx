@@ -417,32 +417,24 @@ export default function AdminDashboardPage() {
       value: isLoading ? "—" : stats.activePMs.toLocaleString(),
       icon: "settings_applications",
       delta: `${isLoading ? "—" : stats.pendingTasks} tasks awaiting start`,
-      badge: "Active Queue",
-      badgeColor: "text-amber-700 bg-amber-50 border-amber-300",
     },
     {
       label: "Scheduled PMs",
       value: isLoading ? "—" : stats.yearScheduledPMs.toLocaleString(),
       icon: "calendar_month",
       delta: `${isLoading ? "—" : stats.yearCompletedReports} completed in ${selectedYear}`,
-      badge: `Year ${selectedYear}`,
-      badgeColor: "text-blue-700 bg-blue-50 border-blue-300",
     },
     {
       label: "Completed Reports",
       value: isLoading ? "—" : stats.yearCompletedReports.toLocaleString(),
       icon: "assessment",
       delta: `${isLoading ? "—" : stats.yearCompletionRate}% annual rate (${stats.totalReports} all-time)`,
-      badge: "Verified Done",
-      badgeColor: "text-green-700 bg-green-50 border-green-300",
     },
     {
       label: "Active Users",
       value: isLoading ? "—" : stats.activeUsers.toLocaleString(),
       icon: "group",
       delta: `${isLoading ? "—" : stats.yearActiveVendors} partner vendors active in ${selectedYear}`,
-      badge: "Verified Accounts",
-      badgeColor: "text-purple-700 bg-purple-50 border-purple-300",
     },
   ];
 
@@ -492,16 +484,16 @@ export default function AdminDashboardPage() {
       <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] pb-24 lg:pb-8">
         <div className="p-4 lg:p-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-10">
 
-          {/* Section Header with Global Year Selector & Live Sync Indicator */}
+          {/* Section Header with Global Year Selector */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-gray-100">
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-headline-md text-base sm:text-lg font-black text-[#1A1A1A] uppercase tracking-tight">
-                  Real-Time Operational Summary
+                  Overview
                 </h3>
               </div>
               <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-0.5">
-                Aggregated metrics &amp; task volume synchronized for Year {selectedYear}
+                Year {selectedYear}
               </p>
             </div>
 
@@ -625,12 +617,6 @@ export default function AdminDashboardPage() {
                   </>
                 )}
               </div>
-
-              {/* Glowing Live Realtime Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border-2 border-green-600 rounded-full text-green-800 text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_0px_#166534] self-start sm:self-auto">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                <span>Live • Auto Data Sync</span>
-              </div>
             </div>
           </div>
 
@@ -645,10 +631,6 @@ export default function AdminDashboardPage() {
                   <div>
                     <span className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider block">
                       {stat.label}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase border px-2 py-0.5 rounded-full mt-1 ${stat.badgeColor}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                      {stat.badge}
                     </span>
                   </div>
                   <span className="material-symbols-outlined text-[#D32F2F] group-hover:scale-110 transition-transform">
@@ -834,7 +816,7 @@ export default function AdminDashboardPage() {
                 },
                 {
                   label: "Create PM Template",
-                  desc: "Draft a new checklist protocol template",
+                  desc: "Create a new PM checklist template",
                   icon: "post_add",
                   color: "bg-[#2E7D32] text-white border-[#2E7D32]",
                   hover: "hover:bg-white hover:text-[#2E7D32]",

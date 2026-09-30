@@ -134,11 +134,7 @@ export default function CreatePMAssignmentPage() {
   return (
     <div className="flex h-screen w-full bg-white text-[#1A1A1A] font-body-md overflow-hidden relative">
       <header className="fixed top-0 right-0 left-0 lg:left-[220px] border-b-2 border-[#1A1A1A] bg-white flex justify-between items-center h-20 px-4 lg:px-10 z-10 gap-4">
-        <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] tracking-tight font-extrabold uppercase">CREATE PM ASSIGNMENT</h2>
-        <span className="text-[10px] font-bold text-green-600 border border-green-300 bg-green-50 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />LIVE
-        </span>
-      </header>
+        <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] tracking-tight font-extrabold uppercase">CREATE PM ASSIGNMENT</h2>      </header>
 
       <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-white w-full lg:w-[calc(100%-220px)] pb-24 lg:pb-8">
         <div className="max-w-[1400px] mx-auto p-4 lg:p-10">

@@ -250,7 +250,7 @@ export default function PMTemplatesPage() {
         <header className="min-h-24 bg-white border-b-2 border-[#1A1A1A] flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 z-40">
           <div>
             <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] uppercase font-extrabold tracking-tight">Checklist Templates</h2>
-            <p className="text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wide">Standardized operational protocols</p>
+            <p className="text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wide">Reusable PM checklists</p>
           </div>
           <button className="pill-button-sharp bg-[#D32F2F] text-white border-black hover:opacity-90 cursor-pointer shrink-0" onClick={switchToCreateMode}>
             <span className="material-symbols-outlined">add</span><span>New Template</span>
@@ -321,7 +321,7 @@ export default function PMTemplatesPage() {
               <div className="flex justify-between items-center mb-6 lg:mb-10">
                 <div className="flex flex-wrap items-center gap-3">
                   <h3 className="font-headline-lg text-lg lg:text-3xl uppercase font-extrabold tracking-tighter">{currentMode==="create"?"CREATE NEW TEMPLATE":"EDIT TEMPLATE"}</h3>
-                  <span className={`status-badge-sharp text-white border-none ${currentMode==="create"?"bg-[#D32F2F]":"bg-[#1a1c1c]"}`}>{currentMode==="create"?"NEW PROTOCOL":"EDITING"}</span>
+                  <span className={`status-badge-sharp text-white border-none ${currentMode==="create"?"bg-[#D32F2F]":"bg-[#1a1c1c]"}`}>{currentMode==="create"?"NEW":"EDITING"}</span>
                 </div>
               </div>
 
@@ -334,7 +334,7 @@ export default function PMTemplatesPage() {
 
                 <div className="space-y-3">
                   <label className="text-xs font-bold uppercase tracking-widest block opacity-60">Description</label>
-                  <textarea value={formDescription} onChange={e=>setFormDescription(e.target.value)} placeholder="ENTER TEMPLATE DESCRIPTION / MAINTENANCE PROTOCOL DETAILS" rows={2}
+                  <textarea value={formDescription} onChange={e=>setFormDescription(e.target.value)} placeholder="ENTER TEMPLATE DESCRIPTION / MAINTENANCE DETAILS" rows={2}
                     className="w-full p-4 rounded border-2 border-gray-200 focus:border-[#D32F2F] font-bold bg-white uppercase outline-none resize-none text-sm"/>
                 </div>
 

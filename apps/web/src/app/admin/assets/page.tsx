@@ -422,21 +422,17 @@ export default function AssetManagementPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="p-3 bg-[#D32F2F] rounded-[12px]"><span className="material-symbols-outlined text-3xl">analytics</span></div>
-                    <h3 className="text-3xl font-extrabold uppercase tracking-tighter">System Health Analysis</h3>
+                    <h3 className="text-3xl font-extrabold uppercase tracking-tighter">Asset Status</h3>
                   </div>
-                  <p className="text-lg font-bold opacity-70 mb-8 max-w-2xl leading-relaxed">
+                  <p className="text-lg font-bold opacity-70 max-w-2xl leading-relaxed">
                     {assets.length} assets registered. {assets.filter(a=>a.status==="operational").length} operational, {assets.filter(a=>a.status==="under maintenance").length} under maintenance, {assets.filter(a=>a.status==="decommissioned").length} decommissioned.
                   </p>
-                  <button onClick={()=>triggerToast("Compiling full engineering report...","info")}
-                    className="px-10 py-4 bg-[#D32F2F] text-white rounded-[20px] font-black text-sm border-2 border-white hover:bg-white hover:text-[#D32F2F] transition-all uppercase tracking-widest cursor-pointer">
-                    VIEW DETAILED REPORT
-                  </button>
                 </div>
                 <div className="w-full md:w-72 aspect-square bg-white text-[#1A1A1A] rounded-[20px] border-4 border-[#D32F2F] flex flex-col items-center justify-center shrink-0">
                   <div className="text-[80px] font-black leading-none tracking-tighter">
                     {assets.length === 0 ? "0" : Math.round((assets.filter(a=>a.status==="operational").length/assets.length)*100)}<span className="text-3xl">%</span>
                   </div>
-                  <div className="text-xs font-black uppercase tracking-widest opacity-40">Health Index</div>
+                  <div className="text-xs font-black uppercase tracking-widest opacity-40">Operational</div>
                 </div>
               </div>
             )}
