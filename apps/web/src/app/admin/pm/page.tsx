@@ -3,8 +3,16 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-interface SubtaskItem { id: string; text: string; }
-interface TaskItem { id: string; text: string; type: "optional"|"required"|"urgent"; requireImage?: boolean; mediaType?: "photo"|"video"|"both"; subtasks?: SubtaskItem[]; }
+type MediaType = "none"|"photo"|"video"|"both";
+interface SubtaskItem { id: string; text: string; mediaType?: MediaType; }
+interface TaskItem { id: string; text: string; type: "optional"|"required"|"urgent"; requireImage?: boolean; mediaType?: MediaType; subtasks?: SubtaskItem[]; }
+
+const MEDIA_OPTIONS: { value: MediaType; label: string; icon: string }[] = [
+  { value: "none", label: "Checkbox", icon: "check_box" },
+  { value: "photo", label: "Photo", icon: "photo_camera" },
+  { value: "video", label: "Video", icon: "videocam" },
+  { value: "both", label: "Photo+Video", icon: "perm_media" },
+];
 interface Template {
   id: string;
   title: string;
@@ -95,29 +103,31 @@ export default function PMTemplatesPage() {
     setFormDescription(template.description || "");
     const sanitizedTasks = (template.checklist_items || []).map((t: any) => ({
       ...t,
-      requireImage: t.type === "optional" ? false : true,
-      mediaType: t.mediaType || "photo",
-      subtasks: t.subtasks || []
+      // Older templates tied evidence to priority; requireImage now decides it on its own.
+      mediaType: t.requireImage ? (t.mediaType && t.mediaType !== "none" ? t.mediaType : "photo") : "none",
+      requireImage: !!t.requireImage,
+      subtasks: (t.subtasks || []).map((s: SubtaskItem) => ({ ...s, mediaType: s.mediaType || "none" }))
     }));
     setFormTasks(sanitizedTasks);
   };
 
   const handleAddTask = () => {
-    const newTask: TaskItem = { id: `task-${Date.now()}-${Math.random().toString(36).substr(2,4)}`, text: "", type: "optional", requireImage: false, mediaType: "photo", subtasks: [] };
+    const newTask: TaskItem = { id: `task-${Date.now()}-${Math.random().toString(36).substr(2,4)}`, text: "", type: "optional", requireImage: false, mediaType: "none", subtasks: [] };
     setFormTasks([...formTasks, newTask]);
   };
 
   const handleTaskTextChange = (id: string, text: string) => setFormTasks(formTasks.map(t=>t.id===id?{...t,text:text.toUpperCase()}:t));
-  const handleTaskTypeChange = (id: string, type: "optional"|"required"|"urgent") => setFormTasks(formTasks.map(t=>t.id===id?{...t,type,requireImage:type==="optional"?false:true}:t));
-  const handleMediaTypeChange = (id: string, mediaType: "photo"|"video"|"both") => setFormTasks(formTasks.map(t=>t.id===id?{...t,mediaType}:t));
-  const handleToggleRequireImage = (id: string) => {}; // no-op since it is locked by task type
+  const handleTaskTypeChange = (id: string, type: "optional"|"required"|"urgent") => setFormTasks(formTasks.map(t=>t.id===id?{...t,type}:t));
+  const handleMediaTypeChange = (id: string, mediaType: MediaType) => setFormTasks(formTasks.map(t=>t.id===id?{...t,mediaType,requireImage:mediaType!=="none"}:t));
+  const handleSubtaskMediaTypeChange = (taskId: string, subtaskId: string, mediaType: MediaType) =>
+    setFormTasks(formTasks.map(t => t.id !== taskId ? t : { ...t, subtasks: (t.subtasks || []).map(s => s.id === subtaskId ? { ...s, mediaType } : s) }));
   const handleRemoveTask = (id: string) => setFormTasks(formTasks.filter(t=>t.id!==id));
 
   const handleAddSubtask = (taskId: string) => {
     setFormTasks(formTasks.map(t => {
       if (t.id !== taskId) return t;
       const currentSubs = t.subtasks || [];
-      const newSub: SubtaskItem = { id: `sub-${Date.now()}-${Math.random().toString(36).substr(2,4)}`, text: "" };
+      const newSub: SubtaskItem = { id: `sub-${Date.now()}-${Math.random().toString(36).substr(2,4)}`, text: "", mediaType: "none" };
       return { ...t, subtasks: [...currentSubs, newSub] };
     }));
   };
@@ -398,6 +408,14 @@ export default function PMTemplatesPage() {
                                   placeholder="ENTER SUBTASK DETAIL"
                                   className="w-full text-xs font-bold uppercase border-none outline-none bg-transparent"
                                 />
+                                <select
+                                  value={sub.mediaType || "none"}
+                                  onChange={(e) => handleSubtaskMediaTypeChange(task.id, sub.id, e.target.value as MediaType)}
+                                  className="shrink-0 text-[9px] font-black uppercase border border-gray-200 rounded px-1 py-0.5 bg-white cursor-pointer"
+                                  title="Evidence required for this subtask"
+                                >
+                                  {MEDIA_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                </select>
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveSubtask(task.id, sub.id)}
@@ -419,25 +437,23 @@ export default function PMTemplatesPage() {
                           ))}
                         </div>
 
-                        {/* Media Requirement Toggle: Photo vs Video vs Both */}
+                        {/* Evidence Requirement: plain checkbox by default, photo/video only where it matters */}
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black uppercase text-gray-400">Upload Media:</span>
+                          <span className="text-[10px] font-black uppercase text-gray-400">Evidence:</span>
                           <div className="flex items-center gap-1 border-2 border-gray-200 rounded p-0.5 bg-gray-50">
-                            {(["photo", "video", "both"] as const).map((mType) => (
+                            {MEDIA_OPTIONS.map(({ value: mType, label, icon }) => (
                               <button
                                 key={mType}
                                 type="button"
                                 onClick={() => handleMediaTypeChange(task.id, mType)}
                                 className={`px-2.5 py-1 rounded font-black text-[9px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
-                                  (task.mediaType || "photo") === mType
+                                  (task.mediaType || "none") === mType
                                     ? "bg-[#D32F2F] text-white"
                                     : "text-gray-400 hover:text-gray-700"
                                 }`}
                               >
-                                <span className="material-symbols-outlined text-xs">
-                                  {mType === "photo" ? "photo_camera" : mType === "video" ? "videocam" : "perm_media"}
-                                </span>
-                                <span>{mType === "photo" ? "Photo" : mType === "video" ? "Video" : "Photo+Video"}</span>
+                                <span className="material-symbols-outlined text-xs">{icon}</span>
+                                <span>{label}</span>
                               </button>
                             ))}
                           </div>

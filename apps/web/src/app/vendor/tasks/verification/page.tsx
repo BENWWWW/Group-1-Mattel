@@ -254,7 +254,9 @@ function AIVerificationScoreContent() {
                 taskId: t.id,
                 taskCode: t.task_code || "TK-DB",
                 title: `${t.assets?.name || "PM Task"} - ${item.title || "Checklist"}`,
-                issueType: item.status === "Error" ? "Image Clarity Failure" : item.status === "Awaiting" ? "Missing Photo Evidence" : "Low Confidence (64)",
+                issueType: !item.requireImage
+                  ? (item.status === "Error" ? "Failed Inspection" : "Not Checked")
+                  : item.status === "Error" ? "Image Clarity Failure" : item.status === "Awaiting" ? "Missing Photo Evidence" : "Low Confidence (64)",
                 issueColor: item.status === "Error" ? "bg-[#D32F2F]" : "bg-[#1A1A1A]",
                 subColor: item.status === "Error" ? "text-[#D32F2F]" : "text-[#1A1A1A]",
                 icon: item.status === "Error" ? "image_not_supported" : "warning",

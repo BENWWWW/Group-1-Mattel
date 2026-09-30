@@ -11,8 +11,11 @@ interface Subtask {
   completed?: boolean;
   image?: string;
   video?: string;
-  mediaType?: "photo" | "video" | "both";
+  mediaType?: MediaType;
 }
+
+// "none" = plain checkbox, no photo/video evidence needed.
+type MediaType = "none" | "photo" | "video" | "both";
 
 interface ChecklistItem {
   id: string;
@@ -26,7 +29,7 @@ interface ChecklistItem {
   notes?: string;
   type?: "optional" | "required" | "urgent";
   requireImage?: boolean;
-  mediaType?: "photo" | "video" | "both";
+  mediaType?: MediaType;
   subtasks?: Subtask[];
   aiConfidence?: number;
   aiQualityLabel?: string;
@@ -56,6 +59,10 @@ interface Task {
   createdAt?: string;
   assetType?: string;
 }
+
+// requireImage is the source of truth for whether an item needs evidence; mediaType says which kind.
+const itemMediaType = (c: { requireImage?: boolean; mediaType?: MediaType }): MediaType =>
+  c.requireImage ? (c.mediaType && c.mediaType !== "none" ? c.mediaType : "photo") : "none";
 
 interface Toast {
   id: string;
@@ -105,12 +112,12 @@ export default function PMChecklistPage() {
   // Custom Professional Modal States (Replacing native browser prompts)
   const [addSubtaskModal, setAddSubtaskModal] = useState<{ isOpen: boolean; itemId: string | null }>({ isOpen: false, itemId: null });
   const [subtaskInputText, setSubtaskInputText] = useState("");
-  const [subtaskMediaType, setSubtaskMediaType] = useState<"photo" | "video" | "both">("photo");
+  const [subtaskMediaType, setSubtaskMediaType] = useState<MediaType>("none");
 
   const [addExtraItemModalOpen, setAddExtraItemModalOpen] = useState(false);
   const [extraItemTitleInput, setExtraItemTitleInput] = useState("");
   const [extraItemDescInput, setExtraItemDescInput] = useState("");
-  const [extraItemMediaTypeInput, setExtraItemMediaTypeInput] = useState<"photo" | "video" | "both">("photo");
+  const [extraItemMediaTypeInput, setExtraItemMediaTypeInput] = useState<MediaType>("none");
   const [extraItemTypeInput, setExtraItemTypeInput] = useState<"optional" | "required" | "urgent">("optional");
 
   const handleToggleSubtask = async (itemId: string, subtaskId: string) => {
@@ -129,7 +136,7 @@ export default function PMChecklistPage() {
     await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
   };
 
-  const handleAddSubtaskToItem = async (itemId: string, text: string, mediaType: "photo" | "video" | "both" = "photo") => {
+  const handleAddSubtaskToItem = async (itemId: string, text: string, mediaType: MediaType = "none") => {
     if (!selectedTask || isLocked || !text.trim()) return;
     const updatedChecklist = selectedTask.checklist.map((c) => {
       if (c.id !== itemId) return c;
@@ -154,7 +161,7 @@ export default function PMChecklistPage() {
     setAddExtraItemModalOpen(true);
     setExtraItemTitleInput("");
     setExtraItemDescInput("");
-    setExtraItemMediaTypeInput("photo");
+    setExtraItemMediaTypeInput("none");
     setExtraItemTypeInput("optional");
   };
 
@@ -217,7 +224,7 @@ export default function PMChecklistPage() {
       description: extraItemDescInput.trim() || "Vendor added custom task item.",
       status: "Awaiting",
       type: extraItemTypeInput,
-      requireImage: true,
+      requireImage: extraItemMediaTypeInput !== "none",
       mediaType: extraItemMediaTypeInput,
       subtasks: []
     };
@@ -314,23 +321,25 @@ export default function PMChecklistPage() {
             errorMessage: c.errorMessage || undefined,
             notes: c.notes || undefined,
             type: c.type || "optional",
-            requireImage: c.requireImage !== undefined ? c.requireImage : false,
-            mediaType: c.mediaType || "photo",
+            video: c.video || undefined,
+            requireImage: !!c.requireImage,
+            mediaType: itemMediaType(c),
             subtasks: Array.isArray(c.subtasks) ? c.subtasks : []
           }));
         } else if (t.pm_templates && Array.isArray(t.pm_templates.checklist_items) && t.pm_templates.checklist_items.length > 0) {
           checklistMapped = t.pm_templates.checklist_items.map((c: any, index: number) => ({
             id: c.id || `item-${index}`,
             title: c.text || c.title || c.task || "Checklist Task",
-            description: c.description || `Priority: ${(c.type || "optional").toUpperCase()} | Photo: ${c.requireImage ? "REQUIRED" : "OPTIONAL"}`,
+            description: c.description || `Priority: ${(c.type || "optional").toUpperCase()} | Evidence: ${c.requireImage ? "REQUIRED" : "NOT NEEDED"}`,
             status: c.status || "Awaiting",
             image: c.image || undefined,
             evidenceTime: c.evidenceTime || undefined,
             errorMessage: c.errorMessage || undefined,
             notes: c.notes || undefined,
             type: c.type || "optional",
-            requireImage: c.requireImage !== undefined ? c.requireImage : false,
-            mediaType: c.mediaType || "photo",
+            video: c.video || undefined,
+            requireImage: !!c.requireImage,
+            mediaType: itemMediaType(c),
             subtasks: Array.isArray(c.subtasks) ? c.subtasks : []
           }));
         } else {
@@ -464,6 +473,7 @@ export default function PMChecklistPage() {
             ...item,
             status: "Awaiting" as const,
             image: undefined,
+            video: undefined,
             evidenceTime: undefined,
             errorMessage: undefined,
           }
@@ -483,6 +493,25 @@ export default function PMChecklistPage() {
       console.error("Failed to delete photo:", e.message);
       triggerToast("Failed to delete photo: " + e.message, "error");
     }
+  };
+
+  // Pass / Fail for checklist items that need no evidence. Clicking the active result again resets it.
+  const handleSetItemResult = async (itemId: string, result: "Pass" | "Error") => {
+    if (!selectedTask || isLocked) return;
+    const updatedChecklist = selectedTask.checklist.map((item) => {
+      if (item.id !== itemId) return item;
+      const status = item.status === result ? ("Awaiting" as const) : result;
+      return {
+        ...item,
+        status,
+        evidenceTime: status === "Awaiting" ? undefined : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        errorMessage: undefined,
+      };
+    });
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === selectedTask.id ? { ...t, checklist: updatedChecklist } : t))
+    );
+    await saveChecklistToDatabase(selectedTask.id, updatedChecklist);
   };
 
   // AI image quality check via SightEngine API for items in "AI Processing" status
@@ -604,20 +633,31 @@ export default function PMChecklistPage() {
       return item.status === "Awaiting";
     });
     if (incompleteTasks.length > 0) {
-      triggerToast(`Cannot proceed! There are ${incompleteTasks.length} required checklist items that are awaiting evidence.`, "error");
+      triggerToast(`Cannot proceed! There are ${incompleteTasks.length} required checklist items not yet checked.`, "error");
       return;
     }
 
-    // Check if required items have evidence photo/video uploaded
+    // Only items the admin flagged for evidence need a photo/video
     const missingImages = selectedTask.checklist.filter((item) => {
       if (item.type === "optional" && item.status === "Awaiting") {
         return false;
       }
-      const needsImage = item.requireImage !== false;
-      return needsImage && !item.image && !item.video;
+      return item.requireImage && !item.image && !item.video;
     });
     if (missingImages.length > 0) {
       triggerToast(`Cannot proceed! Evidence photo/video has not been uploaded for ${missingImages.length} checklist items.`, "error");
+      return;
+    }
+
+    // Subtasks of every checked item must be ticked (evidence subtasks tick themselves on upload)
+    const openSubtasks = selectedTask.checklist.filter((item) => {
+      if (item.type === "optional" && item.status === "Awaiting") {
+        return false;
+      }
+      return (item.subtasks || []).some((sub) => !sub.completed);
+    });
+    if (openSubtasks.length > 0) {
+      triggerToast(`Cannot proceed! ${openSubtasks.length} checklist items still have unchecked subtasks.`, "error");
       return;
     }
 
@@ -1036,7 +1076,7 @@ export default function PMChecklistPage() {
               <div className="bg-white border-2 border-[#1A1A1A] p-6 rounded-[20px] min-w-[320px]">
                 <div className="flex justify-between items-center mb-3">
                   <span className="font-label-md text-xs font-bold uppercase">
-                    PHOTOS UPLOADED {doneCount}/{totalCheckItems}
+                    ITEMS CHECKED {doneCount}/{totalCheckItems}
                   </span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-4 border-2 border-[#1A1A1A] overflow-hidden">
@@ -1122,6 +1162,26 @@ export default function PMChecklistPage() {
                               </button>
                             )}
                           </div>
+                        ) : !item.requireImage ? (
+                          <div className="w-28 flex flex-col gap-2">
+                            {(["Pass", "Error"] as const).map((result) => {
+                              const active = item.status === result;
+                              const activeColor = result === "Pass" ? "bg-green-600 text-white" : "bg-[#D32F2F] text-white";
+                              return (
+                                <button
+                                  key={result}
+                                  type="button"
+                                  disabled={isLocked}
+                                  onClick={() => handleSetItemResult(item.id, result)}
+                                  className={`h-[52px] rounded-[16px] border-2 border-[#1A1A1A] flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-wider transition-colors ${active ? activeColor : "bg-white text-black hover:bg-gray-100"} ${isLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                                  title={result === "Pass" ? "Mark item as OK" : "Flag item as failed (notes required)"}
+                                >
+                                  <span className="material-symbols-outlined text-base">{result === "Pass" ? "check_box" : "report"}</span>
+                                  <span>{result === "Pass" ? "OK" : "Fail"}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         ) : (
                           <button
                             onClick={() => !isLocked && handleOpenUpload(item.id)}
@@ -1168,7 +1228,7 @@ export default function PMChecklistPage() {
                         </p>
 
                         {/* Quick Action Button for awaiting */}
-                        {isAwaiting && !isLocked && (
+                        {isAwaiting && !isLocked && item.requireImage && (
                           <button
                             onClick={() => handleOpenUpload(item.id)}
                             className="w-fit border-2 border-black rounded-full px-4 py-1.5 font-black text-[9px] uppercase hover:bg-black hover:text-white transition-all flex items-center gap-1.5 cursor-pointer bg-white text-black shadow-sm mt-1"
@@ -1191,7 +1251,7 @@ export default function PMChecklistPage() {
                                 onClick={() => {
                                   setAddSubtaskModal({ isOpen: true, itemId: item.id });
                                   setSubtaskInputText("");
-                                  setSubtaskMediaType(item.mediaType || "photo");
+                                  setSubtaskMediaType("none");
                                 }}
                                 className="text-[10px] font-black uppercase text-[#D32F2F] hover:bg-[#D32F2F]/10 px-2 py-1 rounded transition-colors flex items-center gap-1 cursor-pointer"
                               >
@@ -1206,7 +1266,7 @@ export default function PMChecklistPage() {
                           ) : (
                             <div className="space-y-3">
                               {item.subtasks.map((sub) => {
-                                const reqType = sub.mediaType || item.mediaType || "photo";
+                                const reqType: MediaType = sub.mediaType || "none";
 
                                 return (
                                   <div key={sub.id} className="p-3 bg-white border border-gray-200 rounded-lg flex flex-col gap-2 shadow-sm">
@@ -1215,7 +1275,8 @@ export default function PMChecklistPage() {
                                       <label className="flex items-center gap-2 cursor-pointer group select-none flex-1 min-w-[140px]">
                                         <input
                                           type="checkbox"
-                                          disabled={isLocked}
+                                          // Evidence subtasks are ticked by their upload, not by hand
+                                          disabled={isLocked || reqType !== "none"}
                                           checked={!!sub.completed}
                                           onChange={() => handleToggleSubtask(item.id, sub.id)}
                                           className="w-4 h-4 accent-[#D32F2F] rounded cursor-pointer shrink-0"
@@ -1226,7 +1287,7 @@ export default function PMChecklistPage() {
                                       </label>
 
                                       {/* Clear Requirement Badge */}
-                                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded tracking-wide border shrink-0 ${
+                                      {reqType !== "none" && <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded tracking-wide border shrink-0 ${
                                         reqType === "photo"
                                           ? "bg-blue-50 text-blue-700 border-blue-200"
                                           : reqType === "video"
@@ -1236,11 +1297,11 @@ export default function PMChecklistPage() {
                                         {reqType === "photo" && "📷 PHOTO ONLY"}
                                         {reqType === "video" && "🎥 VIDEO ONLY"}
                                         {reqType === "both" && "📷+🎥 PHOTO & VIDEO REQUIRED"}
-                                      </span>
+                                      </span>}
                                     </div>
 
                                     {/* Action Buttons based on requirement */}
-                                    {!isLocked && (
+                                    {!isLocked && reqType !== "none" && (
                                       <div className="flex flex-wrap gap-2 pt-1">
                                         {(reqType === "photo" || reqType === "both") && (
                                           <button
@@ -1329,11 +1390,11 @@ export default function PMChecklistPage() {
                       </div>
                     </div>
 
-                    {/* Lower part: Textarea for repair notes if image is present */}
-                    {item.image && !isProcessing && (
+                    {/* Lower part: Textarea for notes once the item has a result */}
+                    {(item.image || item.video || !isAwaiting) && !isProcessing && (
                       <div className="mt-4 pt-4 border-t border-dashed border-gray-200 animate-in fade-in duration-200">
                         <label className="text-[9px] text-gray-500 font-extrabold uppercase tracking-wider block mb-1">
-                          Notes / Observations (Optional) {isLocked && "(Locked)"}
+                          {isError ? "Findings / Repair Notes (Required)" : "Notes / Observations (Optional)"} {isLocked && "(Locked)"}
                         </label>
                         <textarea
                           value={item.notes || ""}
@@ -1890,12 +1951,13 @@ export default function PMChecklistPage() {
               </div>
 
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider block mb-2 opacity-70">Media Requirement *</label>
+                <label className="text-xs font-bold uppercase tracking-wider block mb-2 opacity-70">Evidence Requirement *</label>
                 <select
                   value={subtaskMediaType}
                   onChange={(e) => setSubtaskMediaType(e.target.value as any)}
                   className="w-full h-12 px-3 rounded-xl border-2 border-black font-bold uppercase text-xs outline-none bg-white cursor-pointer"
                 >
+                  <option value="none">☑ CHECKBOX ONLY</option>
                   <option value="photo">📷 PHOTO ONLY</option>
                   <option value="video">🎥 VIDEO ONLY</option>
                   <option value="both">📷+🎥 PHOTO & VIDEO REQUIRED</option>
@@ -1980,12 +2042,13 @@ export default function PMChecklistPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">Media Requirement</label>
+                  <label className="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">Evidence Requirement</label>
                   <select
                     value={extraItemMediaTypeInput}
                     onChange={(e) => setExtraItemMediaTypeInput(e.target.value as any)}
                     className="w-full h-12 px-3 rounded-xl border-2 border-black font-bold uppercase text-xs outline-none bg-white cursor-pointer"
                   >
+                    <option value="none">CHECKBOX ONLY</option>
                     <option value="photo">PHOTO REQUIRED</option>
                     <option value="video">VIDEO REQUIRED</option>
                     <option value="both">PHOTO & VIDEO REQUIRED</option>
