@@ -277,7 +277,7 @@ export default function AssetManagementPage() {
   const statusLabel = getAssetStatusLabel;
 
   return (
-    <div className="flex h-screen w-full bg-[#FFFFFF] text-[#1A1A1A] font-body-md overflow-hidden">
+    <div className="flex h-screen w-full bg-page text-[#1A1A1A] font-body-md overflow-hidden">
       <main className="lg:ml-[220px] h-screen flex flex-col overflow-hidden bg-page w-full lg:w-[calc(100%-220px)] flex-grow relative pb-24 lg:pb-0">
         <header className="min-h-24 bg-white border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 z-40">
           <div>
@@ -303,7 +303,7 @@ export default function AssetManagementPage() {
           <span className="material-symbols-outlined text-[30px] font-semibold">add</span>
         </button>
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-10 bg-[#f9f9f9] pb-28">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-10 bg-page pb-28">
           {/* Filters */}
           <section className="mb-10 flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-6">

@@ -3,7 +3,7 @@
 @theme {
   --color-primary: #D32F2F;
   /* App page background behind white cards (not used on login) */
-  --color-page: #E4E6EA;
+  --color-page: #fff8f7;
   --color-on-surface: #1A1A1A;
   --color-on-surface-variant: #1A1A1A;
   --color-outline: #1A1A1A;
@@ -103,6 +103,13 @@
   *, ::before, ::after {
     border-color: var(--color-gray-200);
   }
+
+  /* White cards get a tiny lift off the page background. Zero specificity + base layer,
+     so any explicit shadow-* utility on an element (modals, shadow-none) still wins. */
+  /* ponytail: matches cards by class signature (bg-white + large radius); add a .card class if this grabs the wrong boxes */
+  :where(div, section, article, aside, header, footer, form, table, li):where(.bg-white):where(.rounded-xl, .rounded-2xl, .rounded-\[20px\], .rounded-\[24px\]) {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+  }
 }
 
 /* Transition for Label and Input */
@@ -128,6 +135,7 @@ body {
   border: 1px solid #E5E7EB;
   border-radius: 4px;
   padding: 24px;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .industrial-card.active {

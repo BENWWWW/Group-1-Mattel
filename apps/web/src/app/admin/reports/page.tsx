@@ -284,10 +284,10 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#fff8f7] text-[#1A1A1A] font-body-md overflow-hidden">
-      <main className="lg:ml-[220px] w-full lg:w-[calc(100%-220px)] h-screen flex flex-col overflow-hidden bg-[#fff8f7] relative pb-24 lg:pb-0">
+    <div className="flex h-screen w-full bg-page text-[#1A1A1A] font-body-md overflow-hidden">
+      <main className="lg:ml-[220px] w-full lg:w-[calc(100%-220px)] h-screen flex flex-col overflow-hidden bg-page relative pb-24 lg:pb-0">
         {/* TopNavBar */}
-        <header className="min-h-20 bg-[#fff8f7] border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 sticky top-0 z-40">
+        <header className="min-h-20 bg-page border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 sticky top-0 z-40">
           <div>
             <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] font-semibold uppercase tracking-tight">Reports</h2>
             <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase font-medium">PM Submission &amp; Audit Trail</p>

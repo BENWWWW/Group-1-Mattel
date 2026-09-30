@@ -248,8 +248,8 @@ export default function PMTemplatesPage() {
   );
 
   return (
-    <div className="flex h-screen w-full bg-[#f9f9f9] text-[#1A1A1A] font-body-md overflow-hidden">
-      <main className="lg:ml-[220px] w-full lg:w-[calc(100%-220px)] h-screen flex flex-col overflow-hidden bg-[#f9f9f9] flex-grow pb-24 lg:pb-0">
+    <div className="flex h-screen w-full bg-page text-[#1A1A1A] font-body-md overflow-hidden">
+      <main className="lg:ml-[220px] w-full lg:w-[calc(100%-220px)] h-screen flex flex-col overflow-hidden bg-page flex-grow pb-24 lg:pb-0">
         <header className="min-h-24 bg-white border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-10 gap-4 shrink-0 z-40">
           <div>
             <h2 className="font-headline-md text-sm sm:text-base md:text-xl text-[#1A1A1A] uppercase font-semibold tracking-tight">Checklist Templates</h2>
@@ -319,7 +319,7 @@ export default function PMTemplatesPage() {
           </section>
 
           {/* Right: Action Panel */}
-          <section className="flex-1 p-4 lg:p-10 bg-white/50 overflow-y-auto">
+          <section className="flex-1 p-4 lg:p-10 overflow-y-auto">
             <div className="industrial-card max-w-4xl mx-auto min-h-[500px] lg:min-h-[700px] flex flex-col bg-white border-gray-200 rounded-xl">
               <div className="flex justify-between items-center mb-6 lg:mb-10">
                 <div className="flex flex-wrap items-center gap-3">

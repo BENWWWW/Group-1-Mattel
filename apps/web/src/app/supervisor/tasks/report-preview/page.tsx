@@ -255,7 +255,7 @@ function ReportPreviewContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 text-[#1A1A1A] font-body-md flex flex-col items-center">
+    <div className="min-h-screen w-full bg-page text-[#1A1A1A] font-body-md flex flex-col items-center">
       <style jsx global>{`
         /* Ensure the page can scroll naturally */
         html, body {
