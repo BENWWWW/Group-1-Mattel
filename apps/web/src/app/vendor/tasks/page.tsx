@@ -27,7 +27,7 @@ interface ChecklistItem {
   evidenceTime?: string;
   errorMessage?: string;
   notes?: string;
-  type?: "optional" | "required" | "urgent";
+  type?: "optional" | "required";
   requireImage?: boolean;
   mediaType?: MediaType;
   subtasks?: Subtask[];
@@ -115,7 +115,7 @@ export default function PMChecklistPage() {
   const [extraItemTitleInput, setExtraItemTitleInput] = useState("");
   const [extraItemDescInput, setExtraItemDescInput] = useState("");
   const [extraItemMediaTypeInput, setExtraItemMediaTypeInput] = useState<MediaType>("none");
-  const [extraItemTypeInput, setExtraItemTypeInput] = useState<"optional" | "required" | "urgent">("optional");
+  const [extraItemTypeInput, setExtraItemTypeInput] = useState<"optional" | "required">("optional");
 
   const handleToggleSubtask = async (itemId: string, subtaskId: string) => {
     if (!selectedTask || isLocked) return;
@@ -317,7 +317,7 @@ export default function PMChecklistPage() {
             evidenceTime: c.evidenceTime || undefined,
             errorMessage: c.errorMessage || undefined,
             notes: c.notes || undefined,
-            type: c.type || "optional",
+            type: c.type && c.type !== "optional" ? "required" : "optional",
             video: c.video || undefined,
             requireImage: !!c.requireImage,
             mediaType: itemMediaType(c),
@@ -327,13 +327,13 @@ export default function PMChecklistPage() {
           checklistMapped = t.pm_templates.checklist_items.map((c: any, index: number) => ({
             id: c.id || `item-${index}`,
             title: c.text || c.title || c.task || "Checklist Task",
-            description: c.description || `Priority: ${(c.type || "optional").toUpperCase()} | Evidence: ${c.requireImage ? "REQUIRED" : "NOT NEEDED"}`,
+            description: c.description || `Priority: ${(c.type && c.type !== "optional" ? "required" : "optional").toUpperCase()} | Evidence: ${c.requireImage ? "REQUIRED" : "NOT NEEDED"}`,
             status: c.status || "Awaiting",
             image: c.image || undefined,
             evidenceTime: c.evidenceTime || undefined,
             errorMessage: c.errorMessage || undefined,
             notes: c.notes || undefined,
-            type: c.type || "optional",
+            type: c.type && c.type !== "optional" ? "required" : "optional",
             video: c.video || undefined,
             requireImage: !!c.requireImage,
             mediaType: itemMediaType(c),
@@ -611,7 +611,7 @@ export default function PMChecklistPage() {
   const handleSubmitReport = async () => {
     if (!selectedTask || isLocked) return;
 
-    // Check if required/urgent items are completed
+    // Check if required items are completed
     const incompleteTasks = selectedTask.checklist.filter((item) => {
       if (item.type === "optional" && item.status === "Awaiting") {
         return false;
@@ -2014,7 +2014,6 @@ export default function PMChecklistPage() {
                   >
                     <option value="optional">OPTIONAL</option>
                     <option value="required">REQUIRED</option>
-                    <option value="urgent">URGENT</option>
                   </select>
                 </div>
 

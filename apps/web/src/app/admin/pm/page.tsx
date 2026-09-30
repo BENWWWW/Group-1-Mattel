@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type MediaType = "none"|"photo"|"video"|"both";
 interface SubtaskItem { id: string; text: string; mediaType?: MediaType; }
-interface TaskItem { id: string; text: string; type: "optional"|"required"|"urgent"; requireImage?: boolean; mediaType?: MediaType; subtasks?: SubtaskItem[]; }
+interface TaskItem { id: string; text: string; type: "optional"|"required"; requireImage?: boolean; mediaType?: MediaType; subtasks?: SubtaskItem[]; }
 
 const MEDIA_OPTIONS: { value: MediaType; label: string; icon: string }[] = [
   { value: "none", label: "Checkbox", icon: "check_box" },
@@ -103,6 +103,7 @@ export default function PMTemplatesPage() {
     setFormDescription(template.description || "");
     const sanitizedTasks = (template.checklist_items || []).map((t: any) => ({
       ...t,
+      type: t.type && t.type !== "optional" ? "required" : "optional", // legacy "urgent" -> required
       // Older templates tied evidence to priority; requireImage now decides it on its own.
       mediaType: t.requireImage ? (t.mediaType && t.mediaType !== "none" ? t.mediaType : "photo") : "none",
       requireImage: !!t.requireImage,
@@ -117,7 +118,7 @@ export default function PMTemplatesPage() {
   };
 
   const handleTaskTextChange = (id: string, text: string) => setFormTasks(formTasks.map(t=>t.id===id?{...t,text:text.toUpperCase()}:t));
-  const handleTaskTypeChange = (id: string, type: "optional"|"required"|"urgent") => setFormTasks(formTasks.map(t=>t.id===id?{...t,type}:t));
+  const handleTaskTypeChange = (id: string, type: "optional"|"required") => setFormTasks(formTasks.map(t=>t.id===id?{...t,type}:t));
   const handleMediaTypeChange = (id: string, mediaType: MediaType) => setFormTasks(formTasks.map(t=>t.id===id?{...t,mediaType,requireImage:mediaType!=="none"}:t));
   const handleSubtaskMediaTypeChange = (taskId: string, subtaskId: string, mediaType: MediaType) =>
     setFormTasks(formTasks.map(t => t.id !== taskId ? t : { ...t, subtasks: (t.subtasks || []).map(s => s.id === subtaskId ? { ...s, mediaType } : s) }));
@@ -432,8 +433,8 @@ export default function PMTemplatesPage() {
                       <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-gray-100">
                         {/* Task Priority / Requirement */}
                         <div className="flex items-center gap-1 border-2 border-gray-200 rounded p-0.5 bg-gray-50">
-                          {(["optional","required","urgent"] as const).map(type=>(
-                            <button key={type} type="button" onClick={()=>handleTaskTypeChange(task.id,type)} className={`px-3 py-1.5 rounded font-black text-[9px] uppercase tracking-wider transition-all cursor-pointer ${task.type===type?(type==="urgent"?"bg-[#D32F2F] text-white":type==="required"?"bg-[#1A1A1A] text-white":"bg-white border border-gray-200 text-gray-700"):"text-gray-300 hover:text-gray-600"}`}>{type}</button>
+                          {(["optional","required"] as const).map(type=>(
+                            <button key={type} type="button" onClick={()=>handleTaskTypeChange(task.id,type)} className={`px-3 py-1.5 rounded font-black text-[9px] uppercase tracking-wider transition-all cursor-pointer ${task.type===type?(type==="required"?"bg-[#1A1A1A] text-white":"bg-white border border-gray-200 text-gray-700"):"text-gray-300 hover:text-gray-600"}`}>{type}</button>
                           ))}
                         </div>
 

@@ -11,7 +11,7 @@ interface ChecklistItem {
   notes?: string;
   image?: string | null;
   status?: string;
-  type?: "optional" | "required" | "urgent";
+  type?: "optional" | "required";
   requireImage?: boolean;
 }
 
@@ -144,7 +144,7 @@ function ReportPreviewContent() {
                 notes: c.notes || "",
                 image: c.image || null,
                 status: c.status || (c.checked ? "Pass" : "Awaiting"),
-                type: c.type || "optional",
+                type: c.type && c.type !== "optional" ? "required" : "optional",
                 requireImage: c.requireImage !== undefined ? c.requireImage : false
               }));
               vendorSig = reportData.vendor_signature || reportData.vendorSignature || "";
@@ -158,7 +158,7 @@ function ReportPreviewContent() {
                 notes: c.notes || "",
                 image: c.image || null,
                 status: c.status || (c.checked ? "Pass" : "Awaiting"),
-                type: c.type || "optional",
+                type: c.type && c.type !== "optional" ? "required" : "optional",
                 requireImage: c.requireImage !== undefined ? c.requireImage : false
               }));
               vendorSig = cr.vendorSignature || cr.vendor_signature || reportData.vendor_signature || reportData.vendorSignature || "";
@@ -174,7 +174,7 @@ function ReportPreviewContent() {
               notes: c.notes || "",
               image: c.image || null,
               status: c.status || (c.checked ? "Pass" : "Awaiting"),
-              type: c.type || "optional",
+              type: c.type && c.type !== "optional" ? "required" : "optional",
               requireImage: c.requireImage !== undefined ? c.requireImage : false
             }));
           }
@@ -416,9 +416,7 @@ function ReportPreviewContent() {
                         <td className="px-4 py-4 border-r border-[#1A1A1A] max-w-[280px]">
                           <p>{item.label}</p>
                           <div className="flex flex-wrap items-center gap-2 mt-1.5 normal-case font-bold">
-                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${item.type === "urgent"
-                              ? "bg-red-50 text-red-700 border-red-200"
-                              : item.type === "required"
+                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${item.type === "required"
                                 ? "bg-black text-white border-black"
                                 : "bg-gray-100 text-gray-500 border-gray-200"
                               }`}>

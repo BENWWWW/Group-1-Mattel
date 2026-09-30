@@ -15,7 +15,7 @@ interface ChecklistItem {
   image?: string | null;
   video?: string | null;
   status?: string;
-  type?: "optional" | "required" | "urgent";
+  type?: "optional" | "required";
   requireImage?: boolean;
   mediaType?: "photo" | "video" | "both";
   subtasks?: any[];
@@ -198,7 +198,7 @@ export default function ReviewDetailPage() {
           image: c.image || null,
           video: c.video || null,
           status: c.status || (c.checked ? "Pass" : "Awaiting"),
-          type: c.type || "optional",
+          type: c.type && c.type !== "optional" ? "required" : "optional",
           requireImage: c.requireImage !== undefined ? c.requireImage : false,
           mediaType: c.mediaType || "photo",
           subtasks: Array.isArray(c.subtasks) ? c.subtasks : []
@@ -743,9 +743,7 @@ export default function ReviewDetailPage() {
                           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ITEM {idx + 1}</span>
                           <h4 className="font-headline-md text-base font-extrabold text-black leading-tight">{item.label}</h4>
                           <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${item.type === "urgent"
-                                ? "bg-red-50 text-red-700 border-red-200"
-                                : item.type === "required"
+                            <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider border ${item.type === "required"
                                   ? "bg-black text-white border-black"
                                   : "bg-gray-100 text-gray-500 border-gray-200"
                               }`}>
