@@ -678,13 +678,21 @@ export default function PMChecklistPage() {
         const isVideoFile = file.type.startsWith("video") || /\.(mp4|mov|webm|avi|mkv)$/i.test(file.name);
         const mediaLabel = isVideoFile ? "video" : "photo";
         triggerToast(`Uploading evidence ${mediaLabel}...`, "info");
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${selectedTask.id}-${uploadTargetId}-${Date.now()}.${fileExt}`;
+        const fileExt = file.name.split('.').pop()?.toLowerCase();
+        // Name evidence by SHA-256 of its bytes so the same file can never be uploaded twice.
+        // ponytail: exact-byte match only; a re-saved/cropped copy gets a new hash. Use a perceptual hash if that matters.
+        const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+        const hash = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+        const filePath = `evidence/${hash}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("pm_evidence")
-          .upload(filePath, file, { cacheControl: "3600", upsert: true });
+          .upload(filePath, file, { cacheControl: "3600", upsert: false });
 
+        if (uploadError && (uploadError as { statusCode?: string }).statusCode === "409") {
+          triggerToast(`This ${mediaLabel} has already been uploaded as evidence. Please capture a new one.`, "error");
+          return;
+        }
         if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage.from("pm_evidence").getPublicUrl(filePath);
