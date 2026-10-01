@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 interface ToastType { id: string; message: string; type: "success" | "error" | "info"; }
 interface TaskRow { id: string; task_code: string; status: string; priority: string; due_date: string; asset_name: string; vendor_name: string; supervisor_name: string; }
 
+const ONGOING_STATUSES = ["pending", "in_progress", "submitted", "rejected"];
+
 export default function CreatePMAssignmentPage() {
   const supabase = createClient();
   const [assets, setAssets] = useState<{ id: string; name: string; asset_code: string; status: string; category?: string }[]>([]);
@@ -13,6 +15,7 @@ export default function CreatePMAssignmentPage() {
   const [supervisors, setSupervisors] = useState<{ id: string; full_name: string }[]>([]);
   const [templates, setTemplates] = useState<{ id: string; title: string; category?: string }[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedAsset, setSelectedAsset] = useState("");
   const [selectedVendor, setSelectedVendor] = useState("");
   const [selectedSupervisor, setSelectedSupervisor] = useState("");
@@ -42,7 +45,8 @@ export default function CreatePMAssignmentPage() {
         supabase.from("profiles").select("id,full_name").eq("role","vendor").eq("is_active",true).order("full_name"),
         supabase.from("profiles").select("id,full_name").eq("role","supervisor").eq("is_active",true).order("full_name"),
         supabase.from("pm_templates").select("id,title,category").eq("is_active",true).order("title"),
-        supabase.from("pm_tasks").select(`id,task_code,status,priority,due_date,assets(name),vendor:profiles!pm_tasks_assigned_vendor_id_fkey(full_name),supervisor:profiles!pm_tasks_assigned_supervisor_id_fkey(full_name)`).order("created_at",{ascending:false}).limit(10),
+        // Ongoing = everything not yet approved (rejected goes back to the vendor). Soonest due first.
+        supabase.from("pm_tasks").select(`id,task_code,status,priority,due_date,assets(name),vendor:profiles!pm_tasks_assigned_vendor_id_fkey(full_name),supervisor:profiles!pm_tasks_assigned_supervisor_id_fkey(full_name)`).in("status",ONGOING_STATUSES).order("due_date",{ascending:true}),
       ]);
       const activeAssets = (aRes.data||[]).filter((a: any) => !a.is_deleted);
       setAssets(activeAssets);
@@ -128,6 +132,9 @@ export default function CreatePMAssignmentPage() {
     setSelectedTask(null);
     setShowConfirmDelete(false);
   };
+
+  const visibleTasks = statusFilter === "all" ? tasks : tasks.filter(t => t.status === statusFilter);
+  const isOverdue = (t: TaskRow) => !!t.due_date && new Date(t.due_date) < new Date(new Date().toDateString()) && t.status !== "submitted";
 
   const statusStyle = (s:string) => ({approved:"text-green-700 bg-green-50 border-green-300",submitted:"text-blue-700 bg-blue-50 border-blue-300",in_progress:"text-yellow-700 bg-yellow-50 border-yellow-300",rejected:"text-red-700 bg-red-50 border-red-300"}[s]||"text-gray-600 bg-gray-50 border-gray-300");
 
@@ -216,28 +223,41 @@ export default function CreatePMAssignmentPage() {
 
             {/* Task List */}
             <div className="col-span-12 lg:col-span-5 space-y-4">
-              <h3 className="font-headline-md text-xl font-semibold uppercase px-2">Recent Assignments</h3>
+              <h3 className="font-headline-md text-xl font-semibold uppercase px-2">Ongoing Tasks ({tasks.length})</h3>
+              <div className="flex flex-wrap gap-2 px-2">
+                {["all", ...ONGOING_STATUSES].map(s => {
+                  const count = s === "all" ? tasks.length : tasks.filter(t => t.status === s).length;
+                  return (
+                    <button key={s} type="button" onClick={() => setStatusFilter(s)}
+                      className={`px-3 py-1.5 rounded-full border border-gray-200 text-[10px] font-semibold uppercase transition-all cursor-pointer ${statusFilter === s ? "bg-[#1A1A1A] text-white" : "bg-white hover:bg-gray-50"}`}>
+                      {s.replace("_", " ")} ({count})
+                    </button>
+                  );
+                })}
+              </div>
               {isLoading?(
                 <div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-24 bg-gray-100 rounded-[20px] animate-pulse"/>)}</div>
-              ):tasks.length===0?(
+              ):visibleTasks.length===0?(
                 <div className="bg-white rounded-[20px] p-10 text-center text-gray-400 font-medium uppercase text-sm shadow-sm">
-                  <span className="material-symbols-outlined text-4xl block mb-2 opacity-30">assignment</span>No tasks yet.
+                  <span className="material-symbols-outlined text-4xl block mb-2 opacity-30">assignment</span>No ongoing tasks.
                 </div>
               ):(
-                <div className="space-y-4">
-                  {tasks.map(task=>(
+                <div className="space-y-4 lg:max-h-[calc(100vh-14rem)] lg:overflow-y-auto lg:pr-1">
+                  {visibleTasks.map(task=>(
                     <div key={task.id} onClick={()=>setSelectedTask(task)} className="bg-white rounded-[20px] p-6 hover:bg-gray-50 transition-all group relative overflow-hidden cursor-pointer shadow-sm">
                       <div className={`absolute right-0 top-0 w-3 h-full ${task.status==="pending"?"bg-gray-300":"bg-[#D32F2F]"}`}/>
                       <div className="flex justify-between items-start mb-3 pr-4">
                         <div>
                           <h4 className="font-medium text-sm uppercase">{task.asset_name}</h4>
                           <p className="text-[10px] text-[#D32F2F] font-medium uppercase mt-0.5">{task.task_code}</p>
-                          <p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5">Due: {new Date(task.due_date).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</p>
+                          <p className={`text-[10px] font-medium uppercase mt-0.5 ${isOverdue(task) ? "text-[#D32F2F] font-semibold" : "text-gray-500"}`}>
+                            Due: {new Date(task.due_date).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}{isOverdue(task) && " · OVERDUE"}
+                          </p>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-[10px] font-semibold border uppercase ${statusStyle(task.status)}`}>{task.status.replace("_"," ")}</span>
                       </div>
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <span className="text-xs font-medium flex items-center gap-2"><span className="material-symbols-outlined text-[18px]">person</span>{task.supervisor_name}</span>
+                        <span className="text-xs font-medium flex items-center gap-2 min-w-0"><span className="material-symbols-outlined text-[18px]">engineering</span><span className="truncate">{task.vendor_name}</span><span className="text-gray-300">/</span><span className="material-symbols-outlined text-[18px]">person</span><span className="truncate">{task.supervisor_name}</span></span>
                         <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform hover:text-[#D32F2F]">chevron_right</span>
                       </div>
                     </div>
