@@ -450,6 +450,12 @@ function AIVerificationScoreContent() {
             ? t.checklist.map((c: any) => c.image).filter((img: any) => !!img)
             : [];
 
+          // Score from this task's own checklist, not the page-wide aggregate
+          const taskItems: any[] = Array.isArray(t.checklist) ? t.checklist : [];
+          const taskScore = taskItems.length > 0
+            ? Math.round((taskItems.filter((c) => c.status === "Pass").length / taskItems.length) * 100)
+            : 0;
+
           // Try fetching existing report for this task with status 'submitted' (the one created by checklist submit)
           const { data: existingReport } = await supabase
             .from("pm_reports")
@@ -465,7 +471,7 @@ function AIVerificationScoreContent() {
               .from("pm_reports")
               .update({
                 checklist_results: checklistObj,
-                ai_confidence_score: confidence,
+                ai_confidence_score: taskScore,
                 submitted_by: currentUser.id,
                 status: "submitted"
               })
@@ -479,7 +485,7 @@ function AIVerificationScoreContent() {
                 submitted_by: currentUser.id,
                 findings: t.description || null,
                 status: "submitted",
-                ai_confidence_score: confidence,
+                ai_confidence_score: taskScore,
                 photos_urls: photosArray,
                 checklist_results: checklistObj
               });

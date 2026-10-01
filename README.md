@@ -50,6 +50,7 @@ Maintain.AI is a modern, real-time Preventive Maintenance (PM) Verification Syst
    NEXT_PUBLIC_SUPABASE_ANON_KEY=supabase_anon_key
    SIGHTENGINE_API_USER=sightengine_api_user
    SIGHTENGINE_API_SECRET=sightengine_api_secret
+   OPEN_AI_API_KEY=openai_api_key
    ```
 3. Start the development server:
    ```bash
