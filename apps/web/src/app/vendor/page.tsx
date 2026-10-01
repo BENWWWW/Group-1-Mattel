@@ -117,7 +117,8 @@ export default function VendorDashboardPage() {
             reviewed_at
           )
         `)
-        .eq("assigned_vendor_id", user.id);
+        .eq("assigned_vendor_id", user.id)
+        .order("submitted_at", { referencedTable: "pm_reports", ascending: false });
 
       if (error) throw error;
 

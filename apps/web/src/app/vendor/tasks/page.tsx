@@ -59,6 +59,7 @@ interface Task {
   serialNumber?: string;
   techNotes?: string;
   adminNotes?: string;
+  rejectionReason?: string;
   createdAt?: string;
   assetType?: string;
   assetImage?: string; // admin reference photo of the asset
@@ -279,9 +280,14 @@ export default function PMChecklistPage() {
           profiles:assigned_supervisor_id (
             id,
             full_name
+          ),
+          pm_reports (
+            review_notes,
+            submitted_at
           )
         `)
-        .eq("assigned_vendor_id", user.id);
+        .eq("assigned_vendor_id", user.id)
+        .order("submitted_at", { referencedTable: "pm_reports", ascending: false });
 
       if (error) throw error;
 
@@ -344,6 +350,8 @@ export default function PMChecklistPage() {
           checklist: checklistMapped,
           techNotes: t.description || "",
           adminNotes: t.notes || "",
+          // pm_reports is ordered newest first, so [0] is the report the supervisor just rejected
+          rejectionReason: t.status === "rejected" ? t.pm_reports?.[0]?.review_notes || undefined : undefined,
           createdAt: t.created_at,
           assetType: t.assets?.type || t.assets?.name || "",
           assetImage: t.assets?.image_url || undefined
@@ -1134,6 +1142,19 @@ export default function PMChecklistPage() {
                 </div>
               </div>
             </section>
+
+            {/* Supervisor Rejection Reason */}
+            {selectedTask.rejectionReason && (
+              <div className="bg-orange-50 border border-orange-200 rounded-[20px] p-6 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-orange-700">
+                  <span className="material-symbols-outlined text-base">assignment_return</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">Rejected by Supervisor</span>
+                </div>
+                <p className="text-xs text-gray-700 font-semibold leading-relaxed whitespace-pre-wrap">
+                  {selectedTask.rejectionReason}
+                </p>
+              </div>
+            )}
 
             {/* Admin Notes Section */}
             {selectedTask.adminNotes && (
