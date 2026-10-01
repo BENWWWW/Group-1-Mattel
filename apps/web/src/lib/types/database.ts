@@ -26,6 +26,8 @@ export interface Asset {
   name: string
   type: string                 // e.g. 'CNC Machine', 'Conveyor Belt'
   location: string
+  description?: string | null
+  image_url?: string | null    // reference photo, used by AI machine-match check
   status: 'operational' | 'under_maintenance' | 'offline' | 'retired'
   last_pm_date?: string | null
   next_pm_date?: string | null

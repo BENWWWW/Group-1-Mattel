@@ -5,6 +5,8 @@ import {
   SightEngineTimeoutError,
   SightEngineConfigError,
 } from "@/lib/sightengine";
+import { checkMachineMatch, MachineMatchAsset } from "@/lib/machineMatch";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/classify
@@ -13,13 +15,18 @@ import {
  * Detection API. Returns a quality score (0–100) indicating the
  * technical quality (sharpness, exposure, blur, distortion) of the image.
  *
- * Body: { imageUrl: string }
- * Response: { qualityScore: number, confidence: number, isAcceptable: boolean, qualityLabel: string }
+ * If taskId is given, also asks GPT-6 Luna whether the photo shows the
+ * task's machine (compared against the asset's reference photo/details).
+ * machineMatch is null when no taskId, no asset, or the check failed.
+ *
+ * Body: { imageUrl: string, taskId?: string }
+ * Response: { qualityScore: number, confidence: number, isAcceptable: boolean, qualityLabel: string,
+ *             machineMatch: { match: boolean, confidence: number, reason: string } | null }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { imageUrl } = body;
+    const { imageUrl, taskId } = body;
 
     if (!imageUrl) {
       return NextResponse.json(
@@ -28,11 +35,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Machine check runs alongside the quality check. Failures fall back to null
+    // so an OpenAI outage never blocks evidence uploads.
+    const machineMatchPromise = taskId
+      ? getTaskAsset(taskId)
+          .then((asset) => (asset ? checkMachineMatch(imageUrl, asset) : null))
+          .catch((err) => {
+            console.error("[Classify] Machine match failed:", err);
+            return null;
+          })
+      : Promise.resolve(null);
+
     // Call SightEngine Image Quality Detection
     // SightEngine accepts image URLs directly — no base64 conversion needed
     console.log("[Classify] Running SightEngine image quality check...");
 
-    const result = await checkImageQuality(imageUrl);
+    const [result, machineMatch] = await Promise.all([
+      checkImageQuality(imageUrl),
+      machineMatchPromise,
+    ]);
+
+    if (machineMatch) {
+      console.log(
+        `[Classify] Machine match: match=${machineMatch.match}, confidence=${machineMatch.confidence}, reason="${machineMatch.reason}"`
+      );
+    }
 
     // Convert 0.0–1.0 score to 0–100 percentage
     const qualityScore = Math.round(result.quality.score * 100);
@@ -75,6 +102,7 @@ export async function POST(request: NextRequest) {
       confidence: qualityScore, // Alias for backward compatibility
       isAcceptable,
       qualityLabel,
+      machineMatch,
     });
   } catch (error: any) {
     // Handle typed SightEngine errors
@@ -108,4 +136,16 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/** Look up the asset a PM task is for. Uses the caller's session, so RLS applies. */
+async function getTaskAsset(taskId: string): Promise<MachineMatchAsset | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("pm_tasks")
+    .select("assets(name, type, description, asset_code, image_url)")
+    .eq("id", taskId)
+    .single();
+  if (error) throw error;
+  return (data?.assets as unknown as MachineMatchAsset | null) ?? null;
 }

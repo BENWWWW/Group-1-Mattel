@@ -323,7 +323,7 @@ function AIVerificationScoreContent() {
       const aiResponse = await fetch("/api/classify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: selectedItem.photoUrl }),
+        body: JSON.stringify({ imageUrl: selectedItem.photoUrl, taskId: selectedItem.taskId }),
       });
 
       const aiResult = aiResponse.ok ? await aiResponse.json() : null;
@@ -331,12 +331,15 @@ function AIVerificationScoreContent() {
       const aiScore: number = aiResult?.qualityScore ?? 0;
       const aiLabel: string = aiResult?.qualityLabel ?? "Unknown";
       const isAcceptable: boolean = aiResult?.isAcceptable ?? false;
+      const wrongMachine = aiResult?.machineMatch && !aiResult.machineMatch.match;
 
       // 3. Determine pass/fail based on real AI result
-      const newStatus: "Pass" | "Error" = isAcceptable ? "Pass" : "Error";
-      const errorMessage = isAcceptable
-        ? undefined
-        : `AI Verification Failed — Image quality score: ${aiScore}% (${aiLabel}). Score must be ≥ 45% to pass. Please re-upload a clearer, well-lit photo.`;
+      const newStatus: "Pass" | "Error" = isAcceptable && !wrongMachine ? "Pass" : "Error";
+      const errorMessage = !isAcceptable
+        ? `AI Verification Failed — Image quality score: ${aiScore}% (${aiLabel}). Score must be ≥ 45% to pass. Please re-upload a clearer, well-lit photo.`
+        : wrongMachine
+          ? `AI Verification Failed — Photo doesn't show the expected machine: ${aiResult.machineMatch.reason}`
+          : undefined;
 
       // 4. Fetch current checklist from database
       const { data: taskData, error: fetchError } = await supabase
