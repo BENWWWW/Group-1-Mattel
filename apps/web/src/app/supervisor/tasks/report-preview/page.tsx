@@ -4,10 +4,12 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { type Reading, isNumeric, inRange, readingText, pickReading } from "@/lib/readings";
+import { sectionOf } from "@/lib/sections";
 
 interface ChecklistItem extends Reading {
   item_id: string;
   label: string;
+  section?: string;
   checked: boolean;
   notes?: string;
   image?: string | null;
@@ -141,6 +143,7 @@ function ReportPreviewContent() {
               checklistItems = cr.map((c: any) => ({
                 item_id: c.item_id || c.id || "",
                 label: c.label || c.title || c.text || c.task || "Checklist Task",
+                section: c.section || undefined,
                 checked: c.checked !== undefined ? c.checked : (c.status === "Pass"),
                 notes: c.notes || "",
                 image: c.image || null,
@@ -156,6 +159,7 @@ function ReportPreviewContent() {
               checklistItems = results.map((c: any) => ({
                 item_id: c.item_id || c.id || "",
                 label: c.label || c.title || c.text || c.task || "Checklist Task",
+                section: c.section || undefined,
                 checked: c.checked !== undefined ? c.checked : (c.status === "Pass"),
                 notes: c.notes || "",
                 image: c.image || null,
@@ -173,6 +177,7 @@ function ReportPreviewContent() {
             checklistItems = taskData.checklist.map((c: any) => ({
               item_id: c.id || "",
               label: c.label || c.title || c.text || c.task || "Checklist Task",
+              section: c.section || undefined,
               checked: c.status === "Pass" || c.checked === true,
               notes: c.notes || "",
               image: c.image || null,
@@ -416,7 +421,14 @@ function ReportPreviewContent() {
                   </thead>
                   <tbody className="divide-y divide-[#1A1A1A] text-xs font-medium uppercase">
                     {reportInfo.checklist.map((item, idx) => (
-                      <tr key={item.item_id || idx} className="hover:bg-black/5 transition-colors">
+                      <React.Fragment key={item.item_id || idx}>
+                      {/* Section row wherever the section changes (items are stored grouped) */}
+                      {(idx === 0 || sectionOf(item) !== sectionOf(reportInfo.checklist[idx - 1])) && (
+                        <tr className="bg-gray-100">
+                          <td colSpan={3} className="px-4 py-2 text-[11px] font-semibold tracking-wider text-black">{sectionOf(item)}</td>
+                        </tr>
+                      )}
+                      <tr className="hover:bg-black/5 transition-colors">
                         <td className="px-4 py-4 border-r border-gray-200 max-w-[280px]">
                           <p>{item.label}</p>
                           <div className="flex flex-wrap items-center gap-2 mt-1.5 normal-case font-medium">
@@ -474,6 +486,7 @@ function ReportPreviewContent() {
                           {item.notes || "-"}
                         </td>
                       </tr>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>

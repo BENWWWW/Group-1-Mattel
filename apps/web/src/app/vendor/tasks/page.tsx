@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import AssetLookupModal from "@/components/AssetLookupModal";
 import { type Reading, isNumeric, inRange, limitsText, pickReading } from "@/lib/readings";
+import { groupBySection } from "@/lib/sections";
 
 interface Subtask {
   id: string;
@@ -21,6 +22,7 @@ type MediaType = "none" | "photo" | "video" | "both";
 interface ChecklistItem extends Reading {
   id: string;
   title: string;
+  section?: string;
   description: string;
   status: "Pass" | "AI Processing" | "Awaiting" | "Error";
   image?: string;
@@ -58,6 +60,7 @@ interface Task {
   adminNotes?: string;
   createdAt?: string;
   assetType?: string;
+  assetImage?: string; // admin reference photo of the asset
 }
 
 // requireImage is the source of truth for whether an item needs evidence; mediaType says which kind.
@@ -280,7 +283,8 @@ export default function PMChecklistPage() {
             asset_code,
             type,
             category,
-            location
+            location,
+            image_url
           ),
           pm_templates (
             checklist_items
@@ -312,6 +316,7 @@ export default function PMChecklistPage() {
           checklistMapped = t.checklist.map((c: any, index: number) => ({
             id: c.id || `item-${index}`,
             title: c.title || c.text || c.task || "Checklist Task",
+            section: c.section || undefined,
             description: c.description || "Operational integrity check.",
             status: c.status || "Awaiting",
             image: c.image || undefined,
@@ -329,6 +334,7 @@ export default function PMChecklistPage() {
           checklistMapped = t.pm_templates.checklist_items.map((c: any, index: number) => ({
             id: c.id || `item-${index}`,
             title: c.text || c.title || c.task || "Checklist Task",
+            section: c.section || undefined,
             description: c.description || `Priority: ${(c.type && c.type !== "optional" ? "required" : "optional").toUpperCase()} | Evidence: ${c.requireImage ? "REQUIRED" : "NOT NEEDED"}`,
             status: c.status || "Awaiting",
             image: c.image || undefined,
@@ -371,7 +377,8 @@ export default function PMChecklistPage() {
           techNotes: t.description || "",
           adminNotes: t.notes || "",
           createdAt: t.created_at,
-          assetType: t.assets?.type || t.assets?.name || ""
+          assetType: t.assets?.type || t.assets?.name || "",
+          assetImage: t.assets?.image_url || undefined
         };
       });
 
@@ -659,7 +666,9 @@ export default function PMChecklistPage() {
       if (item.type === "optional" && item.status === "Awaiting") {
         return false;
       }
-      return item.requireImage && !item.image && !item.video;
+      if (!item.requireImage) return false;
+      if (item.mediaType === "both") return !item.image || !item.video;
+      return item.mediaType === "video" ? !item.video : !item.image;
     });
     if (missingImages.length > 0) {
       triggerToast(`Cannot proceed! Evidence photo/video has not been uploaded for ${missingImages.length} checklist items.`, "error");
@@ -737,6 +746,21 @@ export default function PMChecklistPage() {
     setUploadTargetId(itemId);
   };
 
+  // Evidence kind the upload target accepts: subtask buttons carry it as a ":::photo"/":::video"
+  // suffix, main items use their mediaType.
+  const uploadTargetKind = (target: string | null): "photo" | "video" | "both" => {
+    if (!target) return "both";
+    const [itemId, , suffix] = target.split(":::");
+    if (suffix === "photo" || suffix === "video") return suffix;
+    const mediaType = selectedTask?.checklist.find((i) => i.id === itemId)?.mediaType;
+    return mediaType === "video" || mediaType === "both" ? mediaType : "photo";
+  };
+  const uploadKind = uploadTargetKind(uploadTargetId);
+  // Checklist item (and subtask) the open upload dialog is for, shown as "For: ..."
+  const [uploadItemId, uploadSubId] = uploadTargetId?.split(":::") ?? [];
+  const uploadItem = selectedTask?.checklist.find((i) => i.id === uploadItemId);
+  const uploadSub = uploadItem?.subtasks?.find((s) => s.id === uploadSubId);
+
   const handleSelectMockImage = async (imageUrl: string) => {
     triggerToast("Example template images cannot be used as evidence! Please upload an actual photo.", "error");
   };
@@ -748,6 +772,12 @@ export default function PMChecklistPage() {
       try {
         const isVideoFile = file.type.startsWith("video") || /\.(mp4|mov|webm|avi|mkv)$/i.test(file.name);
         const mediaLabel = isVideoFile ? "video" : "photo";
+        // accept= is only a picker hint, so enforce the required kind here.
+        if (uploadKind !== "both" && (uploadKind === "video") !== isVideoFile) {
+          triggerToast(`This item requires a ${uploadKind}. Please upload a ${uploadKind} file.`, "error");
+          e.target.value = "";
+          return;
+        }
         triggerToast(`Uploading evidence ${mediaLabel}...`, "info");
         const fileExt = file.name.split('.').pop()?.toLowerCase();
         // Name evidence by SHA-256 of its bytes so the same file can never be uploaded twice.
@@ -816,7 +846,10 @@ export default function PMChecklistPage() {
           item.id === itemId
             ? {
               ...item,
-              status: isVideoFile ? ("Pass" as const) : ("AI Processing" as const),
+              // On "both" items a video must not override the photo's AI result.
+              status: isVideoFile
+                ? (item.mediaType === "both" && item.image ? item.status : ("Pass" as const))
+                : ("AI Processing" as const),
               image: isVideoFile ? item.image : publicUrl,
               video: isVideoFile ? publicUrl : item.video,
               errorMessage: undefined,
@@ -1132,9 +1165,18 @@ export default function PMChecklistPage() {
               </div>
             )}
 
-            {/* Checklist Items Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {selectedTask.checklist.map((item) => {
+            {/* Checklist Items Grid, grouped by section (like the blocks on the paper PM card) */}
+            <div className="space-y-8">
+            {groupBySection(selectedTask.checklist).map(({ section, items }) => (
+              <div key={section} className="space-y-4">
+                <div className="flex items-center justify-between gap-3 pb-2 border-b-2 border-[#1A1A1A]">
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-black">{section}</h3>
+                  <span className="text-[10px] font-semibold uppercase text-gray-500 shrink-0">
+                    {items.filter((i) => i.status === "Pass").length}/{items.length} done
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {items.map((item) => {
                 const isPass = item.status === "Pass";
                 const isProcessing = item.status === "AI Processing";
                 const isAwaiting = item.status === "Awaiting";
@@ -1293,7 +1335,17 @@ export default function PMChecklistPage() {
                             title="Capture overall photo of the machine / component being inspected"
                           >
                             <span>CAPTURE FULL MACHINE</span>
-                            <span className="material-symbols-outlined text-[13px]">photo_camera</span>
+                            <span className="material-symbols-outlined text-[13px]">{item.mediaType === "video" ? "videocam" : "photo_camera"}</span>
+                          </button>
+                        )}
+                        {/* "both" items: prompt for whichever of photo/video is still missing */}
+                        {item.mediaType === "both" && !isLocked && !isProcessing && (item.image || item.video) && !(item.image && item.video) && (
+                          <button
+                            onClick={() => handleOpenUpload(item.id)}
+                            className="w-fit border border-gray-200 rounded-full px-4 py-1.5 font-semibold text-[9px] uppercase hover:bg-black hover:text-white transition-all flex items-center gap-1.5 cursor-pointer bg-white text-black shadow-sm mt-1"
+                          >
+                            <span>{item.image ? "ADD VIDEO" : "ADD PHOTO"}</span>
+                            <span className="material-symbols-outlined text-[13px]">{item.image ? "videocam" : "photo_camera"}</span>
                           </button>
                         )}
                         {/* Subtasks Checklist Section */}
@@ -1479,6 +1531,9 @@ export default function PMChecklistPage() {
                   </div>
                 );
               })}
+                </div>
+              </div>
+            ))}
             </div>
 
             {/* Add Custom Task Item Button */}
@@ -1869,7 +1924,7 @@ export default function PMChecklistPage() {
         type="file"
         ref={fileInputRef}
         onChange={handleRealFileUpload}
-        accept={uploadTargetId?.includes(":::video") ? "video/*" : "image/*,video/*"}
+        accept={{ photo: "image/*", video: "video/*", both: "image/*,video/*" }[uploadKind]}
         className="hidden"
       />
 
@@ -1881,9 +1936,9 @@ export default function PMChecklistPage() {
             <header className="flex justify-between items-center pb-4 border-b border-gray-200">
               <h3 className="font-headline-md text-base uppercase font-semibold tracking-tight flex items-center gap-2">
                 <span className="material-symbols-outlined text-lg">
-                  {uploadTargetId.includes(":::video") ? "videocam" : "perm_media"}
+                  {{ photo: "photo_camera", video: "videocam", both: "perm_media" }[uploadKind]}
                 </span>
-                {uploadTargetId.includes(":::video") ? "Upload Evidence Video" : "Upload Evidence Media"}
+                {{ photo: "Upload Evidence Photo", video: "Upload Evidence Video", both: "Upload Evidence Media" }[uploadKind]}
               </h3>
               <button
                 onClick={() => setUploadTargetId(null)}
@@ -1894,42 +1949,43 @@ export default function PMChecklistPage() {
             </header>
 
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide leading-relaxed">
-              {uploadTargetId.includes(":::video")
-                ? "Capture or choose video proof of work (.mp4, .mov, .webm):"
-                : "Capture or choose proof of work. Please upload real photo or video from your device (template images are for reference only):"}
+              {{
+                photo: "Capture or choose photo proof of work. Please upload a real photo from your device (the reference photo below is only a guide):",
+                video: "Capture or choose video proof of work (.mp4, .mov, .webm):",
+                both: "This item needs both a photo and a video. Upload one now, then add the other (the reference photo below is only a guide):",
+              }[uploadKind]}
             </p>
 
             <div className="grid grid-cols-2 gap-4">
-              <div
-                className="border border-gray-300 rounded-[16px] overflow-hidden p-2 flex flex-col gap-2 text-center bg-gray-50 opacity-60 cursor-not-allowed relative group"
-              >
-                <div className="h-20 w-full overflow-hidden rounded-[10px] border border-black/10 select-none pointer-events-none">
-                  <img
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5PUuGyQj5iS4K8OsIciVH7soDv1iZxtqoatUCeaCmEEKmdhA1x8m6nw1yuqlGdGaC5Xd-Pi7ruxFFEFOzDJVJvI6jxfhNEwxOGSYYK3aqTn7bUyWkASIk5CfpFsqtupp3qdntxCuEE23lVt4HpQDmVifRZ_F75McxZHaG7m2q474o047fSPROxEORil2stcLkoeNGCABR5wGRtbNqpZ-omsxPX5lnF_k7-26BkpXXV66DAYAi_HNPfpPywwFX6H2QGo1H3p6WAJ5U"
-                    className="w-full h-full object-cover"
-                    alt="Inspection 1"
-                  />
+              {/* What to capture: the task's asset (admin reference photo) and the checklist item */}
+              <div className="col-span-2 border border-gray-300 rounded-[16px] p-2 flex gap-3 bg-gray-50 relative group">
+                <div className="w-28 h-24 shrink-0 overflow-hidden rounded-[10px] border border-black/10 select-none pointer-events-none bg-white flex items-center justify-center">
+                  {selectedTask?.assetImage ? (
+                    <img src={selectedTask.assetImage} className="w-full h-full object-cover" alt={selectedTask.asset} />
+                  ) : (
+                    <span className="material-symbols-outlined text-3xl text-gray-300">precision_manufacturing</span>
+                  )}
                 </div>
-                <span className="font-semibold text-[9px] uppercase tracking-wide text-gray-400">Example: Air Mesh (Static)</span>
-                <div className="absolute inset-0 flex items-center justify-center bg-white/70 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-[10px] font-medium text-red-600 uppercase tracking-tight">Reference Only</span>
+                <div className="flex flex-col gap-1 min-w-0 text-left">
+                  <span className="font-semibold text-[9px] uppercase tracking-wide text-gray-400">Capture this machine</span>
+                  <span className="font-semibold text-xs uppercase text-black leading-tight">{selectedTask?.asset}</span>
+                  {selectedTask?.serialNumber && (
+                    <span className="text-[10px] font-semibold uppercase text-gray-500">Machine ID: {selectedTask.serialNumber}</span>
+                  )}
+                  {selectedTask?.location && (
+                    <span className="text-[10px] font-medium uppercase text-gray-500">{selectedTask.location}</span>
+                  )}
+                  {uploadItem && (
+                    <span className="text-[10px] font-semibold uppercase text-[#D32F2F] leading-tight mt-1">
+                      For: {uploadItem.title}{uploadSub ? ` › ${uploadSub.text}` : ""}
+                    </span>
+                  )}
                 </div>
-              </div>
-
-              <div
-                className="border border-gray-300 rounded-[16px] overflow-hidden p-2 flex flex-col gap-2 text-center bg-gray-50 opacity-60 cursor-not-allowed relative group"
-              >
-                <div className="h-20 w-full overflow-hidden rounded-[10px] border border-black/10 select-none pointer-events-none">
-                  <img
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAX4GvgHbE6sHyxp1a6pBEHGlqiB3qbDj7HQ9fAQQgIpN-FXUXfzK-5aP8hhrPe1Kkqj1yk2J5s97U-QDn6E3TRIzT6NNO05RRzoMHu2bqEtWH8svew-mlHLs_trG8FHB5rYfbOrculRtZAM7aKd9sbt6YDkuJEXCTwWMzNcV1Bx_5UHoRyUnMIWdhehZGhZyjrZvpvxBcJ-WlTPdoDS7j_0wtK24YZKQViUaWOl_lwxV_8XpxKddnKm4kkMOSbMVDmjTmzzqp-at5y"
-                    className="w-full h-full object-cover"
-                    alt="Inspection 2"
-                  />
-                </div>
-                <span className="font-semibold text-[9px] uppercase tracking-wide text-gray-400">Example: Grille (Static)</span>
-                <div className="absolute inset-0 flex items-center justify-center bg-white/70 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-[10px] font-medium text-red-600 uppercase tracking-tight">Reference Only</span>
-                </div>
+                {selectedTask?.assetImage && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-[16px] pointer-events-none">
+                    <span className="text-[10px] font-medium text-red-600 uppercase tracking-tight">Reference Only — upload your own photo</span>
+                  </div>
+                )}
               </div>
 
               <button
@@ -1937,7 +1993,7 @@ export default function PMChecklistPage() {
                 className="col-span-2 border border-gray-200 rounded-[12px] py-3.5 hover:bg-[#1A1A1A] hover:text-white transition-all font-semibold text-xs uppercase tracking-widest text-center cursor-pointer flex items-center justify-center gap-2 bg-white"
               >
                 <span className="material-symbols-outlined text-sm">upload_file</span>
-                {uploadTargetId.includes(":::video") ? "Upload Video File" : "Upload Photo / Video File"}
+                {{ photo: "Upload Photo File", video: "Upload Video File", both: "Upload Photo / Video File" }[uploadKind]}
               </button>
             </div>
           </div>

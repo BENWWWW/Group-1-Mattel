@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Reading } from "@/lib/readings";
+import { DEFAULT_SECTION, groupBySection, sectionOf, sortBySection } from "@/lib/sections";
 
 type MediaType = "none"|"photo"|"video"|"both";
 interface SubtaskItem { id: string; text: string; mediaType?: MediaType; }
-interface TaskItem extends Reading { id: string; text: string; type: "optional"|"required"; requireImage?: boolean; mediaType?: MediaType; subtasks?: SubtaskItem[]; }
+interface TaskItem extends Reading { id: string; text: string; section?: string; type: "optional"|"required"; requireImage?: boolean; mediaType?: MediaType; subtasks?: SubtaskItem[]; }
 
 const MEDIA_OPTIONS: { value: MediaType; label: string; icon: string }[] = [
   { value: "none", label: "Checkbox", icon: "check_box" },
@@ -113,10 +114,25 @@ export default function PMTemplatesPage() {
     setFormTasks(sanitizedTasks);
   };
 
-  const handleAddTask = () => {
-    const newTask: TaskItem = { id: `task-${Date.now()}-${Math.random().toString(36).substr(2,4)}`, text: "", type: "optional", requireImage: false, mediaType: "none", subtasks: [] };
-    setFormTasks([...formTasks, newTask]);
+  const newTaskId = () => `task-${Date.now()}-${Math.random().toString(36).substr(2,4)}`;
+
+  // Adds a task at the end of the given section (default: the last section in the list).
+  const handleAddTask = (section: string | undefined = formTasks[formTasks.length - 1]?.section) => {
+    const newTask: TaskItem = { id: newTaskId(), text: "", section, type: "optional", requireImage: false, mediaType: "none", subtasks: [] };
+    const lastIdx = formTasks.map(sectionOf).lastIndexOf(sectionOf(newTask));
+    const updated = [...formTasks];
+    updated.splice(lastIdx === -1 ? updated.length : lastIdx + 1, 0, newTask);
+    setFormTasks(updated);
   };
+  const handleAddSection = () => {
+    const name = `NEW SECTION ${groupBySection(formTasks).length + 1}`;
+    setFormTasks([...formTasks, { id: newTaskId(), text: "", section: name, type: "optional", requireImage: false, mediaType: "none", subtasks: [] }]);
+  };
+  // Sections exist through their tasks, so renaming rewrites every task in the group.
+  const handleRenameSection = (key: string, name: string) =>
+    setFormTasks(formTasks.map(t => sectionOf(t) === key ? { ...t, section: name.toUpperCase() } : t));
+  const handleUngroupSection = (key: string) =>
+    setFormTasks(formTasks.map(t => sectionOf(t) === key ? { ...t, section: undefined } : t));
 
   const handleTaskTextChange = (id: string, text: string) => setFormTasks(formTasks.map(t=>t.id===id?{...t,text:text.toUpperCase()}:t));
   const handleTaskTypeChange = (id: string, type: "optional"|"required") => setFormTasks(formTasks.map(t=>t.id===id?{...t,type}:t));
@@ -165,7 +181,7 @@ export default function PMTemplatesPage() {
           asset_type: "General",
           frequency: "monthly",
           is_active: true,
-          checklist_items: formTasks,
+          checklist_items: sortBySection(formTasks),
           created_by: user.id
         });
         if (error) throw error;
@@ -178,7 +194,7 @@ export default function PMTemplatesPage() {
           description: formDescription.trim(),
           asset_type: "General",
           frequency: "monthly",
-          checklist_items: formTasks
+          checklist_items: sortBySection(formTasks)
         }).eq("id", selectedTemplateId!);
         if (error) throw error;
         triggerToast("Template Saved Successfully","success");
@@ -237,7 +253,7 @@ export default function PMTemplatesPage() {
     if (di===-1||ti===-1) return;
     const updated = [...formTasks];
     const [item] = updated.splice(di, 1);
-    updated.splice(ti, 0, item);
+    updated.splice(ti, 0, { ...item, section: formTasks[ti].section }); // dropping into another section moves it there
     setFormTasks(updated);
     setDraggedTaskId(null);
   };
@@ -359,9 +375,15 @@ export default function PMTemplatesPage() {
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-6">
                   <label className="text-xs font-medium uppercase tracking-widest">Tasks ({formTasks.length})</label>
-                  <button className="pill-button-sharp bg-white text-on-surface hover:bg-gray-100 transition-all text-xs py-2 px-4 cursor-pointer" onClick={handleAddTask}>
-                    <span className="material-symbols-outlined text-[18px]">add</span><span>Add Task</span>
-                  </button>
+                  <div className="flex gap-2">
+                    <button className="pill-button-sharp bg-white text-on-surface hover:bg-gray-100 transition-all text-xs py-2 px-4 cursor-pointer" onClick={handleAddSection}
+                      title="Group tasks under a heading, like the blocks on a paper PM card">
+                      <span className="material-symbols-outlined text-[18px]">segment</span><span>Add Section</span>
+                    </button>
+                    <button className="pill-button-sharp bg-white text-on-surface hover:bg-gray-100 transition-all text-xs py-2 px-4 cursor-pointer" onClick={() => handleAddTask()}>
+                      <span className="material-symbols-outlined text-[18px]">add</span><span>Add Task</span>
+                    </button>
+                  </div>
                 </div>
                 {formTasks.length === 0 && (
                   <div className="text-center py-10 text-gray-400 font-medium uppercase text-xs border border-dashed border-gray-200 rounded-xl">
@@ -369,8 +391,33 @@ export default function PMTemplatesPage() {
                     Add tasks using the button above
                   </div>
                 )}
-                <div className="space-y-4">
-                  {formTasks.map(task=>(
+                <div className="space-y-8">
+                  {/* Index key keeps the name input focused while it is renamed */}
+                  {groupBySection(formTasks).map((group, gi) => (
+                  <div key={gi} className="space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b-2 border-[#1A1A1A]">
+                      <span className="material-symbols-outlined text-gray-400 text-[18px]">segment</span>
+                      <input
+                        type="text"
+                        value={group.items[0].section ?? ""}
+                        onChange={e => handleRenameSection(group.section, e.target.value)}
+                        placeholder={DEFAULT_SECTION}
+                        title="Section name, e.g. BARREL & SCREW MEASUREMENTS"
+                        className="flex-1 min-w-0 font-semibold text-sm uppercase tracking-wide outline-none bg-transparent"
+                      />
+                      <span className="text-[10px] font-medium uppercase text-gray-400 shrink-0">{group.items.length} tasks</span>
+                      <button type="button" onClick={() => handleAddTask(group.items[0].section)}
+                        className="text-[10px] font-semibold uppercase text-[#D32F2F] hover:underline flex items-center gap-1 cursor-pointer shrink-0">
+                        <span className="material-symbols-outlined text-xs">add</span>Task
+                      </button>
+                      {group.section !== DEFAULT_SECTION && (
+                        <button type="button" onClick={() => handleUngroupSection(group.section)} title="Remove section (its tasks move to GENERAL)"
+                          className="p-1 text-gray-400 hover:text-red-500 cursor-pointer shrink-0">
+                          <span className="material-symbols-outlined text-[18px]">layers_clear</span>
+                        </button>
+                      )}
+                    </div>
+                  {group.items.map(task=>(
                     <div key={task.id} draggable onDragStart={()=>handleDragStart(task.id)} onDragOver={handleDragOver} onDrop={()=>handleDrop(task.id)}
                       className={`task-row flex flex-col gap-4 p-5 border border-gray-200 rounded-xl bg-white group cursor-move ${draggedTaskId===task.id?"opacity-50":""}`}>
                       <div className="flex items-start gap-4 w-full">
@@ -488,6 +535,8 @@ export default function PMTemplatesPage() {
                         </div>
                       </div>
                     </div>
+                  ))}
+                  </div>
                   ))}
                 </div>
               </div>

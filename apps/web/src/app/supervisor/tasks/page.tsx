@@ -7,10 +7,12 @@ import NotificationBell from "@/components/NotificationBell";
 import AssetLookupModal from "@/components/AssetLookupModal";
 import { getMySignatures, saveSignature } from "@/lib/signatures";
 import { type Reading, isNumeric, inRange, readingText, pickReading } from "@/lib/readings";
+import { sectionOf } from "@/lib/sections";
 
 interface ChecklistItem extends Reading {
   item_id: string;
   label: string;
+  section?: string;
   checked: boolean;
   notes?: string;
   image?: string | null;
@@ -194,6 +196,7 @@ export default function ReviewDetailPage() {
         checklistItems = rawChecklist.map((c: any) => ({
           item_id: c.item_id || c.id || "",
           label: c.label || c.title || c.text || c.task || "Checklist Task",
+          section: c.section || undefined,
           checked: c.checked !== undefined ? c.checked : (c.status === "Pass"),
           notes: c.notes || "",
           image: c.image || null,
@@ -739,7 +742,12 @@ export default function ReviewDetailPage() {
                   </div>
                 ) : (
                   selectedTask.checklist.map((item, idx) => (
-                    <div key={item.item_id || idx} className="bg-white rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+                    <React.Fragment key={item.item_id || idx}>
+                    {/* Section header wherever the section changes (items are stored grouped) */}
+                    {(idx === 0 || sectionOf(item) !== sectionOf(selectedTask.checklist[idx - 1])) && (
+                      <h4 className="font-semibold text-sm uppercase tracking-wide text-black pb-2 border-b-2 border-[#1A1A1A] mt-2">{sectionOf(item)}</h4>
+                    )}
+                    <div className="bg-white rounded-xl p-5 flex flex-col gap-4 shadow-sm">
                       <div className="flex justify-between items-start">
                         <div className="flex flex-col">
                           <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">ITEM {idx + 1}</span>
@@ -866,6 +874,7 @@ export default function ReviewDetailPage() {
                         </div>
                       )}
                     </div>
+                    </React.Fragment>
                   ))
                 )}
               </section>
