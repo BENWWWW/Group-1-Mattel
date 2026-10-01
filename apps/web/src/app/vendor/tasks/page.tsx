@@ -77,6 +77,7 @@ export default function PMChecklistPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAssetLookupOpen, setIsAssetLookupOpen] = useState(false);
+  const [isAssetImageOpen, setIsAssetImageOpen] = useState(false);
 
   // Search & Filter state variables
   const [searchQuery, setSearchQuery] = useState("");
@@ -1063,6 +1064,25 @@ export default function PMChecklistPage() {
         <main className="lg:ml-[220px] pt-20 h-screen overflow-y-auto bg-page w-full lg:w-[calc(100%-220px)] scroll-container pb-20 lg:pb-0">
           <div className="min-h-[calc(100vh-80px)] py-6 px-4 lg:py-10 lg:px-10 max-w-[1400px] mx-auto space-y-6 lg:space-y-8 animate-in fade-in duration-300">
 
+            {/* Asset being worked on */}
+            <section className="bg-white rounded-[20px] p-3 flex items-center gap-4 shadow-sm">
+              <div className="w-24 h-20 shrink-0 overflow-hidden rounded-[12px] border border-black/10 bg-gray-50 flex items-center justify-center">
+                {selectedTask.assetImage ? (
+                  <button type="button" onClick={() => setIsAssetImageOpen(true)} title="View full image" className="w-full h-full cursor-pointer">
+                    <img src={selectedTask.assetImage} className="w-full h-full object-cover hover:opacity-80 transition-opacity" alt={selectedTask.asset} />
+                  </button>
+                ) : (
+                  <span className="material-symbols-outlined text-3xl text-gray-300">precision_manufacturing</span>
+                )}
+              </div>
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span className="font-semibold text-base uppercase text-[#1A1A1A] leading-tight truncate">{selectedTask.asset}</span>
+                <span className="text-[10px] font-semibold uppercase text-gray-500">
+                  {[selectedTask.serialNumber && `Machine ID: ${selectedTask.serialNumber}`, selectedTask.assetType !== selectedTask.asset && selectedTask.assetType, selectedTask.location].filter(Boolean).join(" · ")}
+                </span>
+              </div>
+            </section>
+
             {/* Sub-header & Asset Info */}
             <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-gray-100">
               <div>
@@ -1560,11 +1580,7 @@ export default function PMChecklistPage() {
                     ></textarea>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-100">
-                    <p className="text-xs font-semibold text-gray-500">
-                      Next: review flagged items and sign the report.
-                    </p>
-
+                  <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-4 border-t border-gray-100">
                     <button
                       onClick={handleSubmitReport}
                       className="w-full sm:w-auto bg-[#D32F2F] text-white border border-gray-200 rounded-full px-10 py-4 font-medium text-sm hover:bg-[#1A1A1A] transition-all flex items-center justify-center gap-3 uppercase cursor-pointer border-none"
@@ -2048,6 +2064,27 @@ export default function PMChecklistPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Asset Image Pop-up */}
+      {isAssetImageOpen && selectedTask?.assetImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsAssetImageOpen(false)}></div>
+          <div className="relative bg-white p-4 rounded-[24px] max-w-3xl w-full z-10 flex flex-col gap-3 shadow-lg">
+            <header className="flex justify-between items-center gap-3">
+              <h3 className="font-headline-md text-sm uppercase font-semibold tracking-tight truncate">
+                {selectedTask.asset}{selectedTask.serialNumber ? ` · ${selectedTask.serialNumber}` : ""}
+              </h3>
+              <button
+                onClick={() => setIsAssetImageOpen(false)}
+                className="w-8 h-8 shrink-0 flex items-center justify-center border border-gray-200 rounded-full hover:bg-[#D32F2F] hover:text-white transition-all cursor-pointer bg-white"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </header>
+            <img src={selectedTask.assetImage} className="w-full max-h-[75vh] object-contain rounded-[16px]" alt={selectedTask.asset} />
           </div>
         </div>
       )}
