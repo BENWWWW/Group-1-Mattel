@@ -229,6 +229,8 @@ function AIVerificationScoreContent() {
         if (Array.isArray(t.checklist)) {
           t.checklist.forEach((item: any) => {
             totalChkCount++;
+            // Older items use the "expected machine" wording
+            const wrongMachine = item.status === "Error" && /confirm the machine|expected machine/.test(item.errorMessage || "");
             if (item.status === "Pass") {
               validChkCount++;
             } else if (item.status === "Error" || item.status === "Awaiting" || item.status === "AI Processing") {
@@ -240,10 +242,10 @@ function AIVerificationScoreContent() {
                 title: `${t.assets?.name || "PM Task"} - ${item.title || "Checklist"}`,
                 issueType: !item.requireImage
                   ? (item.status === "Error" ? "Failed Inspection" : "Not Checked")
-                  : item.status === "Error" ? "Image Clarity Failure" : item.status === "Awaiting" ? "Missing Photo Evidence" : "AI Check Pending",
+                  : wrongMachine ? "Machine Not Recognized" : item.status === "Error" ? "Image Clarity Failure" : item.status === "Awaiting" ? "Missing Photo Evidence" : "AI Check Pending",
                 issueColor: item.status === "Error" ? "bg-[#D32F2F]" : "bg-[#1A1A1A]",
                 subColor: item.status === "Error" ? "text-[#D32F2F]" : "text-[#1A1A1A]",
-                icon: item.status === "Error" ? "image_not_supported" : "warning",
+                icon: wrongMachine ? "precision_manufacturing" : item.status === "Error" ? "image_not_supported" : "warning",
                 confidence: item.aiConfidence ?? null,
                 location: t.assets?.location || "—",
                 assetId: t.assets?.asset_code || "—",
@@ -324,7 +326,7 @@ function AIVerificationScoreContent() {
       const errorMessage = !isAcceptable
         ? `AI Verification Failed — Image quality score: ${aiScore}% (${aiLabel}). Score must be ≥ 45% to pass. Please re-upload a clearer, well-lit photo.`
         : wrongMachine
-          ? `AI Verification Failed — Photo doesn't show the expected machine: ${aiResult.machineMatch.reason}`
+          ? `AI couldn't confirm the machine: ${aiResult.machineMatch.reason}`
           : undefined;
 
       // 4. Fetch current checklist from database

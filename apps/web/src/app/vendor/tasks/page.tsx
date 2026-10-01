@@ -555,7 +555,7 @@ export default function PMChecklistPage() {
         // Wrong machine in photo — reject regardless of quality
         if (result.machineMatch && !result.machineMatch.match) {
           newStatus = "Error";
-          errorMessage = `Photo doesn't show the expected machine (${selectedTask.asset}): ${result.machineMatch.reason}`;
+          errorMessage = `AI couldn't confirm the machine (${selectedTask.asset}): ${result.machineMatch.reason} Re-upload, or if this is the correct machine, explain in the notes and submit.`;
         }
       } else {
         // API call failed — set error
