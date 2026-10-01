@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 import AssetLookupModal from "@/components/AssetLookupModal";
 import { type Reading, isNumeric, inRange, limitsText, pickReading } from "@/lib/readings";
 import { groupBySection } from "@/lib/sections";
@@ -67,12 +68,6 @@ interface Task {
 const itemMediaType = (c: { requireImage?: boolean; mediaType?: MediaType }): MediaType =>
   c.requireImage ? (c.mediaType && c.mediaType !== "none" ? c.mediaType : "photo") : "none";
 
-interface Toast {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
-}
-
 export default function PMChecklistPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -81,7 +76,6 @@ export default function PMChecklistPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAssetLookupOpen, setIsAssetLookupOpen] = useState(false);
 
   // Search & Filter state variables
@@ -99,8 +93,6 @@ export default function PMChecklistPage() {
   const [techNotes, setTechNotes] = useState("");
 
 
-  // Notification Toasts
-  const [toasts, setToasts] = useState<Toast[]>([]);
 
   // File upload input ref for actual evidence file upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -248,13 +240,7 @@ export default function PMChecklistPage() {
   };
 
   // Toast Helper
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
-  };
+  const { toasts, triggerToast } = useToasts(4000, "success");
 
   const loadTasksData = async () => {
     try {
@@ -311,50 +297,31 @@ export default function PMChecklistPage() {
         const supervisorName = t.profiles?.full_name || "Lead Supervisor";
 
         // Handle checklist formatting from DB
-        let checklistMapped: ChecklistItem[] = [];
-        if (Array.isArray(t.checklist) && t.checklist.length > 0) {
-          checklistMapped = t.checklist.map((c: any, index: number) => ({
+        // Task's own saved checklist once started, else a fresh copy of the template's items.
+        const fromTemplate = !(Array.isArray(t.checklist) && t.checklist.length > 0);
+        const rawChecklist: any[] = fromTemplate ? (t.pm_templates?.checklist_items || []) : t.checklist;
+        const checklistMapped: ChecklistItem[] = rawChecklist.map((c: any, index: number) => {
+          const type = c.type && c.type !== "optional" ? "required" : "optional";
+          return {
             id: c.id || `item-${index}`,
             title: c.title || c.text || c.task || "Checklist Task",
             section: c.section || undefined,
-            description: c.description || "Operational integrity check.",
+            description: c.description || (fromTemplate
+              ? `Priority: ${type.toUpperCase()} | Evidence: ${c.requireImage ? "REQUIRED" : "NOT NEEDED"}`
+              : "Operational integrity check."),
             status: c.status || "Awaiting",
             image: c.image || undefined,
             evidenceTime: c.evidenceTime || undefined,
             errorMessage: c.errorMessage || undefined,
             notes: c.notes || undefined,
-            type: c.type && c.type !== "optional" ? "required" : "optional",
+            type,
             video: c.video || undefined,
             requireImage: !!c.requireImage,
             mediaType: itemMediaType(c),
             subtasks: Array.isArray(c.subtasks) ? c.subtasks : [],
             ...pickReading(c)
-          }));
-        } else if (t.pm_templates && Array.isArray(t.pm_templates.checklist_items) && t.pm_templates.checklist_items.length > 0) {
-          checklistMapped = t.pm_templates.checklist_items.map((c: any, index: number) => ({
-            id: c.id || `item-${index}`,
-            title: c.text || c.title || c.task || "Checklist Task",
-            section: c.section || undefined,
-            description: c.description || `Priority: ${(c.type && c.type !== "optional" ? "required" : "optional").toUpperCase()} | Evidence: ${c.requireImage ? "REQUIRED" : "NOT NEEDED"}`,
-            status: c.status || "Awaiting",
-            image: c.image || undefined,
-            evidenceTime: c.evidenceTime || undefined,
-            errorMessage: c.errorMessage || undefined,
-            notes: c.notes || undefined,
-            type: c.type && c.type !== "optional" ? "required" : "optional",
-            video: c.video || undefined,
-            requireImage: !!c.requireImage,
-            mediaType: itemMediaType(c),
-            subtasks: Array.isArray(c.subtasks) ? c.subtasks : [],
-            ...pickReading(c)
-          }));
-        } else {
-          // Fallback checklist default items if database is empty
-          checklistMapped = [
-            { id: "item-1", title: "Visual Casing Integrity", description: "Inspect unit shell and structural mounts.", status: "Awaiting", type: "required", requireImage: true },
-            { id: "item-2", title: "Internal Component Fit", description: "Confirm wiring layout, contacts, and internal wear indicators.", status: "Awaiting", type: "optional", requireImage: false }
-          ];
-        }
+          };
+        });
 
         return {
           id: t.id,
@@ -760,10 +727,6 @@ export default function PMChecklistPage() {
   const [uploadItemId, uploadSubId] = uploadTargetId?.split(":::") ?? [];
   const uploadItem = selectedTask?.checklist.find((i) => i.id === uploadItemId);
   const uploadSub = uploadItem?.subtasks?.find((s) => s.id === uploadSubId);
-
-  const handleSelectMockImage = async (imageUrl: string) => {
-    triggerToast("Example template images cannot be used as evidence! Please upload an actual photo.", "error");
-  };
 
   // Real File Upload to Supabase Storage (Photo & Video)
   const handleRealFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1770,9 +1733,6 @@ export default function PMChecklistPage() {
                 </div>
               ) : (
                 paginatedTasks.map((task) => {
-                  const isActive = task.status === "Active";
-                  const isPending = task.status === "Pending";
-                  const isCompleted = task.status === "Completed";
 
                   return (
                     <div

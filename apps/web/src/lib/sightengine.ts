@@ -4,6 +4,8 @@
 // (blur, exposure, distortion) via a single quality score.
 // ============================================================
 
+import { setTimeout as sleep } from "node:timers/promises";
+
 // --------------- Types ---------------
 
 export interface SightEngineQualityResult {
@@ -22,12 +24,8 @@ export interface SightEngineQualityResult {
   };
 }
 
-export interface SightEngineOptions {
-  /** Request timeout in ms (default: 15000) */
-  timeoutMs?: number;
-  /** Number of retries on failure (default: 2) */
-  retries?: number;
-}
+const TIMEOUT_MS = 15_000;
+const MAX_RETRIES = 2;
 
 // --------------- Errors ---------------
 
@@ -73,35 +71,6 @@ function getConfig() {
   return { apiUser, apiSecret };
 }
 
-// --------------- Helpers ---------------
-
-/** Fetch with an AbortController-based timeout */
-async function fetchWithTimeout(
-  url: string,
-  init: RequestInit,
-  timeoutMs: number
-): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const res = await fetch(url, { ...init, signal: controller.signal });
-    return res;
-  } catch (err: any) {
-    if (err.name === "AbortError") {
-      throw new SightEngineTimeoutError(timeoutMs);
-    }
-    throw err;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-/** Wait for `ms` milliseconds */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 // --------------- Main Client ---------------
 
 /**
@@ -109,20 +78,14 @@ function sleep(ms: number): Promise<void> {
  * Image Quality Detection API.
  *
  * Evaluates blur, exposure, light distortions and returns a
- * single quality score (0.0–1.0).
+ * single quality score (0.0–1.0). Retries timeouts and 5xx errors
+ * up to MAX_RETRIES times with backoff.
  *
  * @param imageUrl - Publicly accessible URL of the image to check
- * @param options  - Optional timeout and retry parameters
  * @returns        - Quality result with score
  */
-export async function checkImageQuality(
-  imageUrl: string,
-  options: SightEngineOptions = {}
-): Promise<SightEngineQualityResult> {
+export async function checkImageQuality(imageUrl: string): Promise<SightEngineQualityResult> {
   const config = getConfig();
-
-  const timeoutMs = options.timeoutMs ?? 15_000;
-  const maxRetries = options.retries ?? 2;
 
   // Build URL with query parameters
   const params = new URLSearchParams({
@@ -134,22 +97,18 @@ export async function checkImageQuality(
 
   const url = `https://api.sightengine.com/1.0/check.json?${params.toString()}`;
 
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+  for (let attempt = 0; ; attempt++) {
     try {
       if (attempt > 0) {
         // Exponential backoff: 500ms, 1500ms
         const backoffMs = 500 * Math.pow(3, attempt - 1);
-        console.log(`[SightEngine] Retry ${attempt}/${maxRetries} after ${backoffMs}ms`);
+        console.log(`[SightEngine] Retry ${attempt}/${MAX_RETRIES} after ${backoffMs}ms`);
         await sleep(backoffMs);
       }
 
-      const response = await fetchWithTimeout(
-        url,
-        { method: "GET" },
-        timeoutMs
-      );
+      const response = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) }).catch((err) => {
+        throw err?.name === "TimeoutError" ? new SightEngineTimeoutError(TIMEOUT_MS) : err;
+      });
 
       if (!response.ok) {
         const errorBody = await response.text();
@@ -174,18 +133,13 @@ export async function checkImageQuality(
       return result;
 
     } catch (err: any) {
-      lastError = err;
-
       // Don't retry on config errors or client errors (4xx)
       if (err instanceof SightEngineConfigError) throw err;
       if (err instanceof SightEngineApiError && err.statusCode >= 400 && err.statusCode < 500) {
         throw err;
       }
       // Retry on timeouts and server errors (5xx)
-      if (attempt === maxRetries) throw err;
+      if (attempt === MAX_RETRIES) throw err;
     }
   }
-
-  // Should never reach here, but TypeScript needs it
-  throw lastError || new Error("SightEngine quality check failed");
 }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 import type { Reading } from "@/lib/readings";
 import { DEFAULT_SECTION, groupBySection, sectionOf, sortBySection } from "@/lib/sections";
 
@@ -26,8 +27,6 @@ interface Template {
   checklist_items: TaskItem[];
   updated_at: string;
 }
-interface ToastType { id: string; message: string; type: "success"|"error"|"info"; }
-
 export default function PMTemplatesPage() {
   const supabase = createClient();
 
@@ -43,16 +42,11 @@ export default function PMTemplatesPage() {
   const [formTasks, setFormTasks] = useState<TaskItem[]>([]);
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
   const [deleteTargetTemplate, setDeleteTargetTemplate] = useState<Template|null>(null);
-  const [toasts, setToasts] = useState<ToastType[]>([]);
   const [draggedTaskId, setDraggedTaskId] = useState<string|null>(null);
 
   const [categories, setCategories] = useState<string[]>(["HVAC SYSTEMS","ELECTRICAL","PLUMBING","FIRE & SAFETY","MECHANICAL","ELEVATORS & LIFTS","POWER GENERATION","BUILDING ENVELOPE"]);
 
-  const triggerToast = useCallback((message: string, type: "success"|"error"|"info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
-  }, []);
+  const { toasts, triggerToast } = useToasts(3000, "success");
 
   const fetchCategories = useCallback(async () => {
     try {

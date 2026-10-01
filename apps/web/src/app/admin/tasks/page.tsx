@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 
-interface ToastType { id: string; message: string; type: "success" | "error" | "info"; }
 interface TaskRow { id: string; task_code: string; status: string; priority: string; due_date: string; asset_name: string; vendor_name: string; supervisor_name: string; }
 
 const ONGOING_STATUSES = ["pending", "in_progress", "submitted", "rejected"];
@@ -29,13 +29,8 @@ export default function CreatePMAssignmentPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskRow | null>(null);
-  const [toasts, setToasts] = useState<ToastType[]>([]);
 
-  const triggerToast = useCallback((message: string, type: "success"|"error"|"info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
-  }, []);
+  const { toasts, triggerToast } = useToasts(4000, "success");
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);

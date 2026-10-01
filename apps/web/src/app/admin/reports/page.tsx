@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 
 interface Report {
   id: string;
@@ -17,8 +18,6 @@ interface Report {
   category: string;
 }
 
-interface ToastType { id: string; message: string; type: "success" | "error" | "info"; }
-
 const PAGE_SIZE = 10;
 
 export default function ReportsPage() {
@@ -31,16 +30,11 @@ export default function ReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("any");
-  const [toasts, setToasts] = useState<ToastType[]>([]);
 
   // Stats
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
 
-  const triggerToast = useCallback((message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
-  }, []);
+  const { toasts, triggerToast } = useToasts(3000, "success");
 
   const fetchStats = useCallback(async () => {
     const [total, approved, pending, rejected] = await Promise.all([
@@ -236,29 +230,6 @@ export default function ReportsPage() {
       `/supervisor/tasks/report-preview?reportId=${report.id}`,
       "_blank"
     );
-  };
-
-  // ─── Approve / Reject ────────────────────────────────────────────────────────
-  const handleUpdateStatus = async (reportId: string, newStatus: "approved" | "rejected") => {
-    try {
-      const report = reports.find(r => r.id === reportId);
-      if (report && report.taskId) {
-        const { error: taskError } = await supabase
-          .from("pm_tasks")
-          .update({ status: newStatus })
-          .eq("id", report.taskId);
-        if (taskError) throw taskError;
-      }
-
-      const { error } = await supabase.from("pm_reports").update({ status: newStatus }).eq("id", reportId);
-      if (error) throw error;
-
-      triggerToast(`Report ${newStatus === "approved" ? "APPROVED" : "REJECTED"} successfully.`, newStatus === "approved" ? "success" : "error");
-      fetchReports();
-      fetchStats();
-    } catch (err: any) {
-      triggerToast(err.message || "Update failed.", "error");
-    }
   };
 
   const getStatusBadge = (status: string) => {

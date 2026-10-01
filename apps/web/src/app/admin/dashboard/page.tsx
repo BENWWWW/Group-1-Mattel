@@ -3,16 +3,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 import NotificationBell from "@/components/NotificationBell";
 import AdminMonthlyTrendChart, { MonthlyPMData } from "@/components/charts/AdminMonthlyTrendChart";
 import AdminVendorComparisonChart, { VendorPerformance } from "@/components/charts/AdminVendorComparisonChart";
 
-
-interface ToastType {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
-}
 
 interface DashboardStats {
   totalAssets: number;
@@ -42,7 +37,6 @@ export default function AdminDashboardPage() {
   const supabase = createClient();
   const currentNow = new Date();
 
-  const [toasts, setToasts] = useState<ToastType[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalAssets: 0,
     activePMs: 0,
@@ -66,16 +60,7 @@ export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Toast Helper
-  const triggerToast = useCallback(
-    (message: string, type: "success" | "error" | "info" = "success") => {
-      const id = Math.random().toString(36).substring(2, 9);
-      setToasts((prev) => [...prev, { id, message, type }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 3000);
-    },
-    []
-  );
+  const { toasts, triggerToast } = useToasts(3000, "success");
 
   // Fetch all dashboard data from Supabase
   const fetchDashboardData = useCallback(async (yearToUse = selectedYear) => {
@@ -165,7 +150,6 @@ export default function AdminDashboardPage() {
 
       const yearScheduled = tasksInYear.length;
       const yearCompleted = tasksInYear.filter((t: any) => t.status === "approved" || t.status === "completed").length;
-      const yearCritical = tasksInYear.filter((t: any) => t.priority === "critical" && (t.status === "pending" || t.status === "in_progress")).length;
       const yearCompletionRate = yearScheduled > 0 ? Math.round((yearCompleted / yearScheduled) * 100) : 0;
 
       // Unique vendors with tasks in this year

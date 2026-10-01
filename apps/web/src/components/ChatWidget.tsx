@@ -144,7 +144,7 @@ export default function ChatWidget() {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.abort();
-      } catch (e) {}
+      } catch {}
     }
 
     try {
@@ -204,7 +204,7 @@ export default function ChatWidget() {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch (e) {}
+      } catch {}
     }
     setIsRecording(false);
   };
@@ -623,7 +623,7 @@ export default function ChatWidget() {
       if (mention.id) {
         if (mention.type === "report") {
           // Fetch the task_id from the report
-          const { data, error } = await supabase
+          const { data } = await supabase
             .from("pm_reports")
             .select("task_id")
             .eq("id", mention.id)
@@ -646,7 +646,7 @@ export default function ChatWidget() {
         }
       } else {
         // Fallback dynamic database lookup by task_code
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("pm_tasks")
           .select("id")
           .eq("task_code", mention.code)
@@ -909,17 +909,6 @@ export default function ChatWidget() {
           right: "32px",
           bottom: "120px", // 120px places it cleanly above the 40px + 64px = 104px FAB add-asset button
         };
-
-  // Dynamic panel orientation based on position on screen
-  const isLeftHalf =
-    position.x !== -1 &&
-    position.x < (typeof window !== "undefined" ? window.innerWidth / 2 : 500);
-  const panelAlignmentClass = isLeftHalf ? "left-0" : "right-0";
-
-  const isTopHalf =
-    position.y !== -1 &&
-    position.y < (typeof window !== "undefined" ? window.innerHeight / 2 : 400);
-  const panelVerticalClass = isTopHalf ? "top-20" : "bottom-20";
 
   return (
     <>

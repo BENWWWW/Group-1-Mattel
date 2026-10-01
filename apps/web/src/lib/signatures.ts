@@ -5,7 +5,16 @@
 // ============================================================
 
 import { createClient } from '@/lib/supabase/client'
-import type { Signature } from '@/lib/types/database'
+
+export interface Signature {
+  id: string
+  user_id: string              // Profile.id (Vendor or Supervisor)
+  label: string                // e.g. "Default"
+  signature_data: string       // base64 data URL (image/png)
+  is_default: boolean          // main/active signature of user
+  created_at: string
+  updated_at: string
+}
 
 // ============================================================
 // GET: Retrieve all signatures belonging to the logged-in user
@@ -24,42 +33,6 @@ export async function getMySignatures(): Promise<Signature[]> {
 
   if (error) throw new Error(`Failed to retrieve signatures: ${error.message}`)
   return data ?? []
-}
-
-// ============================================================
-// GET: Retrieve default signature of the logged-in user
-// ============================================================
-export async function getDefaultSignature(): Promise<Signature | null> {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data, error } = await supabase
-    .from('signatures')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('is_default', true)
-    .maybeSingle()
-
-  if (error) throw new Error(`Failed to retrieve default signature: ${error.message}`)
-  return data
-}
-
-// ============================================================
-// GET: Retrieve default signature of a specific user (by user_id)
-// Used by supervisors to view vendor signature, or vice versa
-// ============================================================
-export async function getSignatureByUserId(userId: string): Promise<Signature | null> {
-  const supabase = createClient()
-  const { data, error } = await supabase
-    .from('signatures')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('is_default', true)
-    .maybeSingle()
-
-  if (error) throw new Error(`Failed to retrieve user signature: ${error.message}`)
-  return data
 }
 
 // ============================================================
@@ -116,33 +89,6 @@ export async function setDefaultSignature(signatureId: string): Promise<void> {
 }
 
 // ============================================================
-// PATCH: Update label or signature data
-// ============================================================
-export async function updateSignature(
-  signatureId: string,
-  params: { label?: string; signatureData?: string }
-): Promise<Signature> {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('User is not authenticated')
-
-  const updatePayload: Record<string, string> = {}
-  if (params.label) updatePayload.label = params.label
-  if (params.signatureData) updatePayload.signature_data = params.signatureData
-
-  const { data, error } = await supabase
-    .from('signatures')
-    .update(updatePayload)
-    .eq('id', signatureId)
-    .eq('user_id', user.id)
-    .select()
-    .single()
-
-  if (error) throw new Error(`Failed to update signature: ${error.message}`)
-  return data
-}
-
-// ============================================================
 // DELETE: Delete specific signature
 // ============================================================
 export async function deleteSignature(signatureId: string): Promise<void> {
@@ -157,19 +103,4 @@ export async function deleteSignature(signatureId: string): Promise<void> {
     .eq('user_id', user.id)
 
   if (error) throw new Error(`Failed to delete signature: ${error.message}`)
-}
-
-// ============================================================
-// UTIL: Convert base64 data URL → Blob (for upload to storage if needed)
-// ============================================================
-export function dataURLtoBlob(dataURL: string): Blob {
-  const [header, base64] = dataURL.split(',')
-  const mimeMatch = header.match(/:(.*?);/)
-  const mime = mimeMatch ? mimeMatch[1] : 'image/png'
-  const binary = atob(base64)
-  const array = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) {
-    array[i] = binary.charCodeAt(i)
-  }
-  return new Blob([array], { type: mime })
 }

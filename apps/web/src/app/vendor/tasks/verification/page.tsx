@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 import { getMySignatures, saveSignature } from "@/lib/signatures";
 
 interface FlaggedItem {
@@ -24,12 +25,6 @@ interface FlaggedItem {
   notes?: string;
 }
 
-interface ToastType {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
-}
-
 function AIVerificationScoreContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,7 +34,6 @@ function AIVerificationScoreContent() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [flaggedItems, setFlaggedItems] = useState<FlaggedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [savedSignatures, setSavedSignatures] = useState<any[]>([]);
 
   useEffect(() => {
@@ -80,8 +74,6 @@ function AIVerificationScoreContent() {
   const [submitText, setSubmitText] = useState("Submit PM Report");
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Notification Toasts
-  const [toasts, setToasts] = useState<ToastType[]>([]);
 
   // Signature States
   const sigCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -178,13 +170,7 @@ function AIVerificationScoreContent() {
   }, [savedSignatures]);
 
   // Toast Helper
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
-  };
+  const { toasts, triggerToast } = useToasts(3500, "success");
 
   const loadVerificationData = async () => {
     try {

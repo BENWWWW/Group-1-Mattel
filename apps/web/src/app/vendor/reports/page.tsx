@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 
 interface Report {
   id: string;        // unique report UUID (used as React key)
@@ -20,12 +21,6 @@ interface Report {
   supervisor: string;
   supervisorId?: string;
   photos: string[];
-}
-
-interface ToastType {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
 }
 
 export default function VendorReportsPage() {
@@ -51,16 +46,8 @@ export default function VendorReportsPage() {
 
   // Audio Playback simulation
 
-  // Notification Toasts
-  const [toasts, setToasts] = useState<ToastType[]>([]);
 
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
-  };
+  const { toasts, triggerToast } = useToasts(3500, "success");
 
   const loadReportsData = async () => {
     try {
@@ -193,9 +180,6 @@ export default function VendorReportsPage() {
   const totalReportsCount = reports.length;
   const approvedReportsCount = reports.filter((rep) => rep.status === "Approved").length;
   const pendingReportsCount = reports.filter((rep) => rep.status === "Pending").length;
-  const avgConfidence = reports.length > 0
-    ? Math.round(reports.reduce((acc, curr) => acc + curr.confidence, 0) / reports.length)
-    : 0;
 
   // Drawer interactions
   const handleOpenDrawer = (rep: Report) => {

@@ -3,14 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-
-type RoleType = "Admin" | "Vendor" | "Supervisor";
-
-type ToastType = {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
-};
+import { useToasts } from "@/lib/useToasts";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,14 +22,6 @@ export default function LoginPage() {
 
   // Forgot password flow states
   const [isInlineForgot, setIsInlineForgot] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Modal form states
-  const [modalId, setModalId] = useState("");
-  const [modalIdError, setModalIdError] = useState("");
-  const [modalEmail, setModalEmail] = useState("");
-  const [modalEmailError, setModalEmailError] = useState("");
-  const [modalPhone, setModalPhone] = useState("");
 
   // Inline Forgot form states
   const [inlineId, setInlineId] = useState("");
@@ -44,8 +29,6 @@ export default function LoginPage() {
   const [inlineEmail, setInlineEmail] = useState("");
   const [inlineEmailError, setInlineEmailError] = useState("");
 
-  // Toast states
-  const [toasts, setToasts] = useState<ToastType[]>([]);
 
   // Trigger page fade-in
   useEffect(() => {
@@ -53,13 +36,7 @@ export default function LoginPage() {
   }, []);
 
   // Toast helper
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "info") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
-  };
+  const { toasts, triggerToast } = useToasts(4000, "info");
 
   // Handle Login Submit — connected to Supabase Auth
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -150,40 +127,6 @@ export default function LoginPage() {
     }
   };
 
-
-  // Handle Modal Forgot Password Submit
-  const handleModalSubmit = () => {
-    let valid = true;
-
-    if (!modalId.trim()) {
-      setModalIdError("This field is required.");
-      valid = false;
-    } else {
-      setModalIdError("");
-    }
-
-    // Simple email regex validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!modalEmail.trim() || !emailRegex.test(modalEmail)) {
-      setModalEmailError("Please enter a valid email.");
-      valid = false;
-    } else {
-      setModalEmailError("");
-    }
-
-    if (!valid) {
-      triggerToast("Forgot Password request validation failed.", "error");
-      return;
-    }
-
-    // Success reset trigger
-    triggerToast(`RESET LINK DISPATCHED TO ${modalEmail.toUpperCase()}`, "success");
-    setIsModalOpen(false);
-    // Clear inputs
-    setModalId("");
-    setModalEmail("");
-    setModalPhone("");
-  };
 
   // Handle Inline Forgot Password Submit
   const handleInlineSubmit = () => {

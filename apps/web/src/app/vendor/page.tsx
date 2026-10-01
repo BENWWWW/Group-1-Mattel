@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 import NotificationBell from "@/components/NotificationBell";
 import VendorPersonalTrendChart, { VendorWeeklyProgress } from "@/components/charts/VendorPersonalTrendChart";
 import VendorWorkloadDistributionChart, { VendorWorkloadData } from "@/components/charts/VendorWorkloadDistributionChart";
@@ -24,12 +25,6 @@ interface Task {
   icon: string;
 }
 
-interface Toast {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
-}
-
 export default function VendorDashboardPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -37,7 +32,6 @@ export default function VendorDashboardPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Statistics state
   const [stats, setStats] = useState({
@@ -72,17 +66,9 @@ export default function VendorDashboardPage() {
   const [isHeaderCalendarOpen, setIsHeaderCalendarOpen] = useState(false);
   const [tempHeaderYear, setTempHeaderYear] = useState<number>(currentNow.getFullYear());
 
-  // Notifications Toast state
-  const [toasts, setToasts] = useState<Toast[]>([]);
 
   // Show toast helper
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
-  };
+  const { toasts, triggerToast } = useToasts(4000, "success");
 
   const handlePeriodChange = (m: number, y: number) => {
     setSelectedMonth(m);

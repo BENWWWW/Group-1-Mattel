@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 import { type Reading, isNumeric, inRange, readingText, pickReading } from "@/lib/readings";
 import { sectionOf } from "@/lib/sections";
 
@@ -39,17 +40,14 @@ interface ReportInfo {
 }
 
 function ReportPreviewContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const taskId = searchParams.get("taskId");
   const reportId = searchParams.get("reportId");
 
   const supabase = createClient();
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [reportInfo, setReportInfo] = useState<ReportInfo | null>(null);
 
-  const [toasts, setToasts] = useState<{ id: string; message: string; type: string }[]>([]);
 
   // Override body overflow so this dedicated PDF preview page can scroll
   useEffect(() => {
@@ -64,29 +62,12 @@ function ReportPreviewContent() {
   }, []);
 
   // Trigger Toast Notification
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
-  };
+  const { toasts, triggerToast } = useToasts(3000, "success");
 
   useEffect(() => {
     const fetchReportDetails = async () => {
       try {
         setLoading(true);
-        // Get user session
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-          setCurrentUser(profile);
-        }
-
         let targetTaskId = taskId;
         let reportData: any = null;
 
@@ -137,55 +118,35 @@ function ReportPreviewContent() {
           let superSig = "";
           let superName = taskData.supervisor?.full_name || "Lead Auditor";
 
+          // Same item shape whether it comes from a report (array or { items }) or the task itself
+          const toItem = (c: any): ChecklistItem => ({
+            item_id: c.item_id || c.id || "",
+            label: c.label || c.title || c.text || c.task || "Checklist Task",
+            section: c.section || undefined,
+            checked: c.checked !== undefined ? c.checked : (c.status === "Pass"),
+            notes: c.notes || "",
+            image: c.image || null,
+            status: c.status || (c.checked ? "Pass" : "Awaiting"),
+            type: c.type && c.type !== "optional" ? "required" : "optional",
+            requireImage: c.requireImage !== undefined ? c.requireImage : false,
+            ...pickReading(c)
+          });
+
           if (reportData && reportData.checklist_results) {
             const cr = reportData.checklist_results;
             if (Array.isArray(cr)) {
-              checklistItems = cr.map((c: any) => ({
-                item_id: c.item_id || c.id || "",
-                label: c.label || c.title || c.text || c.task || "Checklist Task",
-                section: c.section || undefined,
-                checked: c.checked !== undefined ? c.checked : (c.status === "Pass"),
-                notes: c.notes || "",
-                image: c.image || null,
-                status: c.status || (c.checked ? "Pass" : "Awaiting"),
-                type: c.type && c.type !== "optional" ? "required" : "optional",
-                requireImage: c.requireImage !== undefined ? c.requireImage : false,
-                ...pickReading(c)
-              }));
+              checklistItems = cr.map(toItem);
               vendorSig = reportData.vendor_signature || reportData.vendorSignature || "";
               superSig = reportData.supervisor_signature || reportData.supervisorSignature || "";
             } else {
-              const results = cr.items || [];
-              checklistItems = results.map((c: any) => ({
-                item_id: c.item_id || c.id || "",
-                label: c.label || c.title || c.text || c.task || "Checklist Task",
-                section: c.section || undefined,
-                checked: c.checked !== undefined ? c.checked : (c.status === "Pass"),
-                notes: c.notes || "",
-                image: c.image || null,
-                status: c.status || (c.checked ? "Pass" : "Awaiting"),
-                type: c.type && c.type !== "optional" ? "required" : "optional",
-                requireImage: c.requireImage !== undefined ? c.requireImage : false,
-                ...pickReading(c)
-              }));
+              checklistItems = (cr.items || []).map(toItem);
               vendorSig = cr.vendorSignature || cr.vendor_signature || reportData.vendor_signature || reportData.vendorSignature || "";
               vendorName = cr.vendorName || cr.vendor_name || vendorName;
               superSig = cr.supervisorSignature || cr.supervisor_signature || reportData.supervisor_signature || reportData.supervisorSignature || "";
               superName = cr.supervisorName || cr.supervisor_name || superName;
             }
           } else if (Array.isArray(taskData.checklist)) {
-            checklistItems = taskData.checklist.map((c: any) => ({
-              item_id: c.id || "",
-              label: c.label || c.title || c.text || c.task || "Checklist Task",
-              section: c.section || undefined,
-              checked: c.status === "Pass" || c.checked === true,
-              notes: c.notes || "",
-              image: c.image || null,
-              status: c.status || (c.checked ? "Pass" : "Awaiting"),
-              type: c.type && c.type !== "optional" ? "required" : "optional",
-              requireImage: c.requireImage !== undefined ? c.requireImage : false,
-                ...pickReading(c)
-            }));
+            checklistItems = taskData.checklist.map(toItem);
           }
 
           // Format Date

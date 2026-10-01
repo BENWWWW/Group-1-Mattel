@@ -3,16 +3,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 import NotificationBell from "@/components/NotificationBell";
 import SupervisorVerificationVelocityChart, { WeeklyVerificationData } from "@/components/charts/SupervisorVerificationVelocityChart";
 import SupervisorQualityDonutChart, { VerificationQualityData } from "@/components/charts/SupervisorQualityDonutChart";
 
-
-interface ToastType {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
-}
 
 interface QueueItem {
   id: string;
@@ -51,14 +46,12 @@ export default function ReviewQueuePage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [toasts, setToasts] = useState<ToastType[]>([]);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [vendors, setVendors] = useState<VendorCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVendorDetail, setSelectedVendorDetail] = useState<VendorCard | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const currentNow = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number>(currentNow.getMonth()); // 8 = September
@@ -89,11 +82,7 @@ export default function ReviewQueuePage() {
     rejected: 0,
   });
 
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
-  };
+  const { toasts, triggerToast } = useToasts(3000, "success");
 
 
   const timeAgo = (dateStr: string) => {

@@ -3,12 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-
-interface ToastType {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
-}
+import { useToasts } from "@/lib/useToasts";
 
 function ConfirmationContent() {
   const router = useRouter();
@@ -19,17 +14,10 @@ function ConfirmationContent() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [taskData, setTaskData] = useState<any>(null);
   const [reportData, setReportData] = useState<any>(null);
-  const [toasts, setToasts] = useState<ToastType[]>([]);
   const [timestamp, setTimestamp] = useState("Oct 24, 2026 | 14:32:01");
 
   // Trigger Toast helper
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
-  };
+  const { toasts, triggerToast } = useToasts(3500, "success");
 
   const loadUserProfileAndData = async () => {
     try {

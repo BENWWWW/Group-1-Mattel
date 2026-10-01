@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 
 interface Asset {
   id: string;
@@ -16,8 +17,6 @@ interface Asset {
   description?: string;
   image_url?: string;
 }
-
-interface ToastType { id: string; message: string; type: "success" | "error" | "info"; }
 
 function getAssetStatusLabel(status: string): string {
   if (status === "operational")      return "Operational";
@@ -56,14 +55,9 @@ export default function AssetManagementPage() {
 
   // Modals
   const [deleteTargetAsset, setDeleteTargetAsset] = useState<Asset | null>(null);
-  const [toasts, setToasts] = useState<ToastType[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const triggerToast = useCallback((message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
-  }, []);
+  const { toasts, triggerToast } = useToasts(3000, "success");
 
   const handleImageUpload = async (file: File) => {
     if (!file) return;

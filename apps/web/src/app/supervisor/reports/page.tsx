@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 import NotificationBell from "@/components/NotificationBell";
 
 interface AuditReportItem {
@@ -18,17 +19,10 @@ interface AuditReportItem {
   reportId: string;
 }
 
-interface ToastType {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
-}
-
 export default function ReportsPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [toasts, setToasts] = useState<ToastType[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [reports, setReports] = useState<AuditReportItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,13 +50,7 @@ export default function ReportsPage() {
     Facilities: 0
   });
 
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
-  };
+  const { toasts, triggerToast } = useToasts(3000, "success");
 
   const loadData = async () => {
     try {

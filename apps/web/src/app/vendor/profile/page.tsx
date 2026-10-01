@@ -3,13 +3,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 import { getMySignatures, saveSignature, setDefaultSignature, deleteSignature } from "@/lib/signatures";
-
-interface ToastType {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
-}
 
 export default function VendorProfilePage() {
   const router = useRouter();
@@ -19,8 +14,6 @@ export default function VendorProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Toast Notifications State
-  const [toasts, setToasts] = useState<ToastType[]>([]);
 
   // Form Fields State
   const [fullName, setFullName] = useState("");
@@ -40,13 +33,7 @@ export default function VendorProfilePage() {
   const sigFileInputRef = useRef<HTMLInputElement>(null);
 
   // Toast Trigger Helper
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
-  };
+  const { toasts, triggerToast } = useToasts(3500, "success");
 
   const loadSignatures = async () => {
     try {

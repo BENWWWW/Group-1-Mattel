@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 
 interface PMRecord {
   id: string;
@@ -18,12 +19,6 @@ interface PMRecord {
   details: string;
   recommendation: string;
   photos: string[];
-}
-
-interface ToastType {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
 }
 
 export default function VPMHistoryPage() {
@@ -43,17 +38,9 @@ export default function VPMHistoryPage() {
   const [selectedRecord, setSelectedRecord] = useState<PMRecord | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Toast Notification state
-  const [toasts, setToasts] = useState<ToastType[]>([]);
 
   // Trigger Toast helper
-  const triggerToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
-  };
+  const { toasts, triggerToast } = useToasts(3500, "success");
 
   const loadPMRecords = async () => {
     try {

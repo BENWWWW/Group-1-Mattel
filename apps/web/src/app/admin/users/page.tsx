@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToasts } from "@/lib/useToasts";
 
 interface UserProfile {
   id: string;
@@ -16,8 +17,6 @@ interface UserProfile {
   created_at: string;
 }
 
-interface ToastType { id: string; message: string; type: "success" | "error" | "info"; }
-
 export default function UserManagementPage() {
   const supabase = createClient();
 
@@ -25,7 +24,6 @@ export default function UserManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState<"all" | "vendor" | "supervisor">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [toasts, setToasts] = useState<ToastType[]>([]);
 
   // Drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -47,11 +45,7 @@ export default function UserManagementPage() {
   const [deleteTarget, setDeleteTarget] = useState<UserProfile | null>(null);
   const [selectedUserDetail, setSelectedUserDetail] = useState<UserProfile | null>(null);
 
-  const triggerToast = useCallback((message: string, type: "success"|"error"|"info" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
-  }, []);
+  const { toasts, triggerToast } = useToasts(4000, "success");
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
