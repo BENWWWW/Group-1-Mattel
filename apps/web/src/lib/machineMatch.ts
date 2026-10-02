@@ -2,6 +2,8 @@
 // machineMatch.ts — GPT-6 Luna machine identity check
 // Verifies a vendor-uploaded evidence photo shows the machine
 // the PM task is for, using the asset's reference photo + details.
+// With a checkTitle, also looks for the defect that check is about
+// (burn marks, loose cables, leaks...).
 // ============================================================
 
 import OpenAI from "openai";
@@ -20,11 +22,14 @@ export interface MachineMatchResult {
   match: boolean;
   confidence: number; // 0–100
   reason: string;
+  issueFound: boolean; // photo shows a problem the checklist item looks for
+  issue: string; // one sentence, "" when none
 }
 
 export async function checkMachineMatch(
   photoUrl: string,
-  asset: MachineMatchAsset
+  asset: MachineMatchAsset,
+  checkTitle?: string
 ): Promise<MachineMatchResult> {
   const content: OpenAI.Responses.ResponseInputContent[] = [];
 
@@ -41,7 +46,13 @@ export async function checkMachineMatch(
       `${asset.description ?? ""}\n` +
       "Does the uploaded photo show this machine (same type/model)? A close-up of a part of this machine counts as a match. " +
       "If an asset tag or label is readable, compare it to the asset code. " +
-      "Give confidence as 0-100 and a one-sentence reason.",
+      "Give confidence as 0-100 and a one-sentence reason.\n" +
+      (checkTitle
+        ? `The technician took this photo for the inspection step "${checkTitle}". ` +
+          "Set issueFound=true only if the photo clearly shows a problem this step looks for " +
+          "(e.g. burn marks, scorching, melted insulation, loose or disconnected cables, damage, leaks, corrosion), " +
+          "and describe it in issue (one sentence). Otherwise issueFound=false and issue=\"\"."
+        : "Set issueFound=false and issue=\"\"."),
   });
 
   const res = await client.responses.create({
@@ -58,8 +69,10 @@ export async function checkMachineMatch(
             match: { type: "boolean" },
             confidence: { type: "number" },
             reason: { type: "string" },
+            issueFound: { type: "boolean" },
+            issue: { type: "string" },
           },
-          required: ["match", "confidence", "reason"],
+          required: ["match", "confidence", "reason", "issueFound", "issue"],
           additionalProperties: false,
         },
       },

@@ -17,16 +17,18 @@ import { createClient } from "@/lib/supabase/server";
  *
  * If taskId is given, also asks GPT-6 Luna whether the photo shows the
  * task's machine (compared against the asset's reference photo/details).
+ * With checkTitle, the same call also flags visible defects for that check
+ * (e.g. burn marks for "Visual check for burn marks").
  * machineMatch is null when no taskId, no asset, or the check failed.
  *
- * Body: { imageUrl: string, taskId?: string }
+ * Body: { imageUrl: string, taskId?: string, checkTitle?: string }
  * Response: { qualityScore: number, confidence: number, isAcceptable: boolean, qualityLabel: string,
- *             machineMatch: { match: boolean, confidence: number, reason: string } | null }
+ *             machineMatch: { match: boolean, confidence: number, reason: string, issueFound: boolean, issue: string } | null }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { imageUrl, taskId } = body;
+    const { imageUrl, taskId, checkTitle } = body;
 
     if (!imageUrl) {
       return NextResponse.json(
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
     // so an OpenAI outage never blocks evidence uploads.
     const machineMatchPromise = taskId
       ? getTaskAsset(taskId)
-          .then((asset) => (asset ? checkMachineMatch(imageUrl, asset) : null))
+          .then((asset) => (asset ? checkMachineMatch(imageUrl, asset, checkTitle) : null))
           .catch((err) => {
             console.error("[Classify] Machine match failed:", err);
             return null;
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (machineMatch) {
       console.log(
-        `[Classify] Machine match: match=${machineMatch.match}, confidence=${machineMatch.confidence}, reason="${machineMatch.reason}"`
+        `[Classify] Machine match: match=${machineMatch.match}, confidence=${machineMatch.confidence}, reason="${machineMatch.reason}", issueFound=${machineMatch.issueFound}`
       );
     }
 

@@ -509,12 +509,12 @@ export default function PMChecklistPage() {
   };
 
   // AI image quality check via SightEngine API for items in "AI Processing" status
-  const checkImageQualityWithAI = async (imageUrl: string, taskId: string) => {
+  const checkImageQualityWithAI = async (imageUrl: string, taskId: string, checkTitle: string) => {
     try {
       const response = await fetch("/api/classify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl, taskId }),
+        body: JSON.stringify({ imageUrl, taskId, checkTitle }),
       });
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
@@ -536,7 +536,7 @@ export default function PMChecklistPage() {
     let cancelled = false;
 
     const runQualityCheck = async () => {
-      const result = await checkImageQualityWithAI(processingItem.image!, selectedTask.id);
+      const result = await checkImageQualityWithAI(processingItem.image!, selectedTask.id, processingItem.title);
 
       if (cancelled) return;
 
@@ -559,6 +559,12 @@ export default function PMChecklistPage() {
           errorMessage = `Fair image quality (${confidence}%). Flagged for supervisor review.`;
         }
         // Good/Excellent quality (>=60%) — clean pass
+
+        // Defect visible for this check (burn marks, loose cables...) — item fails, notes required on submit
+        if (result.machineMatch?.issueFound) {
+          newStatus = "Error";
+          errorMessage = `AI spotted a possible issue: ${result.machineMatch.issue} Repair it and re-upload, or explain in the notes and submit.`;
+        }
 
         // Wrong machine in photo — reject regardless of quality
         if (result.machineMatch && !result.machineMatch.match) {
