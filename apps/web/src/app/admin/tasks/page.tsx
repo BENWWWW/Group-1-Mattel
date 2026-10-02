@@ -4,7 +4,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToasts } from "@/lib/useToasts";
 
-interface TaskRow { id: string; task_code: string; status: string; priority: string; due_date: string; asset_name: string; vendor_name: string; supervisor_name: string; }
+interface TaskRow { id: string; task_code: string; status: string; priority: string; due_date: string; asset_name: string; vendor_name: string; supervisor_name: string; recurrence: Recurrence; recurrence_interval: number; }
+
+type Recurrence = "none"|"monthly"|"yearly";
+const recurrenceLabel = (r: Recurrence, n: number) => r === "none" ? "One-time" : `Every ${n > 1 ? `${n} ` : ""}${r === "monthly" ? "month" : "year"}${n > 1 ? "s" : ""}`;
 
 const ONGOING_STATUSES = ["pending", "in_progress", "submitted", "rejected"];
 
@@ -24,6 +27,9 @@ export default function CreatePMAssignmentPage() {
   const [scheduleDate, setScheduleDate] = useState("");
   const [priority, setPriority] = useState<"low"|"medium"|"high"|"critical">("medium");
   const [notes, setNotes] = useState("");
+  const [recurrence, setRecurrence] = useState<Recurrence>("none");
+  const [recurrenceInterval, setRecurrenceInterval] = useState(1);
+  const [isSavingSchedule, setIsSavingSchedule] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -41,14 +47,14 @@ export default function CreatePMAssignmentPage() {
         supabase.from("profiles").select("id,full_name").eq("role","supervisor").eq("is_active",true).order("full_name"),
         supabase.from("pm_templates").select("id,title,category").eq("is_active",true).order("title"),
         // Ongoing = everything not yet approved (rejected goes back to the vendor). Soonest due first.
-        supabase.from("pm_tasks").select(`id,task_code,status,priority,due_date,assets(name),vendor:profiles!pm_tasks_assigned_vendor_id_fkey(full_name),supervisor:profiles!pm_tasks_assigned_supervisor_id_fkey(full_name)`).in("status",ONGOING_STATUSES).order("due_date",{ascending:true}),
+        supabase.from("pm_tasks").select(`id,task_code,status,priority,due_date,recurrence,recurrence_interval,assets(name),vendor:profiles!pm_tasks_assigned_vendor_id_fkey(full_name),supervisor:profiles!pm_tasks_assigned_supervisor_id_fkey(full_name)`).in("status",ONGOING_STATUSES).order("due_date",{ascending:true}),
       ]);
       const activeAssets = (aRes.data||[]).filter((a: any) => !a.is_deleted);
       setAssets(activeAssets);
       setVendors(vRes.data||[]);
       setSupervisors(sRes.data||[]);
       setTemplates(tRes.data||[]);
-      setTasks((taskRes.data||[]).map((t:any)=>({id:t.id,task_code:t.task_code,status:t.status,priority:t.priority,due_date:t.due_date,asset_name:t.assets?.name??"—",vendor_name:t.vendor?.full_name??"—",supervisor_name:t.supervisor?.full_name??"—"})));
+      setTasks((taskRes.data||[]).map((t:any)=>({id:t.id,task_code:t.task_code,status:t.status,priority:t.priority,due_date:t.due_date,asset_name:t.assets?.name??"—",vendor_name:t.vendor?.full_name??"—",supervisor_name:t.supervisor?.full_name??"—",recurrence:t.recurrence??"none",recurrence_interval:t.recurrence_interval??1})));
       if(activeAssets.length) {
         setSelectedAsset(activeAssets[0].id);
       } else {
@@ -95,10 +101,10 @@ export default function CreatePMAssignmentPage() {
       const {data:{user}} = await supabase.auth.getUser();
       if(!user){triggerToast("Not authenticated.","error");return;}
       const code = `TASK-${new Date().getFullYear()}-${Math.floor(1000+Math.random()*9000)}`;
-      const {error} = await supabase.from("pm_tasks").insert({task_code:code,asset_id:selectedAsset,assigned_vendor_id:selectedVendor,assigned_supervisor_id:selectedSupervisor,template_id:selectedTemplate||null,created_by:user.id,priority,due_date:dueDate,scheduled_date:scheduleDate||null,notes:notes||null,status:"pending"});
+      const {error} = await supabase.from("pm_tasks").insert({task_code:code,asset_id:selectedAsset,assigned_vendor_id:selectedVendor,assigned_supervisor_id:selectedSupervisor,template_id:selectedTemplate||null,created_by:user.id,priority,due_date:dueDate,scheduled_date:scheduleDate||null,notes:notes||null,status:"pending",recurrence,recurrence_interval:recurrenceInterval});
       if(error) throw error;
       triggerToast(`PM TASK ${code} ASSIGNED SUCCESSFULLY.`,"success");
-      setNotes("");setDueDate("");setScheduleDate("");
+      setNotes("");setDueDate("");setScheduleDate("");setRecurrence("none");setRecurrenceInterval(1);
       fetchData();
     } catch(err:any){triggerToast(err.message||"Failed.","error");}
     finally{setIsSubmitting(false);}
@@ -120,6 +126,23 @@ export default function CreatePMAssignmentPage() {
       triggerToast(err.message || "Failed to delete task.", "error");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleSaveSchedule = async () => {
+    if (!selectedTask) return;
+    setIsSavingSchedule(true);
+    try {
+      const { error } = await supabase.from("pm_tasks")
+        .update({ recurrence: selectedTask.recurrence, recurrence_interval: selectedTask.recurrence_interval })
+        .eq("id", selectedTask.id);
+      if (error) throw error;
+      triggerToast("Schedule updated.", "success");
+      fetchData();
+    } catch (err: any) {
+      triggerToast(err.message || "Failed to update schedule.", "error");
+    } finally {
+      setIsSavingSchedule(false);
     }
   };
 
@@ -197,6 +220,21 @@ export default function CreatePMAssignmentPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
+                      <label className="text-xs font-medium uppercase block">Repeat</label>
+                      <div className="flex gap-3">
+                        {(["none","monthly","yearly"] as const).map(r=>(
+                          <button key={r} type="button" onClick={()=>setRecurrence(r)} className={`flex-1 py-3 rounded-[20px] border border-gray-200 font-medium text-xs uppercase transition-all cursor-pointer ${recurrence===r?"bg-[#D32F2F] text-white":"bg-white hover:bg-gray-50"}`}>{r==="none"?"One-time":r}</button>
+                        ))}
+                      </div>
+                      {recurrence!=="none"&&(
+                        <div className="flex items-center gap-3 text-xs font-medium uppercase pt-1">
+                          <span>Every</span>
+                          <input type="number" min={1} max={120} value={recurrenceInterval} onChange={e=>setRecurrenceInterval(Math.min(120,Math.max(1,Number(e.target.value)||1)))} className="w-20 h-10 px-3 bg-white border border-gray-200 rounded-[12px] focus:outline-none text-sm"/>
+                          <span>{recurrence==="monthly"?"month(s)":"year(s)"} — next task is created when this one is approved</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
                       <label className="text-xs font-medium uppercase block">Priority</label>
                       <div className="flex gap-3">
                         {(["low","medium","high","critical"] as const).map(p=>(
@@ -248,6 +286,7 @@ export default function CreatePMAssignmentPage() {
                           <p className={`text-[10px] font-medium uppercase mt-0.5 ${isOverdue(task) ? "text-[#D32F2F] font-semibold" : "text-gray-500"}`}>
                             Due: {new Date(task.due_date).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}{isOverdue(task) && " · OVERDUE"}
                           </p>
+                          {task.recurrence!=="none"&&<p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">event_repeat</span>{recurrenceLabel(task.recurrence,task.recurrence_interval)}</p>}
                         </div>
                         <span className={`px-3 py-1 rounded-full text-[10px] font-semibold border uppercase ${statusStyle(task.status)}`}>{task.status.replace("_"," ")}</span>
                       </div>
@@ -281,6 +320,22 @@ export default function CreatePMAssignmentPage() {
               {[{l:"Vendor",v:selectedTask.vendor_name},{l:"Supervisor",v:selectedTask.supervisor_name},{l:"Due Date",v:new Date(selectedTask.due_date).toLocaleDateString()},{l:"Priority",v:selectedTask.priority},{l:"Status",v:selectedTask.status.replace("_"," ")}].map(({l,v})=>(
                 <div key={l} className="flex justify-between py-2 border-b border-gray-100"><span className="opacity-50">{l}</span><span>{v}</span></div>
               ))}
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <label className="text-xs font-medium uppercase block opacity-50">Repeat schedule</label>
+              <div className="flex gap-2 items-center">
+                <select value={selectedTask.recurrence} onChange={e=>setSelectedTask({...selectedTask,recurrence:e.target.value as Recurrence})} className="flex-1 h-10 pl-3 bg-white border border-gray-200 rounded-[12px] focus:outline-none text-xs font-medium uppercase cursor-pointer">
+                  <option value="none">One-time</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+                {selectedTask.recurrence!=="none"&&(
+                  <input type="number" min={1} max={120} value={selectedTask.recurrence_interval} onChange={e=>setSelectedTask({...selectedTask,recurrence_interval:Math.min(120,Math.max(1,Number(e.target.value)||1))})} className="w-20 h-10 px-3 bg-white border border-gray-200 rounded-[12px] focus:outline-none text-xs" aria-label="Repeat interval"/>
+                )}
+                <button disabled={isSavingSchedule} onClick={handleSaveSchedule} className="h-10 px-4 bg-[#1A1A1A] text-white font-semibold uppercase rounded-[12px] text-xs cursor-pointer disabled:opacity-60">{isSavingSchedule?"Saving...":"Save"}</button>
+              </div>
+              <p className="text-[10px] text-gray-500 uppercase">{recurrenceLabel(selectedTask.recurrence,selectedTask.recurrence_interval)}</p>
             </div>
 
             {showConfirmDelete ? (

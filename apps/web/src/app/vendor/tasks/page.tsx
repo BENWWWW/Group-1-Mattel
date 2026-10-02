@@ -766,12 +766,14 @@ export default function PMChecklistPage() {
 
         const { error: uploadError } = await supabase.storage
           .from("pm_evidence")
-          .upload(filePath, file, { cacheControl: "3600", upsert: false });
+          // DEMO: duplicate block disabled — upsert: true lets the same file be re-uploaded (same bytes, same path).
+          // Restore upsert: false and the 409 check below after the demo.
+          .upload(filePath, file, { cacheControl: "3600", upsert: true });
 
-        if (uploadError && (uploadError as { statusCode?: string }).statusCode === "409") {
-          triggerToast(`This ${mediaLabel} has already been uploaded as evidence. Please capture a new one.`, "error");
-          return;
-        }
+        // if (uploadError && (uploadError as { statusCode?: string }).statusCode === "409") {
+        //   triggerToast(`This ${mediaLabel} has already been uploaded as evidence. Please capture a new one.`, "error");
+        //   return;
+        // }
         if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage.from("pm_evidence").getPublicUrl(filePath);

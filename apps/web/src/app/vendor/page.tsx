@@ -7,6 +7,7 @@ import { useToasts } from "@/lib/useToasts";
 import NotificationBell from "@/components/NotificationBell";
 import VendorPersonalTrendChart, { VendorWeeklyProgress } from "@/components/charts/VendorPersonalTrendChart";
 import VendorWorkloadDistributionChart, { VendorWorkloadData } from "@/components/charts/VendorWorkloadDistributionChart";
+import RecurringScheduleChart from "@/components/charts/RecurringScheduleChart";
 
 
 // Define Task interface matching the industrial requirements
@@ -698,6 +699,8 @@ export default function VendorDashboardPage() {
             />
             <VendorWorkloadDistributionChart data={workloadData} />
           </div>
+
+          <RecurringScheduleChart />
 
           {/* Awaiting Start Tasks Panel */}
           <div className="bg-white rounded-[20px] p-8 space-y-6 shadow-sm">

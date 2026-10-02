@@ -7,6 +7,7 @@ import { useToasts } from "@/lib/useToasts";
 import NotificationBell from "@/components/NotificationBell";
 import AdminMonthlyTrendChart, { MonthlyPMData } from "@/components/charts/AdminMonthlyTrendChart";
 import AdminVendorComparisonChart, { VendorPerformance } from "@/components/charts/AdminVendorComparisonChart";
+import RecurringScheduleChart from "@/components/charts/RecurringScheduleChart";
 
 
 interface DashboardStats {
@@ -649,6 +650,8 @@ export default function AdminDashboardPage() {
               selectedYear={selectedYear}
             />
           </div>
+
+          <RecurringScheduleChart showVendor />
 
           {/* Recent Tasks Table */}
           <div className="space-y-4">
